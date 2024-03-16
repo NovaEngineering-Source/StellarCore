@@ -1,0 +1,23 @@
+{
+  "modListVersion": 2,
+  "modList": [
+    {
+      "modid": "stellar_core",
+      "name": "Stellar Core",
+      "description": "Stellar Core，An optimization mod.\n星核，一个普通的优化模组。",
+      "version": "${version}",
+      "mcversion": "${mcversion}",
+      "url": "https://github.com/NovaEngineering-Source/StellarCore",
+      "updateUrl": "",
+      "authorList": [
+        "Kasumi_Nova"
+      ],
+      "credits": "",
+      "logoFile": "",
+      "screenshots": [],
+      "dependencies": [],
+      "requiredMods": [],
+      "useDependencyInformation": true
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "package": "github.kasuminova.stellarcore.mixin.minecraft",
+  "refmap": "mixins.stellar_core.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinChunk",
+    "MixinWorld",
+    "forge.MixinForgeHooks"
+  ],
+  "client": [
+    "MixinFontRenderer",
+    "MixinNettyCompressionDecoder",
+    "MixinNettyPacketDecoder",
+    "MixinTessellator",
+    "forge.MixinSimpleIndexedCodec",
+    "forge.MixinSplashProgress"
+  ]
+}
