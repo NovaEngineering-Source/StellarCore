@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin;
 
+import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraftforge.fml.common.Loader;
 import org.apache.logging.log4j.LogManager;
@@ -7,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
 @SuppressWarnings("unused")
@@ -45,6 +47,12 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_techguns.json",             "techguns");
         addModdedMixinCFG("mixins.stellar_core_theoneprobe.json",          "theoneprobe");
         addModdedMixinCFG("mixins.stellar_core_thermaldynamics.json",      "thermaldynamics");
+    }
+
+    static {
+        if (StellarCoreConfig.FEATURES.hitokoto) {
+            CompletableFuture.runAsync(HitokotoAPI::getRandomHitokoto);
+        }
     }
 
     @Override

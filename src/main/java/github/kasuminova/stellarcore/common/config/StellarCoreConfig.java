@@ -336,6 +336,14 @@ public class StellarCoreConfig {
     }
 
     public static class Features {
+        @Config.Name("Enable Custom Game Title")
+        public final boolean enbleTitle = false;
+
+        @Config.Name("Title Use Hitokoto API")
+        public final boolean hitokoto = true;
+
+        @Config.Name("Custom Game Title")
+        public final String title = "Minecraft 1.12.2";
 
         @Config.Name("Font Scale")
         public final FontScale fontScale = new FontScale();
