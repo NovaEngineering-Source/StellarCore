@@ -3,7 +3,12 @@ package github.kasuminova.stellarcore.common.config;
 import com.cleanroommc.configanytime.ConfigAnytime;
 import github.kasuminova.stellarcore.StellarCore;
 import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+@Mod.EventBusSubscriber(modid = StellarCore.MOD_ID)
 @Config(modid = StellarCore.MOD_ID, name = "stellar_core")
 public class StellarCoreConfig {
 
@@ -19,6 +24,15 @@ public class StellarCoreConfig {
 
     @Config.Name("Features")
     public static final Features FEATURES = new Features();
+
+    @SubscribeEvent
+    public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
+    {
+        if (event.getModID().equals(StellarCore.MOD_ID))
+        {
+            ConfigManager.sync(StellarCore.MOD_ID, Config.Type.INSTANCE);
+        }
+    }
 
     public static class BugFixes {
 

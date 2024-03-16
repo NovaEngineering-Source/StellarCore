@@ -8,8 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = StellarCore.MOD_ID, name = StellarCore.MOD_NAME, version = StellarCore.VERSION,
         dependencies = "required-after:forge@[14.23.5.2847,);" +
-                "required-after:theoneprobe@[1.12-1.4.28,);" +
-                "after:jianghun@[1.0,);",
+                "required-after:configanytime@[2.0,);",
         acceptedMinecraftVersions = "[1.12, 1.13)"
 )
 @SuppressWarnings("MethodMayBeStatic")
