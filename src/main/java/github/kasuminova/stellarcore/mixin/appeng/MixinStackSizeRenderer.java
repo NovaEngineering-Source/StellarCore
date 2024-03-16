@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.appeng;
 
 import appeng.client.render.StackSizeRenderer;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -19,7 +20,7 @@ public class MixinStackSizeRenderer {
     )
     public float onRenderStackSize(final float ci) {
         if (ci == 0.5F) {
-            return 0.7F;
+            return StellarCoreConfig.FEATURES.fontScale.ae2;
         }
         return ci;
     }

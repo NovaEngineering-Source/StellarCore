@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.techguns;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -15,6 +16,9 @@ public class MixinTGExtendedPlayer {
 
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
     private void onInit(final EntityPlayer entity, final CallbackInfo ci) {
+        if (!StellarCoreConfig.FEATURES.techguns.forceSecurityMode) {
+            return;
+        }
         enableSafemode = true;
     }
 

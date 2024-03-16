@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.mets;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.lrsoft.mets.manager.EnchantmentManager;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraftforge.event.RegistryEvent;
@@ -16,6 +17,9 @@ public class MixinEnchantmentManager {
 
     @Inject(method = "onEnchantmentInit", at = @At("HEAD"), cancellable = true, remap = false)
     private static void removeEnchantment(final RegistryEvent.Register<Enchantment> event, final CallbackInfo ci) {
+        if (!StellarCoreConfig.FEATURES.moreElectricTools.disableEfficientEnergyCost) {
+            return;
+        }
         ci.cancel();
     }
 

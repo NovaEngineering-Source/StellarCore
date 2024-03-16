@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.mets;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.lrsoft.mets.item.ElectricForceFieldGenerator;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -19,6 +20,9 @@ public class MixinForceFieldGenerator {
      */
     @Inject(method = "onUpdate", at = @At("HEAD"), cancellable = true)
     private void injectOnWorkTick(final ItemStack stack, final World worldIn, final Entity entity, final int itemSlot, final boolean isSelected, final CallbackInfo ci) {
+        if (!StellarCoreConfig.BUG_FIXES.moreElectricTools.fixLifeSupports) {
+            return;
+        }
         if (entity == null || !entity.isEntityAlive()) {
             ci.cancel();
         }

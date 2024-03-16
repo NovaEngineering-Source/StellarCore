@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.fluxnetworks;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.util.text.TextFormatting;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -23,6 +24,9 @@ public class MixinTOPIntegration {
                     remap = false),
             remap = false)
     public String redirectAddProbeInfoTrans(final Translation instance) {
+        if (!StellarCoreConfig.BUG_FIXES.fluxNetworks.fixTop) {
+            return instance.t();
+        }
         return stellar_core$getTOPTransKey(instance);
     }
 
@@ -33,30 +37,33 @@ public class MixinTOPIntegration {
                     target = "Lsonar/fluxnetworks/common/core/FluxUtils;getTransferInfo(Lsonar/fluxnetworks/api/network/ConnectionType;Lsonar/fluxnetworks/api/utils/EnergyType;J)Ljava/lang/String;",
                     remap = false),
             remap = false)
-    public String redirectAddProbeInfoGetTransferInfo(final ConnectionType connectionType, final EnergyType energyType, final long change) {
-        return stellar_core$getTransferInfo(connectionType, energyType, change);
+    public String redirectAddProbeInfoGetTransferInfo(final ConnectionType connectionType, final EnergyType energyType, final long charge) {
+        if (!StellarCoreConfig.BUG_FIXES.fluxNetworks.fixTop) {
+            return FluxUtils.getTransferInfo(connectionType, energyType, charge);
+        }
+        return stellar_core$getTransferInfo(connectionType, energyType, charge);
     }
 
     @Unique
-    private static String stellar_core$getTransferInfo(ConnectionType type, EnergyType energyType, long change) {
+    private static String stellar_core$getTransferInfo(ConnectionType type, EnergyType energyType, long charge) {
         if (type.isPlug()) {
-            String formatted = FluxUtils.format(change, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
-            return change == 0L ? stellar_core$getTOPTransKey(FluxTranslate.INPUT) + ": " + TextFormatting.GOLD + formatted : stellar_core$getTOPTransKey(FluxTranslate.INPUT) + ": " + TextFormatting.GREEN + "+" + formatted;
+            String formatted = FluxUtils.format(charge, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
+            return charge == 0L ? stellar_core$getTOPTransKey(FluxTranslate.INPUT) + ": " + TextFormatting.GOLD + formatted : stellar_core$getTOPTransKey(FluxTranslate.INPUT) + ": " + TextFormatting.GREEN + "+" + formatted;
         }
         if (!type.isPoint() && !type.isController()) {
             if (type != ConnectionType.STORAGE) {
                 return "";
             }
-            if (change == 0L) {
-                return stellar_core$getTOPTransKey(FluxTranslate.CHANGE) + ": " + TextFormatting.GOLD + change + energyType.getUsageSuffix();
+            if (charge == 0L) {
+                return stellar_core$getTOPTransKey(FluxTranslate.CHANGE) + ": " + TextFormatting.GOLD + charge + energyType.getUsageSuffix();
             }
-            if (change > 0L) {
-                return stellar_core$getTOPTransKey(FluxTranslate.CHANGE) + ": " + TextFormatting.RED + "-" + FluxUtils.format(change, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
+            if (charge > 0L) {
+                return stellar_core$getTOPTransKey(FluxTranslate.CHANGE) + ": " + TextFormatting.RED + "-" + FluxUtils.format(charge, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
             }
-            return stellar_core$getTOPTransKey(FluxTranslate.CHANGE) + ": " + TextFormatting.GREEN + "+" + FluxUtils.format(-change, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
+            return stellar_core$getTOPTransKey(FluxTranslate.CHANGE) + ": " + TextFormatting.GREEN + "+" + FluxUtils.format(-charge, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
         }
-        String formatted = FluxUtils.format(-change, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
-        if (change == 0L) {
+        String formatted = FluxUtils.format(-charge, FluxUtils.TypeNumberFormat.COMMAS, energyType, true);
+        if (charge == 0L) {
             return stellar_core$getTOPTransKey(FluxTranslate.OUTPUT) + ": " + TextFormatting.GOLD + formatted;
         }
         return stellar_core$getTOPTransKey(FluxTranslate.OUTPUT) + ": " + TextFormatting.RED + "-" + formatted;

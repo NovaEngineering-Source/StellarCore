@@ -1,6 +1,8 @@
 package github.kasuminova.stellarcore.mixin.eio;
 
 import crazypants.enderio.base.capability.ItemTools;
+import crazypants.enderio.base.diagnostics.Prof;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,6 +17,9 @@ public class MixinItemTools {
             remap = false
     )
     private static void redirectProfStart(final Profiler profiler, final String section, final Object param) {
+        if (!StellarCoreConfig.PERFORMANCE.enderIO.itemTools) {
+            Prof.start(profiler, section, param);
+        }
         // noop
     }
 
@@ -24,6 +29,9 @@ public class MixinItemTools {
             remap = false
     )
     private static void redirectProfStop(final Profiler profiler) {
+        if (!StellarCoreConfig.PERFORMANCE.enderIO.itemTools) {
+            Prof.stop(profiler);
+        }
         // noop
     }
 
@@ -32,7 +40,10 @@ public class MixinItemTools {
             at = @At(value = "INVOKE", target = "Lcrazypants/enderio/base/diagnostics/Prof;stop(Lnet/minecraft/profiler/Profiler;I)V"),
             remap = false
     )
-    private static void redirectProfStop(final Profiler i, final int profiler) {
+    private static void redirectProfStop(final Profiler profiler, final int i) {
+        if (!StellarCoreConfig.PERFORMANCE.enderIO.itemTools) {
+            Prof.stop(profiler, i);
+        }
         // noop
     }
 

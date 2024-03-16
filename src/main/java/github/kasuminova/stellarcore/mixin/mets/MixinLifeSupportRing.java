@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.mets;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.lrsoft.mets.item.bauble.ElectricLifeSupportRing;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
@@ -18,6 +19,9 @@ public class MixinLifeSupportRing {
      */
     @Inject(method = "onWornTick", at = @At("HEAD"), cancellable = true, remap = false)
     private void injectOnWorkTick(final ItemStack itemstack, final EntityLivingBase entity, final CallbackInfo ci) {
+        if (!StellarCoreConfig.BUG_FIXES.moreElectricTools.fixLifeSupports) {
+            return;
+        }
         if (entity == null || !entity.isEntityAlive()) {
             ci.cancel();
         }

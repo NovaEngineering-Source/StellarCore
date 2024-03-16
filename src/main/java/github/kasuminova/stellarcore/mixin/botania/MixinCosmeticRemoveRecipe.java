@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.botania;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -15,11 +16,17 @@ public class MixinCosmeticRemoveRecipe {
 
     @Inject(method = "matches", at = @At("HEAD"), cancellable = true)
     private void removeMatches(final InventoryCrafting var1, final World var2, final CallbackInfoReturnable<Boolean> cir) {
+        if (!StellarCoreConfig.FEATURES.botania.disableCosmeticRecipe) {
+            return;
+        }
         cir.setReturnValue(false);
     }
 
     @Inject(method = "getCraftingResult", at = @At("HEAD"), cancellable = true)
     private void removeGetCraftingResult(final InventoryCrafting var1, final CallbackInfoReturnable<ItemStack> cir) {
+        if (!StellarCoreConfig.FEATURES.botania.disableCosmeticRecipe) {
+            return;
+        }
         cir.setReturnValue(ItemStack.EMPTY);
     }
 

@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.oreexcavation;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.BlockSnapShotProvider;
 import net.minecraft.entity.player.EntityPlayerMP;
 import oreexcavation.handlers.MiningAgent;
@@ -24,6 +25,9 @@ public class MixinMiningAgent {
                     remap = false),
             remap = false)
     private Object onTickMinerRemoveSnapshots(final ArrayList instance, final int i) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshotsMiningAgentIntegration) {
+            return instance.remove(i);
+        }
         return ((BlockSnapShotProvider) player.world).getCapturedBlockSnapshots().remove(i);
     }
 
@@ -35,6 +39,9 @@ public class MixinMiningAgent {
                     remap = false),
             remap = false)
     private int onTickMinerGetSnapshotsSize(final ArrayList instance) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshotsMiningAgentIntegration) {
+            return instance.size();
+        }
         return ((BlockSnapShotProvider) player.world).getCapturedBlockSnapshots().size();
     }
 
@@ -46,6 +53,9 @@ public class MixinMiningAgent {
                     remap = false),
             remap = false)
     private Object onTickMinerGetSnapshot(final ArrayList instance, final int i) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshotsMiningAgentIntegration) {
+            return instance.get(i);
+        }
         return ((BlockSnapShotProvider) player.world).getCapturedBlockSnapshots().get(i);
     }
 
@@ -57,6 +67,10 @@ public class MixinMiningAgent {
                     remap = false),
             remap = false)
     private void onTickMinerClearSnapshots(final ArrayList instance) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshotsMiningAgentIntegration) {
+            instance.clear();
+            return;
+        }
         ((BlockSnapShotProvider) player.world).getCapturedBlockSnapshots().clear();
     }
 

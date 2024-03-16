@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.ic2;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import ic2.api.upgrade.IUpgradableBlock;
 import ic2.core.item.upgrade.ItemUpgradeModule;
 import net.minecraft.item.ItemStack;
@@ -23,8 +24,11 @@ public class MixinItemUpgradeModule {
             cancellable = true
     )
     private void injectOnTick(final ItemStack stack, final IUpgradableBlock parent, final CallbackInfoReturnable<Boolean> cir) {
+        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.itemUpgradeModule) {
+            return;
+        }
         TileEntity te = (TileEntity) parent;
-        if (te.getWorld().getTotalWorldTime() % 5 != 0) {
+        if (te.getWorld().getTotalWorldTime() % StellarCoreConfig.PERFORMANCE.industrialCraft2.itemUpgradeModuleWorkDelay != 0) {
             cir.setReturnValue(false);
         }
     }

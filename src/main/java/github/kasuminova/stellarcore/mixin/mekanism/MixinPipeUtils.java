@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.mekanism;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import mekanism.common.base.target.FluidHandlerTarget;
 import mekanism.common.util.CapabilityUtils;
 import mekanism.common.util.EmitUtils;
@@ -9,7 +10,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collections;
 import java.util.Set;
@@ -21,10 +24,14 @@ public class MixinPipeUtils {
      * @author Kasumi_Nova
      * @reason 没有 HashSet 就没有伤害。
      */
-    @Overwrite(remap = false)
-    public static int emit(Set<EnumFacing> sides, FluidStack stack, TileEntity from) {
+    @Inject(method = "emit", at = @At("HEAD"), cancellable = true, remap = false)
+    private static void emit(final Set<EnumFacing> sides, final FluidStack stack, final TileEntity from, final CallbackInfoReturnable<Integer> cir) {
+        if (!StellarCoreConfig.PERFORMANCE.mekanism.pipeUtils) {
+            return;
+        }
         if (stack == null || stack.amount == 0) {
-            return 0;
+            cir.setReturnValue(0);
+            return;
         }
 
         FluidHandlerTarget target = new FluidHandlerTarget(stack);
@@ -39,10 +46,11 @@ public class MixinPipeUtils {
 
         int curHandlers = target.getHandlers().size();
         if (curHandlers == 0) {
-            return 0;
+            cir.setReturnValue(0);
+            return;
         }
 
-        return EmitUtils.sendToAcceptors(Collections.singleton(target), curHandlers, stack.amount, stack);
+        cir.setReturnValue(EmitUtils.sendToAcceptors(Collections.singleton(target), curHandlers, stack.amount, stack));
     }
 
 }

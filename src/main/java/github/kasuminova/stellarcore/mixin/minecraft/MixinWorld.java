@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.BlockSnapShotProvider;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.BlockSnapshot;
@@ -16,11 +17,14 @@ public class MixinWorld implements BlockSnapShotProvider {
 
     @Unique public LinkedList<BlockSnapshot> stellarcore$capturedBlockSnapshots = new LinkedList<>();
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Redirect(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/state/IBlockState;I)Z",
             at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;add(Ljava/lang/Object;)Z")
     )
     public boolean onSetBlockStateAddSnapshot(final ArrayList instance, final Object e) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots) {
+            return instance.add(e);
+        }
         return stellarcore$capturedBlockSnapshots.add((BlockSnapshot) e);
     }
 
@@ -29,6 +33,9 @@ public class MixinWorld implements BlockSnapShotProvider {
             at = @At(value = "INVOKE", target = "Ljava/util/ArrayList;remove(Ljava/lang/Object;)Z")
     )
     public boolean onSetBlockStateRemoveSnapshot(final ArrayList instance, final Object e) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots) {
+            return instance.remove(e);
+        }
         return stellarcore$capturedBlockSnapshots.remove((BlockSnapshot) e);
     }
 

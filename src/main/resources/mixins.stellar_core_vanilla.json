@@ -10,11 +10,6 @@
     "forge.MixinForgeHooks"
   ],
   "client": [
-    "MixinFontRenderer",
-    "MixinNettyCompressionDecoder",
-    "MixinNettyPacketDecoder",
-    "MixinTessellator",
-    "forge.MixinSimpleIndexedCodec",
     "forge.MixinSplashProgress"
   ]
 }

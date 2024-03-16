@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.mek_top;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.integration.fluxnetworks.FluxPlugAcceptor;
 import mekanism.api.Coord4D;
 import mekanism.common.base.EnergyAcceptorWrapper;
@@ -16,6 +17,9 @@ public class MixinEnergyAcceptorWrapper {
 
     @Inject(method = "get", at = @At("HEAD"), cancellable = true, remap = false)
     private static void injectGet(final TileEntity te, final EnumFacing side, final CallbackInfoReturnable<EnergyAcceptorWrapper> cir) {
+        if (StellarCoreConfig.FEATURES.mekanism.fluxNetworksSupport) {
+            return;
+        }
         //noinspection ConstantValue
         if (te instanceof TileFluxPlug plug && te.getWorld() != null) {
             FluxPlugAcceptor wrapper = new FluxPlugAcceptor(plug, side);

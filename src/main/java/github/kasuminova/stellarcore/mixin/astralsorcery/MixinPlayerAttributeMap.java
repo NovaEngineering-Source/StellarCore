@@ -1,12 +1,15 @@
 package github.kasuminova.stellarcore.mixin.astralsorcery;
 
 import com.google.common.collect.Lists;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import hellfirepvp.astralsorcery.common.constellation.perk.PlayerAttributeMap;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 @SuppressWarnings({"rawtypes", "unchecked", "MethodMayBeStatic"})
@@ -22,7 +25,10 @@ public class MixinPlayerAttributeMap {
             ),
             remap = false)
     public Object redirectApplyModifierComputeIfAbsent(final Map map, final Object key, final Function _f) {
-        return map.computeIfAbsent(key, t -> Lists.newCopyOnWriteArrayList());
+        if (StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
+            return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
+        }
+        return map.computeIfAbsent(key, t -> new ArrayList<>());
     }
 
     @Redirect(
@@ -34,7 +40,10 @@ public class MixinPlayerAttributeMap {
             ),
             remap = false)
     public Object redirectRemoveModifierComputeIfAbsent(final Map map, final Object key, final Function _f) {
-        return map.computeIfAbsent(key, t -> Lists.newCopyOnWriteArrayList());
+        if (StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
+            return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
+        }
+        return map.computeIfAbsent(key, t -> new ArrayList<>());
     }
 
     @Redirect(
@@ -46,7 +55,10 @@ public class MixinPlayerAttributeMap {
             ),
             remap = false)
     public Object redirectGetModifiersByTypeComputeIfAbsent(final Map map, final Object key, final Function _f) {
-        return map.computeIfAbsent(key, t -> Lists.newCopyOnWriteArrayList());
+        if (StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
+            return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
+        }
+        return map.computeIfAbsent(key, t -> new ArrayList<>());
     }
 
 }

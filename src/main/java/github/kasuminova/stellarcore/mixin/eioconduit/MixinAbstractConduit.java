@@ -2,10 +2,14 @@ package github.kasuminova.stellarcore.mixin.eioconduit;
 
 import crazypants.enderio.base.conduit.IConduitBundle;
 import crazypants.enderio.conduits.conduit.AbstractConduit;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nonnull;
 
@@ -26,8 +30,14 @@ public abstract class MixinAbstractConduit {
      * @author Kasumi_Nova
      * @reason 移除 Profiler 部分。
      */
-    @Overwrite(remap = false)
-    public void updateEntity(@Nonnull World world) {
+    @Inject(method = "updateEntity", at = @At("HEAD"), cancellable = true, remap = false)
+    public void updateEntity(final World world, final CallbackInfo ci) {
+        if (StellarCoreConfig.PERFORMANCE.enderIOConduits.abstractConduit) {
+            return;
+        }
+        ci.cancel();
+
+        // Improvements
         if (world.isRemote) {
             return;
         }

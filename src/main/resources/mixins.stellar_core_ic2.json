@@ -7,8 +7,6 @@
   "mixins": [
     "MixinEnergyCalculatorLeg",
     "MixinGradualRecipe",
-    "MixinItemUpgradeModule",
-    "MixinTileEntityMatter",
-    "MixinTileEntityReplicator"
+    "MixinItemUpgradeModule"
   ]
 }

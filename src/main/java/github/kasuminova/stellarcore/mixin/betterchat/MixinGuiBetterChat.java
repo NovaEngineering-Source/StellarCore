@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.betterchat;
 
 import com.llamalad7.betterchat.gui.GuiBetterChat;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiUtilRenderComponents;
@@ -27,7 +28,7 @@ import java.util.regex.Pattern;
 @Mixin(GuiBetterChat.class)
 public abstract class MixinGuiBetterChat {
     @Unique
-    private final Pattern universalTweaks$pattern = Pattern.compile("(?:§7)?\\s+\\[+\\d+]");
+    private static final Pattern STELLAR_CORE$PATTERN = Pattern.compile("(?:§7)?\\s+\\[+\\d+]");
 
     @Shadow(remap = false) @Final private List<ChatLine> drawnChatLines = new ArrayList<>();
 
@@ -43,6 +44,10 @@ public abstract class MixinGuiBetterChat {
 
     @Inject(method = "setChatLine", at = @At("HEAD"), remap = false)
     private void compactMessage(ITextComponent chatComponent, int chatLineId, int updateCounter, boolean displayOnly, CallbackInfo ci) {
+        if (!StellarCoreConfig.FEATURES.betterChat.messageCompat) {
+            return;
+        }
+
         int count = 1;
         int chatSize = MathHelper.floor((float) this.getChatWidth() / this.getChatScale());
         List<ITextComponent> split = GuiUtilRenderComponents.splitText(chatComponent, chatSize, this.mc.fontRenderer, false, false);
@@ -53,12 +58,12 @@ public abstract class MixinGuiBetterChat {
             if (lineComponent.getFormattedText().trim().isEmpty()) {
                 continue;
             }
-            if (!universalTweaks$isMessageEqual(lineComponent.createCopy(), textComponent.createCopy())) {
+            if (!stellar_core$isMessageEqual(lineComponent.createCopy(), textComponent.createCopy())) {
                 continue;
             }
             if (!lineComponent.getSiblings().isEmpty()) {
                 for (ITextComponent sibling : lineComponent.getSiblings()) {
-                    if (universalTweaks$pattern.matcher(sibling.getUnformattedComponentText()).matches()) {
+                    if (STELLAR_CORE$PATTERN.matcher(sibling.getUnformattedComponentText()).matches()) {
                         count += Integer.parseInt(sibling.getUnformattedComponentText().replaceAll("(?:§7)?\\D?", ""));
                         break;
                     }
@@ -72,7 +77,7 @@ public abstract class MixinGuiBetterChat {
     }
 
     @Unique
-    private boolean universalTweaks$isMessageEqual(ITextComponent left, ITextComponent right) {
+    private boolean stellar_core$isMessageEqual(ITextComponent left, ITextComponent right) {
         if (left.equals(right) || left.getUnformattedText().equals(right.getUnformattedText())) {
             return true;
         }
@@ -80,7 +85,7 @@ public abstract class MixinGuiBetterChat {
             return false;
         }
 
-        left.getSiblings().removeIf(sibling -> universalTweaks$pattern.matcher(sibling.getUnformattedComponentText()).matches());
+        left.getSiblings().removeIf(sibling -> STELLAR_CORE$PATTERN.matcher(sibling.getUnformattedComponentText()).matches());
 
         return left.equals(right) || left.getUnformattedText().equals(right.getUnformattedText());
     }

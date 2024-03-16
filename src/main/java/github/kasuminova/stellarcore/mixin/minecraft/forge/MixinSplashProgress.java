@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.CustomLoadingScreenUtils;
 import net.minecraftforge.fml.client.SplashProgress;
 import net.minecraftforge.fml.common.Loader;
@@ -14,6 +15,9 @@ public class MixinSplashProgress {
 
     @Inject(method = "finish", at = @At("TAIL"), remap = false)
     private static void injectFinish(final CallbackInfo ci) {
+        if (!StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress) {
+            return;
+        }
         if (Loader.isModLoaded("customloadingscreen")) {
             CustomLoadingScreenUtils.cleanCLSTextures();
         }

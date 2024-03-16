@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.thermaldynamics;
 
 import cofh.thermaldynamics.duct.fluid.DuctUnitFluidSuper;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -17,6 +18,9 @@ public class MixinDuctUnitFluidSuper {
 
     @ModifyReturnValue(method = "getFluidCapability", at = @At("RETURN"), remap = false)
     private IFluidHandler modifyFluidCapability(final IFluidHandler handler, final EnumFacing from) {
+        if (!StellarCoreConfig.BUG_FIXES.thermalDynamics.fixFluidDuplicate) {
+            return handler;
+        }
         if (handler == EmptyFluidHandler.INSTANCE) {
             return handler;
         }

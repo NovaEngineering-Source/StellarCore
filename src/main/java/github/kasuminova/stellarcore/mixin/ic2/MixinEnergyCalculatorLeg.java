@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.ic2;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import ic2.core.energy.grid.Grid;
 import ic2.core.energy.grid.Node;
 import ic2.core.energy.leg.EnergyCalculatorLeg;
@@ -23,6 +24,10 @@ public class MixinEnergyCalculatorLeg {
     )
     private static Collection<Node> injectRunCalculation(final Grid instance) {
         Collection<Node> nodes = instance.getNodes();
+        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.energyCalculatorLeg) {
+            return nodes;
+        }
+
         if (nodes.size() <= 1) {
             return Collections.emptyList();
         }

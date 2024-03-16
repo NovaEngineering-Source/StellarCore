@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.eioconduit;
 
 import com.enderio.core.common.util.NNList;
 import crazypants.enderio.conduits.conduit.item.ItemConduit;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.CachedItemConduit;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -20,6 +21,9 @@ public abstract class MixinItemConduit implements CachedItemConduit {
 
     @Inject(method = "writeToNBT", at = @At("TAIL"), remap = false)
     public void onWriteToNBT(final NBTTagCompound nbtRoot, final CallbackInfo ci) {
+        if (!StellarCoreConfig.BUG_FIXES.enderIOConduits.cachedItemConduit) {
+            return;
+        }
         if (!stellarcore$cachedStack.isEmpty()) {
             NBTTagCompound cachedStackTag = new NBTTagCompound();
 
@@ -34,6 +38,9 @@ public abstract class MixinItemConduit implements CachedItemConduit {
 
     @Inject(method = "readFromNBT", at = @At("TAIL"), remap = false)
     public void onReadFromNBT(final NBTTagCompound nbtRoot, final CallbackInfo ci) {
+        if (!StellarCoreConfig.BUG_FIXES.enderIOConduits.cachedItemConduit) {
+            return;
+        }
         if (nbtRoot.hasKey("cachedStack")) {
             NBTTagCompound cachedStackTag = nbtRoot.getCompoundTag("cachedStack");
             stellarcore$cachedStack = new ItemStack(cachedStackTag);
@@ -43,6 +50,9 @@ public abstract class MixinItemConduit implements CachedItemConduit {
 
     @Inject(method = "getDrops", at = @At("RETURN"), remap = false)
     public void onGetDrops(final CallbackInfoReturnable<NNList<ItemStack>> cir) {
+        if (!StellarCoreConfig.BUG_FIXES.enderIOConduits.cachedItemConduit) {
+            return;
+        }
         if (!stellarcore$cachedStack.isEmpty()) {
             cir.getReturnValue().add(stellarcore$cachedStack);
         }

@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.ic2;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import ic2.core.recipe.GradualRecipe;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,6 +19,10 @@ public class MixinGradualRecipe {
     )
     public ItemStack redirectItemStackCopy(final ItemStack instance) {
         ItemStack copied = instance.copy();
+        if (!StellarCoreConfig.BUG_FIXES.industrialCraft2.gradualRecipe) {
+            return copied;
+        }
+
         if (copied.getCount() > 1) {
             copied.setCount(1);
         }

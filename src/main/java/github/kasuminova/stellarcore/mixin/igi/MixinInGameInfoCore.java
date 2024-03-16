@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.igi;
 import com.github.lunatrius.ingameinfo.InGameInfoCore;
 import com.github.lunatrius.ingameinfo.client.gui.overlay.Info;
 import github.kasuminova.stellarcore.client.util.RenderUtils;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.IMixinInGameInfoCore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -21,30 +22,25 @@ import java.util.List;
 public class MixinInGameInfoCore implements IMixinInGameInfoCore {
 
     @Unique
-    private final List<Runnable> stellarcore$postDrawList = new LinkedList<>();
+    private final List<Runnable> stellar_core$postDrawList = new LinkedList<>();
 
     @Shadow(remap = false) @Final private List<Info> info;
-    @Unique
-    private Framebuffer stellarcore$fbo = null;
-    @Unique
-    private boolean stellarcore$refreshFBO = true;
-    @Unique
-    private boolean stellarcore$postDrawing = true;
 
     @Unique
-    private int stellarcore$tickCounter = 0;
-    @Unique
-    private int stellarcore$displayWidth = 0;
-    @Unique
-    private int stellarcore$displayHeight = 0;
+    private Framebuffer stellar_core$fbo = null;
 
-    @Inject(method = "onTickClient", at = @At("HEAD"), remap = false)
-    private void onTickClient(final CallbackInfo ci) {
-        stellarcore$tickCounter++;
-        if (stellarcore$tickCounter % 2 == 0) {
-            stellarcore$refreshFBO = true;
-        }
-    }
+    @Unique
+    private boolean stellar_core$refreshFBO = true;
+    @Unique
+    private boolean stellar_core$postDrawing = true;
+
+    @Unique
+    private int stellar_core$displayWidth = 0;
+    @Unique
+    private int stellar_core$displayHeight = 0;
+    
+    @Unique
+    private long stellar_core$lastRenderMS = 0;
 
     /**
      * @author Kasumi_Nova
@@ -52,43 +48,51 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
      */
     @Overwrite(remap = false)
     public void onTickRender() {
+        if (!StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
+            return;
+        }
         if (!OpenGlHelper.framebufferSupported) {
             return;
         }
+        int timeRange = 1000 / StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameRate;
+        if (System.currentTimeMillis() - stellar_core$lastRenderMS > timeRange) {
+            stellar_core$refreshFBO = true;
+        }
+        stellar_core$lastRenderMS = System.currentTimeMillis();
 
         Minecraft minecraft = Minecraft.getMinecraft();
-        stellarcore$postDrawing = false;
+        stellar_core$postDrawing = false;
 
-        if (stellarcore$fbo == null) {
-            stellarcore$displayWidth = minecraft.displayWidth;
-            stellarcore$displayHeight = minecraft.displayHeight;
-            stellarcore$fbo = new Framebuffer(stellarcore$displayWidth, stellarcore$displayHeight, false);
-            stellarcore$fbo.framebufferColor[0] = 0.0F;
-            stellarcore$fbo.framebufferColor[1] = 0.0F;
-            stellarcore$fbo.framebufferColor[2] = 0.0F;
+        if (stellar_core$fbo == null) {
+            stellar_core$displayWidth = minecraft.displayWidth;
+            stellar_core$displayHeight = minecraft.displayHeight;
+            stellar_core$fbo = new Framebuffer(stellar_core$displayWidth, stellar_core$displayHeight, false);
+            stellar_core$fbo.framebufferColor[0] = 0.0F;
+            stellar_core$fbo.framebufferColor[1] = 0.0F;
+            stellar_core$fbo.framebufferColor[2] = 0.0F;
         }
 
-        if (stellarcore$refreshFBO) {
-            stellarcore$postDrawList.clear();
+        if (stellar_core$refreshFBO) {
+            stellar_core$postDrawList.clear();
             stellar_core$renderToFBO(minecraft);
-            stellarcore$refreshFBO = false;
+            stellar_core$refreshFBO = false;
         }
 
-        RenderUtils.renderFramebuffer(minecraft, stellarcore$fbo);
-        stellarcore$postDrawing = true;
-        stellarcore$postDrawList.forEach(Runnable::run);
+        RenderUtils.renderFramebuffer(minecraft, stellar_core$fbo);
+        stellar_core$postDrawing = true;
+        stellar_core$postDrawList.forEach(Runnable::run);
     }
 
     @Unique
     private void stellar_core$renderToFBO(final Minecraft minecraft) {
-        if (stellarcore$displayWidth != minecraft.displayWidth || stellarcore$displayHeight != minecraft.displayHeight) {
-            stellarcore$displayWidth = minecraft.displayWidth;
-            stellarcore$displayHeight = minecraft.displayHeight;
-            stellarcore$fbo.createBindFramebuffer(stellarcore$displayWidth, stellarcore$displayHeight);
+        if (stellar_core$displayWidth != minecraft.displayWidth || stellar_core$displayHeight != minecraft.displayHeight) {
+            stellar_core$displayWidth = minecraft.displayWidth;
+            stellar_core$displayHeight = minecraft.displayHeight;
+            stellar_core$fbo.createBindFramebuffer(stellar_core$displayWidth, stellar_core$displayHeight);
         } else {
-            stellarcore$fbo.framebufferClear();
+            stellar_core$fbo.framebufferClear();
         }
-        stellarcore$fbo.bindFramebuffer(false);
+        stellar_core$fbo.bindFramebuffer(false);
 
         GlStateManager.disableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -101,13 +105,13 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
     @Override
     @SuppressWarnings("AddedMixinMembersNamePattern")
     public void addPostDrawAction(final Runnable action) {
-        stellarcore$postDrawList.add(action);
+        stellar_core$postDrawList.add(action);
     }
 
     @Override
     @SuppressWarnings("AddedMixinMembersNamePattern")
     public boolean isPostDrawing() {
-        return stellarcore$postDrawing;
+        return stellar_core$postDrawing;
     }
 
 }

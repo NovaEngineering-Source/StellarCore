@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.immersiveengineering;
 import blusunrize.immersiveengineering.common.blocks.BlockIEMultiblock;
 import blusunrize.immersiveengineering.common.util.inventory.IIEInventory;
 import com.llamalad7.mixinextras.sugar.Local;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,6 +25,9 @@ public class MixinBlockIEMultiblock {
     private boolean onBreakBlock(final Iterator instance, @Local(name = "master") IIEInventory master) {
         if (instance.hasNext()) {
             return true;
+        }
+        if (!StellarCoreConfig.BUG_FIXES.immersiveEngineering.blockIEMultiblock) {
+            return false;
         }
         NonNullList<ItemStack> inventory = master.getInventory();
         Collections.fill(inventory, ItemStack.EMPTY);

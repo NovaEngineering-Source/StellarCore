@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraftforge.fml.common.Loader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,13 +20,12 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_ae.json",                   "appliedenergistics2");
         addModdedMixinCFG("mixins.stellar_core_armourers_workshop.json",   "armourers_workshop");
         addModdedMixinCFG("mixins.stellar_core_astralsorcery.json",        "astralsorcery");
-        addModdedMixinCFG("mixins.stellar_core_athenaeum.json",            "athenaeum");
         addModdedMixinCFG("mixins.stellar_core_avaritia.json",             "avaritia");
         addModdedMixinCFG("mixins.stellar_core_betterchat.json",           "betterchat");
         addModdedMixinCFG("mixins.stellar_core_biomesoplenty.json",        "biomesoplenty");
         addModdedMixinCFG("mixins.stellar_core_bloodmagic.json",           "bloodmagic");
         addModdedMixinCFG("mixins.stellar_core_botania.json",              "botania");
-        addModdedMixinCFG("mixins.stellar_core_cfm.json",                  "cfm");
+        addModdedMixinCFG("mixins.stellar_core_cfm.json",                  "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",               "chisel");
         addModdedMixinCFG("mixins.stellar_core_eio.json",                  "enderio");
         addModdedMixinCFG("mixins.stellar_core_eio_conduit.json",          "enderio", "enderioconduits");
@@ -68,6 +68,10 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
     private static void addModdedMixinCFG(final String mixinConfig, final String modID) {
         MIXIN_CONFIGS.put(mixinConfig, () -> modLoaded(modID));
+    }
+
+    private static void addModdedMixinCFG(final String mixinConfig, final String modID, final BooleanSupplier condition) {
+        MIXIN_CONFIGS.put(mixinConfig, () -> modLoaded(modID) && condition.getAsBoolean());
     }
 
     private static void addModdedMixinCFG(final String mixinConfig, final String modID, final String... modIDs) {

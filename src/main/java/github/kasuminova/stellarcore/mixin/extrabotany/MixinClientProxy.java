@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.extrabotany;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.meteor.extrabotany.client.ClientProxy;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,8 +26,12 @@ public class MixinClientProxy {
             ),
             remap = false)
     private ListenableFuture<Object> redirectAddScheduledTask(final Minecraft instance, final Runnable runnableToSchedule) {
+        if (!StellarCoreConfig.PERFORMANCE.extraBotany.persistentVariableHandler) {
+            return instance.addScheduledTask(runnableToSchedule);
+        }
         CompletableFuture.runAsync(runnableToSchedule);
         // 返回 null，完全用不到。
         return null;
     }
+
 }

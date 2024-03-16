@@ -5,6 +5,7 @@ import crazypants.enderio.base.filter.item.IItemFilter;
 import crazypants.enderio.conduits.conduit.item.IItemConduit;
 import crazypants.enderio.conduits.conduit.item.NetworkedInventory;
 import crazypants.enderio.util.Prep;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.CachedItemConduit;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
@@ -93,6 +94,9 @@ public abstract class MixinNetworkedInventory {
                            final ItemStack extractedItem,
                            final int slot,
                            final CallbackInfoReturnable<Boolean> cir) {
+        if (!StellarCoreConfig.BUG_FIXES.enderIOConduits.cachedItemConduit) {
+            return;
+        }
         if (!(con instanceof CachedItemConduit cachedItemConduit)) {
             return;
         }
@@ -131,6 +135,9 @@ public abstract class MixinNetworkedInventory {
             cancellable = true,
             remap = false)
     public void onTransferItems(final CallbackInfoReturnable<Boolean> cir) {
+        if (!StellarCoreConfig.BUG_FIXES.enderIOConduits.cachedItemConduit) {
+            return;
+        }
         if (!(con instanceof CachedItemConduit cachedItemConduit)) {
             return;
         }

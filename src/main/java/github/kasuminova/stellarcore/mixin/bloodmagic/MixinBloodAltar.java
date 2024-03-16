@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.bloodmagic;
 
 import WayofTime.bloodmagic.altar.BloodAltar;
 import WayofTime.bloodmagic.tile.TileAltar;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
@@ -46,6 +47,10 @@ public class MixinBloodAltar {
                     remap = true),
             remap = false)
     public void onStartCycleNotifyUpdate(final World world, final BlockPos blockPos, final IBlockState pos, final IBlockState oldState, final int newState) {
+        if (!StellarCoreConfig.PERFORMANCE.bloodMagic.bloodAltar) {
+            world.notifyBlockUpdate(blockPos, pos, oldState, newState);
+            return;
+        }
         sendUpdatePacketToNearPlayers(tileAltar, world, blockPos);
     }
 
@@ -56,6 +61,10 @@ public class MixinBloodAltar {
                     remap = true),
             remap = false)
     public void onUpdateNotifyUpdate(final World world, final BlockPos blockPos, final IBlockState pos, final IBlockState oldState, final int newState) {
+        if (!StellarCoreConfig.PERFORMANCE.bloodMagic.bloodAltar) {
+            world.notifyBlockUpdate(blockPos, pos, oldState, newState);
+            return;
+        }
         sendUpdatePacketToNearPlayers(tileAltar, world, blockPos);
     }
 
@@ -66,6 +75,10 @@ public class MixinBloodAltar {
                     remap = true),
             remap = false)
     public void onUpdateAltarCycleNotifyUpdate(final World world, final BlockPos blockPos, final IBlockState pos, final IBlockState oldState, final int newState) {
+        if (!StellarCoreConfig.PERFORMANCE.bloodMagic.bloodAltar) {
+            world.notifyBlockUpdate(blockPos, pos, oldState, newState);
+            return;
+        }
         sendUpdatePacketToNearPlayers(tileAltar, world, blockPos);
     }
 

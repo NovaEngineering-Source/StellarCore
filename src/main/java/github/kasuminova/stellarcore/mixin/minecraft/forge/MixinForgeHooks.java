@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge;
 
 import com.google.common.collect.Lists;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.BlockSnapShotProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,9 +19,10 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.world.BlockEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 @Mixin(ForgeHooks.class)
@@ -30,9 +32,23 @@ public class MixinForgeHooks {
      * @author Kasumi_Nova
      * @reason 重写获取的 capturedBlockSnapshots 捏，有一定危险性。
      */
-    @Overwrite(remap = false)
+    @Inject(method = "onPlaceItemIntoWorld", at = @At("HEAD"), cancellable = true, remap = false)
     @SuppressWarnings("unchecked")
-    public static EnumActionResult onPlaceItemIntoWorld(@Nonnull ItemStack itemstack, @Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ, @Nonnull EnumHand hand) {
+    private static void onPlaceItemIntoWorld(final ItemStack itemstack,
+                                             final EntityPlayer player,
+                                             final World world,
+                                             final BlockPos pos,
+                                             final EnumFacing side,
+                                             final float hitX,
+                                             final float hitY,
+                                             final float hitZ,
+                                             final EnumHand hand,
+                                             final CallbackInfoReturnable<EnumActionResult> cir)
+    {
+        if (StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots) {
+            return;
+        }
+
         // handle all placement events here
         int meta = itemstack.getItemDamage();
         int size = itemstack.getCount();
@@ -128,7 +144,7 @@ public class MixinForgeHooks {
             world.capturedBlockSnapshots.clear();
         }
 
-        return ret;
+        cir.setReturnValue(ret);
     }
 
 }

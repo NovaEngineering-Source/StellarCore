@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.immersiveengineering;
 
 import blusunrize.immersiveengineering.common.IEContent;
 import blusunrize.immersiveengineering.common.crafting.RecipeJerrycan;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
@@ -22,6 +23,9 @@ public class MixinRecipeJerrycan {
             ),
             remap = false)
     private IFluidHandlerItem redirectGetRelevantSlotsGetFluidHandler(final ItemStack itemStack) {
+        if (!StellarCoreConfig.BUG_FIXES.immersiveEngineering.fixJerryCanRecipe) {
+            return FluidUtil.getFluidHandler(itemStack);
+        }
         if (IEContent.itemJerrycan.equals(itemStack.getItem())) {
             return null;
         }

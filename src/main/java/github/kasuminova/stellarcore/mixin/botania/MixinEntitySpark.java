@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.botania;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -26,6 +27,9 @@ public abstract class MixinEntitySpark {
             cancellable = true
     )
     private void injectOnUpdatePre(final CallbackInfo ci) {
+        if (!StellarCoreConfig.PERFORMANCE.botania.sparkImprovements) {
+            return;
+        }
         if (((Entity) (Object) this).world.getTotalWorldTime() % stellarcore$failureCounter != 0) {
             ci.cancel();
         }
@@ -34,6 +38,9 @@ public abstract class MixinEntitySpark {
     @Redirect(method = "onUpdate", at = @At(value = "INVOKE", target = "Lvazkii/botania/api/mana/spark/ISparkAttachable;recieveMana(I)V", remap = false))
     private void redirectReceiveMana(final ISparkAttachable attachable, final int mana) {
         attachable.recieveMana(mana);
+        if (!StellarCoreConfig.PERFORMANCE.botania.sparkImprovements) {
+            return;
+        }
         if (mana != 0) {
             stellarcore$receiveLeastOne = true;
         }
@@ -41,11 +48,14 @@ public abstract class MixinEntitySpark {
 
     @Inject(method = "onUpdate", at = @At("TAIL"))
     private void injectOnUpdateTail(final CallbackInfo ci) {
+        if (!StellarCoreConfig.PERFORMANCE.botania.sparkImprovements) {
+            return;
+        }
         if (stellarcore$receiveLeastOne) {
             if (stellarcore$failureCounter > 1) {
                 stellarcore$failureCounter--;
             }
-        } else if (stellarcore$failureCounter < 10) {
+        } else if (stellarcore$failureCounter < StellarCoreConfig.PERFORMANCE.botania.sparkMaxWorkDelay) {
             stellarcore$failureCounter++;
         }
     }

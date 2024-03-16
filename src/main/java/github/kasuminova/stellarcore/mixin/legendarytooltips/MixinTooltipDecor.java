@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.legendarytooltips;
 
 import com.anthonyhilyard.legendarytooltips.render.TooltipDecor;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.client.gui.FontRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,6 +24,9 @@ public class MixinTooltipDecor {
             ),
             remap = false)
     private static List<String> redirectDrawBorderListFormattedStringToWidth(final FontRenderer instance, final String str, final int wrapWidth) {
+        if (!StellarCoreConfig.FEATURES.legendaryTooltips.tooltipDecor) {
+            return instance.listFormattedStringToWidth(str, wrapWidth);
+        }
         return Collections.singletonList(str);
     }
 

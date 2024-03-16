@@ -2,10 +2,13 @@ package github.kasuminova.stellarcore.mixin.scalingguis;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import spazley.scalingguis.ScalingGUIs;
 import spazley.scalingguis.config.JsonHelper;
 
@@ -23,13 +26,17 @@ public class MixinJsonHelper {
      * @author Kasumi_Nova
      * @reason 在迭代器里面用 {@link List#remove(Object)} 是不行的捏。
      */
-    @Overwrite(remap = false)
+    @Inject(method = "getKeyList", at = @At("HEAD"), cancellable = true, remap = false)
     @SuppressWarnings("unchecked")
-    public static List<String> getKeyList(JsonObject jsonObjectIn) {
+    private static void getKeyList(final JsonObject jsonObjectIn, final CallbackInfoReturnable<List<String>> cir) {
+        if (!StellarCoreConfig.BUG_FIXES.scalingGuis.fixJsonHelper) {
+            return;
+        }
+
         Map<String, Object> map = (Map<String, Object>) GSON.fromJson(jsonObjectIn, LinkedHashMap.class);
         List<String> keyList = new ArrayList<>(map.keySet());
         keyList.removeIf(s -> !isClassExists(s));
-        return keyList;
+        cir.setReturnValue(keyList);
     }
 
     @Unique

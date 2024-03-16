@@ -1,14 +1,16 @@
 package github.kasuminova.stellarcore.mixin.theoneprobe;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import mcjty.theoneprobe.TheOneProbe;
 import mcjty.theoneprobe.rendering.RenderHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RenderHelper.class)
 public class MixinRenderHelper {
@@ -17,12 +19,11 @@ public class MixinRenderHelper {
      * @author Kasumi_Nova
      * @reason 防止渲染实体后头部乱动。
      */
-    @Overwrite(remap = false)
-    public static void renderEntity(final Entity entity, final int xPos, final int yPos, final float scale) {
-        if (!(entity instanceof EntityPlayer)) {
+    @Inject(method = "renderEntity", at = @At("HEAD"), cancellable = true, remap = false)
+    private static void renderEntity(final Entity entity, final int xPos, final int yPos, final float scale, final CallbackInfo ci) {
+        if (!StellarCoreConfig.BUG_FIXES.theOneProbe.fixRenderHelper) {
             return;
         }
-
         GlStateManager.pushMatrix();
         GlStateManager.color(1.0F, 1.0F, 1.0F);
         GlStateManager.enableRescaleNormal();

@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.biomesoplenty;
 
 import biomesoplenty.common.remote.TrailManager;
 import biomesoplenty.core.BiomesOPlenty;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -23,7 +24,11 @@ public class MixinBiomesOPlenty {
             remap = false)
     @SuppressWarnings("MethodMayBeStatic")
     private void onPreInit() {
-        CompletableFuture.runAsync(TrailManager::retrieveTrails);
+        if (StellarCoreConfig.PERFORMANCE.biomesOPlenty.trailManager) {
+            CompletableFuture.runAsync(TrailManager::retrieveTrails);
+            return;
+        }
+        TrailManager.retrieveTrails();
     }
 
 }

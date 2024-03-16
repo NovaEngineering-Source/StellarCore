@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.armourersworkshop;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import moe.plushie.armourers_workshop.common.skin.data.SkinTexture;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +22,10 @@ public abstract class MixinSkinTexture {
                     remap = false),
             remap = false)
     private void onDeleteTexture(final SkinTexture instance) {
+        if (!StellarCoreConfig.BUG_FIXES.armourersWorkshop.skinTexture) {
+            deleteTexture();
+            return;
+        }
         if (textureId != -1) {
             Minecraft.getMinecraft().addScheduledTask(this::deleteTexture);
         }
