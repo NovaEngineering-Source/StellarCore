@@ -14,7 +14,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
     @Override
     public List<String> getMixinConfigs() {
         return Arrays.asList(
-                "mixins.jep.vanilla.json"
+                "mixins.stellar_core_vanilla.json"
         );
     }
 

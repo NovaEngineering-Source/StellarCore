@@ -9,14 +9,14 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @Mod.EventBusSubscriber(modid = StellarCore.MOD_ID)
-@Config(modid = StellarCore.MOD_ID, name = "stellar_core")
+@Config(modid = StellarCore.MOD_ID, name = StellarCore.MOD_ID)
 public class StellarCoreConfig {
 
     static {
         ConfigAnytime.register(StellarCoreConfig.class);
     }
 
-    @Config.Name("Bug Fixes")
+    @Config.Name("BugFixes")
     public static final BugFixes BUG_FIXES = new BugFixes();
 
     @Config.Name("Performance")
@@ -26,29 +26,27 @@ public class StellarCoreConfig {
     public static final Features FEATURES = new Features();
 
     @SubscribeEvent
-    public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
-    {
-        if (event.getModID().equals(StellarCore.MOD_ID))
-        {
+    public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (event.getModID().equals(StellarCore.MOD_ID)) {
             ConfigManager.sync(StellarCore.MOD_ID, Config.Type.INSTANCE);
         }
     }
 
     public static class BugFixes {
 
-        @Config.Name("Armourers Workshop")
+        @Config.Name("ArmourersWorkshop")
         public final ArmourersWorkshop armourersWorkshop = new ArmourersWorkshop();
 
         @Config.Name("AstralSorcery")
         public final AstralSorcery astralSorcery = new AstralSorcery();
 
-        @Config.Name("MrCrayfish Furniture")
+        @Config.Name("MrCrayfishFurniture")
         public final MrCrayfishFurniture mrCrayfishFurniture = new MrCrayfishFurniture();
 
-        @Config.Name("EnderIO Conduits")
+        @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
-        @Config.Name("Flux Networks")
+        @Config.Name("FluxNetworks")
         public final FluxNetworks fluxNetworks = new FluxNetworks();
 
         @Config.Name("IndustrialCraft2")
@@ -57,13 +55,13 @@ public class StellarCoreConfig {
         @Config.Name("InGameInfoXML")
         public final InGameInfoXML inGameInfoXML = new InGameInfoXML();
 
-        @Config.Name("Immersive Engineering")
+        @Config.Name("ImmersiveEngineering")
         public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
 
-        @Config.Name("More Electric Tools")
+        @Config.Name("MoreElectricTools")
         public final MoreElectricTools moreElectricTools = new MoreElectricTools();
 
-        @Config.Name("Scaling Guis")
+        @Config.Name("ScalingGuis")
         public final ScalingGuis scalingGuis = new ScalingGuis();
 
         @Config.Name("Techguns")
@@ -72,18 +70,18 @@ public class StellarCoreConfig {
         @Config.Name("TheOneProbe")
         public final TheOneProbe theOneProbe = new TheOneProbe();
 
-        @Config.Name("Thermal Dynamics")
+        @Config.Name("ThermalDynamics")
         public final ThermalDynamics thermalDynamics = new ThermalDynamics();
 
         public static class ArmourersWorkshop {
-            @Config.Name("SkinTexture Crash Fixes")
+            @Config.Name("SkinTextureCrashFixes")
             public boolean skinTexture = true;
         }
 
         public static class AstralSorcery {
 
             @Config.RequiresWorldRestart
-            @Config.Name("PlayerAttributeMap Crash Fixes")
+            @Config.Name("PlayerAttributeMapCrashFixes")
             public boolean playerAttributeMap = true;
 
         }
@@ -91,83 +89,83 @@ public class StellarCoreConfig {
         public static class MrCrayfishFurniture {
 
             @Config.RequiresMcRestart
-            @Config.Name("ImageCache Crash Fixes")
+            @Config.Name("ImageCacheCrashFixes")
             public boolean imageCache = true;
 
         }
 
         public static class EnderIOConduits {
 
-            @Config.Name("ItemConduit ItemStack Cache")
+            @Config.Name("ItemConduitItemStackCache")
             public boolean cachedItemConduit = true;
 
         }
 
         public static class FluxNetworks {
 
-            @Config.Name("TheOneProbe Integration")
+            @Config.Name("TheOneProbeIntegration")
             public boolean fixTop = true;
 
         }
 
         public static class IndustrialCraft2 {
 
-            @Config.Name("GradualRecipe Fixes")
+            @Config.Name("GradualRecipeFixes")
             public boolean gradualRecipe = true;
 
         }
 
         public static class InGameInfoXML {
 
-            @Config.Name("PlayerHandler Fixes")
+            @Config.Name("PlayerHandlerFixes")
             public boolean playerHandler = true;
 
         }
 
         public static class ImmersiveEngineering {
 
-            @Config.Name("Multiblock Structure Container Fixes")
+            @Config.Name("MultiblockStructureContainerFixes")
             public boolean blockIEMultiblock = true;
 
-            @Config.Name("JerryCan Fixes")
+            @Config.Name("JerryCanFixes")
             public boolean fixJerryCanRecipe = true;
 
         }
 
         public static class MoreElectricTools {
 
-            @Config.Name("LifeSupports Fixes")
+            @Config.Name("LifeSupportsFixes")
             public boolean fixLifeSupports = true;
 
         }
 
         public static class ScalingGuis {
 
-            @Config.Name("JsonHelper Crash Fixes")
+            @Config.Name("JsonHelperCrashFixes")
             public boolean fixJsonHelper = true;
 
         }
 
         public static class Techguns {
 
-            @Config.Name("TGPermissions Crash Fixes")
+            @Config.Name("TGPermissionsCrashFixes")
             public boolean tgPermissions = true;
 
-            @Config.Name("Invalid Recipe Fixes")
+            @Config.Name("InvalidRecipeFixes")
             public boolean fixAmmoSumRecipeFactory = true;
 
         }
 
         public static class TheOneProbe {
 
-            @Config.Name("Player Entity Render Fixes")
+            @Config.Name("PlayerEntityRenderFixes")
             public boolean fixRenderHelper = true;
 
         }
 
         public static class ThermalDynamics {
 
-            @Config.Name("Fluid Duplicate Fixes")
+            @Config.Name("FluidDuplicateFixes")
             public boolean fixFluidDuplicate = true;
 
         }
@@ -182,13 +180,13 @@ public class StellarCoreConfig {
         @Config.Name("Avaritia")
         public final Avaritia avaritia = new Avaritia();
 
-        @Config.Name("Biomes O' Plenty")
+        @Config.Name("BiomesOPlenty")
         public final BiomesOPlenty biomesOPlenty = new BiomesOPlenty();
 
-        @Config.Name("Extra Botany")
+        @Config.Name("ExtraBotany")
         public final ExtraBotany extraBotany = new ExtraBotany();
 
-        @Config.Name("Blood Magic")
+        @Config.Name("BloodMagic")
         public final BloodMagic bloodMagic = new BloodMagic();
 
         @Config.Name("Botania")
@@ -197,13 +195,19 @@ public class StellarCoreConfig {
         @Config.Name("Chisel")
         public final Chisel chisel = new Chisel();
 
-        @Config.Name("Custom Loading Screen")
+        @Config.Name("Cucumber")
+        public final Cucumber cucumber = new Cucumber();
+
+        @Config.Name("CustomLoadingScreen")
         public final CustomLoadingScreen customLoadingScreen = new CustomLoadingScreen();
+
+        @Config.Name("EnderCore")
+        public final EnderCore enderCore = new EnderCore();
 
         @Config.Name("EnderIO")
         public final EnderIO enderIO = new EnderIO();
 
-        @Config.Name("EnderIO Conduits")
+        @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
         @Config.Name("IndustrialCraft2")
@@ -217,110 +221,130 @@ public class StellarCoreConfig {
 
         public static class Vanilla {
 
-            @Config.Name("Captured Block Snapshots Improvements")
+            @Config.Name("CapturedBlockSnapshotsImprovements")
             public boolean capturedBlockSnapshots = true;
 
-            @Config.Name("Captured Block Snapshots Improvements - OreExcavation Integration")
+            @Config.Name("CapturedBlockSnapshotsImprovementsOreExcavationIntegration")
             public boolean capturedBlockSnapshotsMiningAgentIntegration = true;
 
-            @Config.Name("Chunk TileEntityMap Improvements")
+            @Config.Name("ChunkTileEntityMapImprovements")
             public boolean blockPos2ValueMap = true;
 
         }
 
         public static class Avaritia {
 
-            @Config.Name("TileBase Improvements")
+            @Config.Name("TileBaseImprovements")
             public boolean tileBase = true;
 
         }
 
         public static class BiomesOPlenty {
 
-            @Config.Name("TrailManager Async")
+            @Config.Name("TrailManagerAsync")
             public boolean trailManager = true;
+
+        }
+
+        public static class Cucumber {
+
+            @Config.Name("VanillaPacketDispatcherImprovements")
+            public boolean vanillaPacketDispatcher = false;
+
+            @Config.Name("TileEntityUpdateRange")
+            public float tileEntityUpdateRange = 16F;
 
         }
 
         public static class ExtraBotany {
 
-            @Config.Name("PersistentVariableHandler Async")
+            @Config.Name("PersistentVariableHandlerAsync")
             public boolean persistentVariableHandler = true;
 
         }
 
         public static class BloodMagic {
 
-            @Config.Name("BloodAltar Improvements")
+            @Config.Name("BloodAltarImprovements")
             public boolean bloodAltar = true;
 
         }
 
         public static class Botania {
 
-            @Config.Name("Spark Entity Improvements")
+            @Config.Name("SparkEntityImprovements")
             public boolean sparkImprovements = true;
 
             @Config.RangeInt(min = 2, max = 60)
-            @Config.Name("Spark Max Work Delay")
+            @Config.Name("SparkMaxWorkDelay")
             public int sparkMaxWorkDelay = 10;
 
         }
 
         public static class Chisel {
 
-            @Config.Name("Auto Chisel Improvements")
+            @Config.Name("AutoChiselImprovements")
             public boolean autoChiselImprovements = true;
 
             @Config.RangeInt(min = 20, max = 100)
-            @Config.Name("Auto Chisel Max Work Delay")
+            @Config.Name("AutoChiselMaxWorkDelay")
             public int autoChiselMaxWorkDelay = 100;
 
         }
 
         public static class CustomLoadingScreen {
 
-            @Config.Name("Texture Cleanup")
+            @Config.Name("TextureCleanup")
             public boolean splashProgress = true;
+
+        }
+
+        public static class EnderCore {
+
+            @Config.Name("OreThingImprovements")
+            public boolean oreThing = true;
 
         }
 
         public static class EnderIO {
 
-            @Config.Name("ItemTools Improvements")
+            @Config.Name("ItemToolsImprovements")
             public boolean itemTools = true;
 
-            @Config.Name("TileEntityBase Improvements")
+            @Config.Name("TileEntityBaseImprovements")
             public boolean tileEntityBase = true;
 
         }
 
         public static class EnderIOConduits {
 
-            @Config.Name("AbstractConduit Improvements")
+            @Config.Name("AbstractConduitImprovements")
             public boolean abstractConduit = true;
 
         }
 
         public static class IndustrialCraft2 {
 
-            @Config.Name("EnergyCalculatorLeg Improvements")
+            @Config.Name("EnergyCalculatorLegImprovements")
             public boolean energyCalculatorLeg = true;
 
-            @Config.Name("ItemUpgradeModule Improvements")
+            @Config.Name("GridImprovements")
+            public boolean grid = true;
+
+            @Config.Name("ItemUpgradeModuleImprovements")
             public boolean itemUpgradeModule = false;
 
-            @Config.Name("ItemUpgradeModule Work Delay")
+            @Config.Name("ItemUpgradeModuleWorkDelay")
             public int itemUpgradeModuleWorkDelay = 5;
 
         }
 
         public static class InGameInfoXML {
 
-            @Config.Name("HUD Framebuffer")
+            @Config.Name("HUDFramebuffer")
             public boolean hudFrameBuffer = true;
 
-            @Config.Name("HUD FPS")
+            @Config.Name("HUDFPS")
             @Config.RangeInt(min = 5, max = 60)
             public int hudFrameRate = 10;
 
@@ -328,27 +352,33 @@ public class StellarCoreConfig {
 
         public static class Mekanism {
 
-            @Config.Name("PipeUtils Improvements")
+            @Config.Name("PipeUtilsImprovements")
             public boolean pipeUtils = true;
+
+            @Config.Name("EnergyNetworkImprovements")
+            public boolean energyNetwork = true;
+
+            @Config.Name("FrequencyImprovements")
+            public boolean frequency = true;
 
         }
 
     }
 
     public static class Features {
-        @Config.Name("Enable Custom Game Title")
-        public final boolean enbleTitle = false;
+        @Config.Name("EnableCustomGameTitle")
+        public boolean enableTitle = false;
 
-        @Config.Name("Title Use Hitokoto API")
-        public final boolean hitokoto = true;
+        @Config.Name("TitleUseHitokotoAPI")
+        public boolean hitokoto = true;
 
-        @Config.Name("Custom Game Title")
-        public final String title = "Minecraft 1.12.2";
+        @Config.Name("CustomGameTitle")
+        public String title = "Minecraft 1.12.2";
 
-        @Config.Name("Font Scale")
+        @Config.Name("FontScale")
         public final FontScale fontScale = new FontScale();
 
-        @Config.Name("Astral Sorcery")
+        @Config.Name("AstralSorcery")
         public final AstralSorcery astralSorcery = new AstralSorcery();
 
         @Config.Name("BetterChat")
@@ -366,7 +396,7 @@ public class StellarCoreConfig {
         @Config.Name("NuclearCraftOverhauled")
         public final NuclearCraftOverhauled nuclearCraftOverhauled = new NuclearCraftOverhauled();
 
-        @Config.Name("RGB Chat")
+        @Config.Name("RGBChat")
         public final RGBChat rgbChat = new RGBChat();
 
         @Config.Name("Techguns")
@@ -392,62 +422,63 @@ public class StellarCoreConfig {
 
         public static class BetterChat {
 
-            @Config.Name("Enable Message Compat")
+            @Config.Name("EnableMessageCompat")
             public boolean messageCompat = false;
 
         }
 
         public static class Botania {
 
-            @Config.Name("Disable Cosmetic Recipe")
+            @Config.Name("DisableCosmeticRecipe")
             public boolean disableCosmeticRecipe = false;
 
         }
 
         public static class LegendaryTooltips {
 
-            @Config.Name("Disable Title Wrap")
+            @Config.Name("DisableTitleWrap")
             public boolean tooltipDecor = false;
 
         }
 
         public static class Mekanism {
 
-            @Config.Name("TOP Support")
+            @Config.RequiresMcRestart
+            @Config.Name("TOPSupport")
             public boolean topSupport = true;
 
-            @Config.Name("FluxNetworks Support")
+            @Config.Name("FluxNetworksSupport")
             public boolean fluxNetworksSupport = true;
 
         }
 
         public static class NuclearCraftOverhauled {
 
-            @Config.Name("Disable RadiationCapability")
+            @Config.Name("DisableRadiationCapability")
             public boolean removeRadiationCapabilityHandler = false;
 
         }
 
         public static class RGBChat {
 
-            @Config.Name("TrueRGBSimpleRenderer Improvements")
+            @Config.Name("TrueRGBSimpleRendererImprovements")
             public boolean cachedRGBFontRenderer = true;
 
         }
 
         public static class Techguns {
 
-            @Config.Name("Force Security Mode")
+            @Config.Name("ForceSecurityMode")
             public boolean forceSecurityMode = true;
 
-            @Config.Name("Bullet is Projectile")
+            @Config.Name("BulletIsProjectile")
             public boolean tgDamageSource = true;
 
         }
 
         public static class MoreElectricTools {
 
-            @Config.Name("Remove EfficientEnergyCost Enchantment")
+            @Config.Name("RemoveEfficientEnergyCostEnchantment")
             public boolean disableEfficientEnergyCost = false;
 
         }

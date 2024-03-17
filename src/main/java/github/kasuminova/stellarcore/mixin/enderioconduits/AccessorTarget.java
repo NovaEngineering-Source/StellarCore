@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.eioconduit;
+package github.kasuminova.stellarcore.mixin.enderioconduits;
 
 import crazypants.enderio.conduits.conduit.item.NetworkedInventory;
 import org.spongepowered.asm.mixin.Mixin;

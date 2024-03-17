@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.eio;
+package github.kasuminova.stellarcore.mixin.enderio;
 
 import crazypants.enderio.base.capability.ItemTools;
 import crazypants.enderio.base.diagnostics.Prof;

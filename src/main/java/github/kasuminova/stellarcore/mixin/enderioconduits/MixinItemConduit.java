@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.eioconduit;
+package github.kasuminova.stellarcore.mixin.enderioconduits;
 
 import com.enderio.core.common.util.NNList;
 import crazypants.enderio.conduits.conduit.item.ItemConduit;

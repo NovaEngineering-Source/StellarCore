@@ -19,7 +19,7 @@ public class TitleUtils {
      * @param state 当前状态
      */
     public static void setRandomTitle(final String state) {
-        if (!StellarCoreConfig.FEATURES.enbleTitle) {
+        if (!StellarCoreConfig.FEATURES.enableTitle) {
             return;
         }
         lastCurrentTitle = currentTitle;
@@ -40,7 +40,7 @@ public class TitleUtils {
      * 如果一言缓存为空，则尝试重新获取一言。
      */
     public static void setRandomTitle() {
-        if (!StellarCoreConfig.FEATURES.enbleTitle) {
+        if (!StellarCoreConfig.FEATURES.enableTitle) {
             return;
         }
         lastCurrentTitle = currentTitle;
@@ -62,7 +62,7 @@ public class TitleUtils {
      * @param state 当前状态
      */
     public static void setRandomTitleSync(String state) {
-        if (!StellarCoreConfig.FEATURES.enbleTitle) {
+        if (!StellarCoreConfig.FEATURES.enableTitle) {
             return;
         }
         lastCurrentTitle = currentTitle;
@@ -73,7 +73,7 @@ public class TitleUtils {
      * 设置一言随机标题，可以在其他线程使用。
      */
     public static void setRandomTitleSync() {
-        if (!StellarCoreConfig.FEATURES.enbleTitle) {
+        if (!StellarCoreConfig.FEATURES.enableTitle) {
             return;
         }
         lastCurrentTitle = currentTitle;
@@ -97,7 +97,7 @@ public class TitleUtils {
     }
 
     public static void checkTitleState() {
-        if (!StellarCoreConfig.FEATURES.enbleTitle) {
+        if (!StellarCoreConfig.FEATURES.enableTitle) {
             return;
         }
         if (currentTitle == null) {

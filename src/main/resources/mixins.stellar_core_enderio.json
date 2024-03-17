@@ -1,5 +1,5 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.eio",
+  "package": "github.kasuminova.stellarcore.mixin.enderio",
   "refmap": "mixins.stellar_core.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8",

@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 )
 @SuppressWarnings("MethodMayBeStatic")
 public class StellarCore {
-    public static final String MOD_ID = "stellarcore";
+    public static final String MOD_ID = "stellar_core";
     public static final String MOD_NAME = "Stellar Core";
 
     public static final String VERSION = Tags.VERSION;

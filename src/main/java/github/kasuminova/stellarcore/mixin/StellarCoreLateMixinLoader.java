@@ -29,15 +29,16 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_botania.json",              "botania");
         addModdedMixinCFG("mixins.stellar_core_cfm.json",                  "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",               "chisel");
-        addModdedMixinCFG("mixins.stellar_core_eio.json",                  "enderio");
-        addModdedMixinCFG("mixins.stellar_core_eio_conduit.json",          "enderio", "enderioconduits");
+        addModdedMixinCFG("mixins.stellar_core_endercore.json",            "endercore");
+        addModdedMixinCFG("mixins.stellar_core_enderio.json",              "enderio");
+        addModdedMixinCFG("mixins.stellar_core_enderioconduits.json",      "enderio", "enderioconduits");
         addModdedMixinCFG("mixins.stellar_core_extrabotany.json",          "extrabotany");
         addModdedMixinCFG("mixins.stellar_core_fluxnetworks.json",         "fluxnetworks");
         addModdedMixinCFG("mixins.stellar_core_ic2.json",                  "ic2");
         addModdedMixinCFG("mixins.stellar_core_igi.json",                  "ingameinfoxml");
         addModdedMixinCFG("mixins.stellar_core_immersiveengineering.json", "immersiveengineering");
         addModdedMixinCFG("mixins.stellar_core_legendarytooltips.json",    "legendarytooltips");
-        addModdedMixinCFG("mixins.stellar_core_mek_top.json",              "mekanism", "theoneprobe");
+        addModdedMixinCFG("mixins.stellar_core_mek_top.json",        new String[]{"mekanism", "theoneprobe"}, () -> StellarCoreConfig.FEATURES.mekanism.topSupport);
         addModdedMixinCFG("mixins.stellar_core_mekanism.json",             "mekanism");
         addModdedMixinCFG("mixins.stellar_core_mets.json",                 "mets");
         addModdedMixinCFG("mixins.stellar_core_nco.json",                  "nuclearcraft");
@@ -80,6 +81,10 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
     private static void addModdedMixinCFG(final String mixinConfig, final String modID, final BooleanSupplier condition) {
         MIXIN_CONFIGS.put(mixinConfig, () -> modLoaded(modID) && condition.getAsBoolean());
+    }
+
+    private static void addModdedMixinCFG(final String mixinConfig, final String[] modIDs, final BooleanSupplier condition) {
+        MIXIN_CONFIGS.put(mixinConfig, () -> Arrays.stream(modIDs).allMatch(Loader::isModLoaded) && condition.getAsBoolean());
     }
 
     private static void addModdedMixinCFG(final String mixinConfig, final String modID, final String... modIDs) {

@@ -98,7 +98,7 @@ tasks.javadoc.configure {
 tasks.jar.configure {
     manifest {
         val attributes = manifest.attributes
-        attributes["FMLCorePlugin"] = "github.kasuminova.jep.mixin.JEPEarlyMixinLoader"
+        attributes["FMLCorePlugin"] = "github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader"
         attributes["FMLCorePluginContainsFMLMod"] = true
     }
 }
@@ -116,13 +116,6 @@ listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).for
         )
     }
 }
-
-//tasks.deobfuscateMergedJarToSrg.configure {
-//    accessTransformerFiles.from("src/main/resources/META-INF/justenoughpatches_at.cfg")
-//}
-//tasks.srgifyBinpatchedJar.configure {
-//    accessTransformerFiles.from("src/main/resources/META-INF/justenoughpatches_at.cfg")
-//}
 
 // Dependencies
 repositories {
@@ -168,10 +161,6 @@ repositories {
     }
 }
 
-//mixin {
-//    add sourceSets.main, "mixins.justenoughpatches.refmap.json"
-//}
-
 dependencies {
     annotationProcessor("com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
     compileOnly("com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
@@ -188,7 +177,7 @@ dependencies {
 
     // Mixins
 //    implementation("zone.rong:mixinbooter:7.1")
-    val mixin : String = modUtils.enableMixins("zone.rong:mixinbooter:8.9", "mixins.justenoughpatches.refmap.json").toString()
+    val mixin : String = modUtils.enableMixins("zone.rong:mixinbooter:8.9", "mixins.stellar_core.refmap.json").toString()
     api (mixin) {
         isTransitive = false
     }
@@ -252,6 +241,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:better-loading-screen-229302:3769828"))
     compileOnly(rfg.deobf("curse.maven:better-chat-363860:3048407"))
     compileOnly(rfg.deobf("curse.maven:mrcrayfish-furniture-mod-55438:3865259"))
+    compileOnly(rfg.deobf("curse.maven:extended-crafting-nomifactory-edition-398267:4592627"))
+    compileOnly(rfg.deobf("curse.maven:cucumber-272335:2645867"))
 }
 
 // Publishing to a Maven repository

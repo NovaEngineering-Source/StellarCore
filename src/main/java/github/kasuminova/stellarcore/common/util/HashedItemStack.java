@@ -1,16 +1,34 @@
 package github.kasuminova.stellarcore.common.util;
 
 import com.github.bsideup.jabel.Desugar;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.oredict.OreDictionary;
 
+import javax.annotation.Nonnull;
 import java.util.Base64;
 import java.util.Objects;
 
 @Desugar
-public record HashedItemStack(ItemStack stack, int stackHashCode) {
-    public static HashedItemStack of(final ItemStack stack) {
+public record HashedItemStack(ItemStack stack, int stackHashCode, boolean hasTag) {
+
+    public static HashedItemStack ofTag(final ItemStack stack) {
         ItemStack copied = stack.copy();
-        return new HashedItemStack(copied, Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage(), copied.getTagCompound()));
+        NBTTagCompound tag = copied.getTagCompound();
+        boolean hasTag = tag == null || tag.isEmpty();
+        int hash;
+        if (hasTag) {
+            hash = Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage(), tag);
+        } else {
+            hash = Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage());
+        }
+        return new HashedItemStack(copied, hash, hasTag);
+    }
+
+    public static HashedItemStack ofMeta(final ItemStack stack) {
+        ItemStack copied = stack.copy();
+        return new HashedItemStack(copied, Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage(), copied.getMetadata()), false);
     }
 
     public static String stackToString(final ItemStack stack) {
@@ -29,9 +47,31 @@ public record HashedItemStack(ItemStack stack, int stackHashCode) {
     @Override
     public boolean equals(final Object o) {
         if (o instanceof HashedItemStack hashedItemStack) {
-            return ItemStack.areItemStacksEqual(stack, hashedItemStack.stack);
+            if (hasTag && !hashedItemStack.hasTag) {
+                return false;
+            }
+            return stackEqualsNonNBT(stack, hashedItemStack.stack) && (!hasTag || ItemStack.areItemStackTagsEqual(stack, hashedItemStack.stack));
         }
         return false;
+    }
+
+    public static boolean stackEqualsNonNBT(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
+        if (stack.isEmpty() && other.isEmpty()) {
+            return true;
+        }
+        if (stack.isEmpty() || other.isEmpty()) {
+            return false;
+        }
+        Item sItem = stack.getItem();
+        Item oItem = other.getItem();
+        if (sItem.getHasSubtypes() || oItem.getHasSubtypes()) {
+            return sItem.equals(other.getItem()) &&
+                    (stack.getItemDamage() == other.getItemDamage() ||
+                            stack.getItemDamage() == OreDictionary.WILDCARD_VALUE ||
+                            other.getItemDamage() == OreDictionary.WILDCARD_VALUE);
+        } else {
+            return sItem.equals(other.getItem());
+        }
     }
 
     @Override

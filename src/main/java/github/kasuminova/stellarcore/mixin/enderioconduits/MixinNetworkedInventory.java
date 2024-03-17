@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.eioconduit;
+package github.kasuminova.stellarcore.mixin.enderioconduits;
 
 import crazypants.enderio.base.capability.ItemTools;
 import crazypants.enderio.base.filter.item.IItemFilter;

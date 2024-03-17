@@ -20,8 +20,7 @@ public class MixinKeyChainMining {
      * @reason 配置文件不让禁用，那就把方法爆了。
      */
     @Inject(method = "onBreak", at = @At("HEAD"), cancellable = true, remap = false)
-    @SubscribeEvent(priority = EventPriority.LOW)
-    public void onBreak(final BlockEvent.BreakEvent event, final CallbackInfo ci) {
+    public void onBreak(final CallbackInfo ci) {
         if (StellarCoreConfig.FEATURES.astralSorcery.disableChainMining) {
             ci.cancel();
         }

@@ -18,7 +18,7 @@ public interface MixinIStrictEnergyStorage extends IBigPower {
     @Override
     default long getStoredPower() {
         double converted = getEnergy() / 2.5D;
-        if (StellarCoreConfig.FEATURES.mekanism.topSupport) {
+        if (!StellarCoreConfig.FEATURES.mekanism.topSupport) {
             return (long) Math.min(converted, Integer.MAX_VALUE);
         }
         if (converted >= Long.MAX_VALUE) {
@@ -31,7 +31,7 @@ public interface MixinIStrictEnergyStorage extends IBigPower {
     @Override
     default long getCapacity() {
         double converted = getMaxEnergy() / 2.5D;
-        if (StellarCoreConfig.FEATURES.mekanism.topSupport) {
+        if (!StellarCoreConfig.FEATURES.mekanism.topSupport) {
             return (long) Math.min(converted, Integer.MAX_VALUE);
         }
         if (converted >= Long.MAX_VALUE) {

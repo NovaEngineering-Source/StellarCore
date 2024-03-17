@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.igi;
 
 import com.github.lunatrius.ingameinfo.InGameInfoCore;
 import com.github.lunatrius.ingameinfo.client.gui.overlay.Info;
+import com.github.lunatrius.ingameinfo.handler.ConfigurationHandler;
 import github.kasuminova.stellarcore.client.util.RenderUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.IMixinInGameInfoCore;
@@ -44,21 +45,27 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
 
     /**
      * @author Kasumi_Nova
-     * @reason 使用 FBO 优化 IGI 渲染性能，帧率越高效果越好。
+     * @reason 使用 FBO 优化 IGI 渲染性能，帧率越低效果越好。
      */
-    @Overwrite(remap = false)
-    public void onTickRender() {
+    @Inject(method = "onTickRender", at = @At("HEAD"), cancellable = true, remap = false)
+    public void onTickRender(final CallbackInfo ci) {
         if (!StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
             return;
         }
         if (!OpenGlHelper.framebufferSupported) {
             return;
         }
+        ci.cancel();
+
+        GlStateManager.pushMatrix();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.scale(ConfigurationHandler.scale, ConfigurationHandler.scale, ConfigurationHandler.scale);
+
         int timeRange = 1000 / StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameRate;
         if (System.currentTimeMillis() - stellar_core$lastRenderMS > timeRange) {
             stellar_core$refreshFBO = true;
+            stellar_core$lastRenderMS = System.currentTimeMillis();
         }
-        stellar_core$lastRenderMS = System.currentTimeMillis();
 
         Minecraft minecraft = Minecraft.getMinecraft();
         stellar_core$postDrawing = false;
@@ -81,6 +88,9 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
         RenderUtils.renderFramebuffer(minecraft, stellar_core$fbo);
         stellar_core$postDrawing = true;
         stellar_core$postDrawList.forEach(Runnable::run);
+
+        GlStateManager.popMatrix();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     @Unique

@@ -17,7 +17,7 @@ public class MixinEnergyAcceptorWrapper {
 
     @Inject(method = "get", at = @At("HEAD"), cancellable = true, remap = false)
     private static void injectGet(final TileEntity te, final EnumFacing side, final CallbackInfoReturnable<EnergyAcceptorWrapper> cir) {
-        if (StellarCoreConfig.FEATURES.mekanism.fluxNetworksSupport) {
+        if (!StellarCoreConfig.FEATURES.mekanism.fluxNetworksSupport) {
             return;
         }
         //noinspection ConstantValue

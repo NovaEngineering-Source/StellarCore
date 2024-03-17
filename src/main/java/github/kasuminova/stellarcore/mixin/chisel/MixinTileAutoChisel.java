@@ -46,7 +46,7 @@ public class MixinTileAutoChisel {
         if (!StellarCoreConfig.PERFORMANCE.chisel.autoChiselImprovements) {
             return instance.getGroup(stack);
         }
-        return CACHED_CARVING_GROUP.computeIfAbsent(HashedItemStack.of(stack), _g -> instance.getGroup(stack));
+        return CACHED_CARVING_GROUP.computeIfAbsent(HashedItemStack.ofTag(stack), _g -> instance.getGroup(stack));
     }
 
     @Redirect(
@@ -61,7 +61,7 @@ public class MixinTileAutoChisel {
         if (!StellarCoreConfig.PERFORMANCE.chisel.autoChiselImprovements) {
             return instance.getVariation(stack);
         }
-        return CACHED_VARIATION_GROUP.computeIfAbsent(HashedItemStack.of(stack), _g -> instance.getVariation(stack));
+        return CACHED_VARIATION_GROUP.computeIfAbsent(HashedItemStack.ofTag(stack), _g -> instance.getVariation(stack));
     }
 
     @Inject(method = "mergeOutput", at = @At("HEAD"), remap = false)

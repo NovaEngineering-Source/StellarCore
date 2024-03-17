@@ -1,5 +1,5 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.eioconduit",
+  "package": "github.kasuminova.stellarcore.mixin.enderioconduits",
   "refmap": "mixins.stellar_core.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8",

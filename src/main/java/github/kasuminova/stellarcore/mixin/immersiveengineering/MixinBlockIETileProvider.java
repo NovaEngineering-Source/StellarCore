@@ -28,7 +28,7 @@ public class MixinBlockIETileProvider {
         if (instance.hasNext()) {
             return true;
         }
-        if (StellarCoreConfig.BUG_FIXES.immersiveEngineering.blockIEMultiblock) {
+        if (!StellarCoreConfig.BUG_FIXES.immersiveEngineering.blockIEMultiblock) {
             return false;
         }
         if (tile instanceof IIEInventory ieInv) {

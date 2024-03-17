@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.eioconduit;
+package github.kasuminova.stellarcore.mixin.enderioconduits;
 
 import crazypants.enderio.conduits.conduit.item.NetworkedInventory;
 import net.minecraftforge.items.IItemHandler;
