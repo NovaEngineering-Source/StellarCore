@@ -30,6 +30,9 @@ public class MixinOreThing {
         if (!StellarCoreConfig.PERFORMANCE.enderCore.oreThing) {
             return;
         }
+        if (this.ores.size() <= 4) {
+            return;
+        }
 
         if (itemStack == null || itemStack.isEmpty()) {
             cir.setReturnValue(false);

@@ -243,6 +243,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:mrcrayfish-furniture-mod-55438:3865259"))
     compileOnly(rfg.deobf("curse.maven:extended-crafting-nomifactory-edition-398267:4592627"))
     compileOnly(rfg.deobf("curse.maven:cucumber-272335:2645867"))
+    compileOnly(rfg.deobf("curse.maven:better-builders-wands-238403:2691084"))
 }
 
 // Publishing to a Maven repository

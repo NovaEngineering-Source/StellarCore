@@ -24,6 +24,7 @@ public class MixinRenderHelper {
         if (!StellarCoreConfig.BUG_FIXES.theOneProbe.fixRenderHelper) {
             return;
         }
+        ci.cancel();
         GlStateManager.pushMatrix();
         GlStateManager.color(1.0F, 1.0F, 1.0F);
         GlStateManager.enableRescaleNormal();

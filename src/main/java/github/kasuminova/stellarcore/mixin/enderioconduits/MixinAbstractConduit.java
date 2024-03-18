@@ -21,7 +21,7 @@ public abstract class MixinAbstractConduit {
 
     @Shadow(remap = false) protected boolean readFromNbt;
 
-    @Shadow(remap = false)private boolean clientStateDirty;
+    @Shadow(remap = false) private boolean clientStateDirty;
 
     @Shadow(remap = false) @Nonnull public abstract IConduitBundle getBundle();
 
@@ -31,7 +31,7 @@ public abstract class MixinAbstractConduit {
      */
     @Inject(method = "updateEntity", at = @At("HEAD"), cancellable = true, remap = false)
     public void updateEntity(final World world, final CallbackInfo ci) {
-        if (StellarCoreConfig.PERFORMANCE.enderIOConduits.abstractConduit) {
+        if (!StellarCoreConfig.PERFORMANCE.enderIOConduits.abstractConduit) {
             return;
         }
         ci.cancel();

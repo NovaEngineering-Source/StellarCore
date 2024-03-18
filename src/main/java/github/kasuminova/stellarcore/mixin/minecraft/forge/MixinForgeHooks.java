@@ -45,7 +45,7 @@ public class MixinForgeHooks {
                                              final EnumHand hand,
                                              final CallbackInfoReturnable<EnumActionResult> cir)
     {
-        if (StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots) {
             return;
         }
 

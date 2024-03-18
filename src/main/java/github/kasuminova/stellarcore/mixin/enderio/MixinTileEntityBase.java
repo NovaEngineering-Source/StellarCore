@@ -20,7 +20,7 @@ public abstract class MixinTileEntityBase extends TileEntity {
     @Shadow(remap = false) protected abstract void sendProgressIf();
 
     @Inject(method = "update", at = @At("HEAD"), cancellable = true)
-    private void redirectGetTileEntity(final CallbackInfo ci) {
+    private void injectUpdate(final CallbackInfo ci) {
         if (!StellarCoreConfig.PERFORMANCE.enderIO.tileEntityBase) {
             return;
         }
