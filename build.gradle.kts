@@ -244,6 +244,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:extended-crafting-nomifactory-edition-398267:4592627"))
     compileOnly(rfg.deobf("curse.maven:cucumber-272335:2645867"))
     compileOnly(rfg.deobf("curse.maven:better-builders-wands-238403:2691084"))
+    compileOnly(rfg.deobf("curse.maven:sync-229090:2682824"))
 }
 
 // Publishing to a Maven repository

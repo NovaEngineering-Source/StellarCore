@@ -64,6 +64,9 @@ public class StellarCoreConfig {
         @Config.Name("ScalingGuis")
         public final ScalingGuis scalingGuis = new ScalingGuis();
 
+        @Config.Name("Sync")
+        public final Sync sync = new Sync();
+
         @Config.Name("Techguns")
         public final Techguns techguns = new Techguns();
 
@@ -148,6 +151,13 @@ public class StellarCoreConfig {
 
             @Config.Name("JsonHelperCrashFixes")
             public boolean fixJsonHelper = true;
+
+        }
+
+        public static class Sync {
+
+            @Config.Name("TechgunsDuplicationFixes")
+            public boolean techgunsDuplicationFixes = true;
 
         }
 
