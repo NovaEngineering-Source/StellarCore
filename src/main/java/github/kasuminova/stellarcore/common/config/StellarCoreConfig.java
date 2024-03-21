@@ -92,6 +92,11 @@ public class StellarCoreConfig {
             @Config.Name("ImageCacheCrashFixes")
             public boolean imageCache = true;
 
+            @Config.Name("TileEntityFurnitureFixes")
+            public boolean tileEntityFurniture = true;
+
+            @Config.Name("BlockFurnitureTileFixes")
+            public boolean blockFurnitureTile = true;
         }
 
         public static class EnderIOConduits {
