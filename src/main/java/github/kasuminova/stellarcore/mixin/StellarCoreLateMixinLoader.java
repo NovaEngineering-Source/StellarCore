@@ -45,6 +45,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_oreexcavation.json",        "oreexcavation");
         addModdedMixinCFG("mixins.stellar_core_rgb_chat.json",             "jianghun");
         addModdedMixinCFG("mixins.stellar_core_scalingguis.json",          "scalingguis");
+        addModdedMixinCFG("mixins.stellar_core_sync.json",        "sync");
         addModdedMixinCFG("mixins.stellar_core_sync_techguns.json",        "sync", "techguns");
         addModdedMixinCFG("mixins.stellar_core_techguns.json",             "techguns");
         addModdedMixinCFG("mixins.stellar_core_theoneprobe.json",          "theoneprobe");
@@ -53,7 +54,14 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
     static {
         if (StellarCoreConfig.FEATURES.hitokoto) {
-            CompletableFuture.runAsync(HitokotoAPI::getRandomHitokoto);
+            new Thread(() -> {
+                Thread.currentThread().setName("Stellar Core Hitokoto Initializer");
+                String hitokoto = HitokotoAPI.getRandomHitokoto();
+                if (hitokoto == null || hitokoto.isEmpty()) {
+                    return;
+                }
+                LOG.info(LOG_PREFIX + hitokoto);
+            }).start();
         }
     }
 

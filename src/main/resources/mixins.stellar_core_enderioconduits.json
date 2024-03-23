@@ -9,6 +9,7 @@
     "InvokerNetworkedInventory",
     "MixinAbstractConduit",
     "MixinItemConduit",
-    "MixinNetworkedInventory"
+    "MixinNetworkedInventory",
+    "MixinTileConduitBundle"
   ]
 }

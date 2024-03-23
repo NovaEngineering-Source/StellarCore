@@ -1,6 +1,6 @@
 package github.kasuminova.stellarcore.mixin.cfm;
 
-import com.mrcrayfish.furniture.tileentity.TileEntityFurniture;
+import com.mrcrayfish.furniture.tileentity.TileEntityDeskCabinet;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.tileentity.TileEntity;
@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.Unique;
 
 import javax.annotation.Nonnull;
 
-@Mixin(TileEntityFurniture.class)
-public class MixinTileEntityFurniture extends TileEntity {
+@Mixin(TileEntityDeskCabinet.class)
+public class MixinTileEntityDeskCabinet extends TileEntity {
 
     @Unique
     @Override

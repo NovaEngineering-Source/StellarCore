@@ -14,7 +14,7 @@ import techguns.capabilities.TGExtendedPlayerCapProvider;
 
 @Mixin(TileEntityDualVertical.class)
 @SuppressWarnings("MethodMayBeStatic")
-public class MixinTileEntityDualVertical {
+public class MixinTileEntityDualVerticalTechguns {
 
     @Inject(method = "update",
             at = @At(

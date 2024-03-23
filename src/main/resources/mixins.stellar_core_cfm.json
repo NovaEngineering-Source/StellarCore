@@ -5,8 +5,14 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "MixinBlockFurnitureTile",
+    "MixinTileEntityCookieJar",
+    "MixinTileEntityDeskCabinet",
     "MixinTileEntityFurniture",
-    "MixinBlockFurnitureTile"
+    "MixinTileEntityKitchenCounter",
+    "MixinTileEntityKitchenCounterDrawer",
+    "MixinTileEntitySyncClient",
+    "MixinTileEntityTVStand"
   ],
   "client": [
     "MixinImageCache"

@@ -95,8 +95,8 @@ public class StellarCoreConfig {
             @Config.Name("ImageCacheCrashFixes")
             public boolean imageCache = true;
 
-            @Config.Name("TileEntityFurnitureFixes")
-            public boolean tileEntityFurniture = true;
+            @Config.Name("RotatableFurniture")
+            public boolean rotatableFurniture = true;
 
             @Config.Name("BlockFurnitureTileFixes")
             public boolean blockFurnitureTile = true;
@@ -158,6 +158,9 @@ public class StellarCoreConfig {
 
             @Config.Name("TechgunsDuplicationFixes")
             public boolean techgunsDuplicationFixes = true;
+
+            @Config.Name("RidingFixes")
+            public boolean ridingFixes = true;
 
         }
 
@@ -237,7 +240,7 @@ public class StellarCoreConfig {
         public static class Vanilla {
 
             @Config.Name("CapturedBlockSnapshotsImprovements")
-            public boolean capturedBlockSnapshots = true;
+            public boolean capturedBlockSnapshots = false;
 
             @Config.Name("CapturedBlockSnapshotsImprovementsOreExcavationIntegration")
             public boolean capturedBlockSnapshotsMiningAgentIntegration = true;
@@ -335,6 +338,9 @@ public class StellarCoreConfig {
 
             @Config.Name("AbstractConduitImprovements")
             public boolean abstractConduit = true;
+
+            @Config.Name("TileConduitBundleImprovements")
+            public boolean tileConduitBundle = true;
 
         }
 

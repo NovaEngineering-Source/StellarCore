@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.cfm;
 
-import com.mrcrayfish.furniture.tileentity.TileEntityFurniture;
+import com.mrcrayfish.furniture.tileentity.TileEntityCookieJar;
+import com.mrcrayfish.furniture.tileentity.TileEntityKitchenCounterDrawer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.tileentity.TileEntity;
@@ -11,16 +12,15 @@ import org.spongepowered.asm.mixin.Unique;
 
 import javax.annotation.Nonnull;
 
-@Mixin(TileEntityFurniture.class)
-public class MixinTileEntityFurniture extends TileEntity {
+@Mixin(TileEntityKitchenCounterDrawer.class)
+public class MixinTileEntityKitchenCounterDrawer extends TileEntity {
 
     @Unique
     @Override
     public boolean shouldRefresh(@Nonnull final World world,
                                  @Nonnull final BlockPos pos,
                                  @Nonnull final IBlockState oldState,
-                                 @Nonnull final IBlockState newSate)
-    {
+                                 @Nonnull final IBlockState newSate) {
         if (!StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.rotatableFurniture) {
             return super.shouldRefresh(world, pos, oldState, newSate);
         }

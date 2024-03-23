@@ -21,7 +21,7 @@ public class MixinTileEntitySyncClient extends TileEntity {
                                  @Nonnull final IBlockState oldState,
                                  @Nonnull final IBlockState newSate)
     {
-        if (!StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.tileEntityFurniture) {
+        if (!StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.rotatableFurniture) {
             return super.shouldRefresh(world, pos, oldState, newSate);
         }
         return oldState.getBlock() != newSate.getBlock();
