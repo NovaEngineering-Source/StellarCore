@@ -243,7 +243,7 @@ public class StellarCoreConfig {
             public boolean capturedBlockSnapshots = false;
 
             @Config.Name("CapturedBlockSnapshotsImprovementsOreExcavationIntegration")
-            public boolean capturedBlockSnapshotsMiningAgentIntegration = true;
+            public boolean capturedBlockSnapshotsMiningAgentIntegration = false;
 
             @Config.Name("ChunkTileEntityMapImprovements")
             public boolean blockPos2ValueMap = true;
