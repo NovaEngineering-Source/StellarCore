@@ -6,8 +6,7 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "MixinChunk",
-    "MixinWorld",
-    "forge.MixinForgeHooks"
+    "MixinWorld"
   ],
   "client": [
     "forge.MixinSplashProgress"
