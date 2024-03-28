@@ -15,9 +15,9 @@ import java.util.List;
 @Mixin(TileFusionCraftingCore.class)
 public abstract class MixinTileFusionCraftingCore implements IFusionCraftingCore {
 
-    @Shadow protected abstract void invalidateCrafting();
+    @Shadow(remap = false) protected abstract void invalidateCrafting();
 
-    @Shadow public IFusionRecipe activeRecipe;
+    @Shadow(remap = false) public IFusionRecipe activeRecipe;
 
     @Redirect(
             method = "updateInjectors",
