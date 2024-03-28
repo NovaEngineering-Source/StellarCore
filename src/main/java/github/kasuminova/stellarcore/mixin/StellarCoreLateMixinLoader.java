@@ -14,11 +14,10 @@ import java.util.function.BooleanSupplier;
 @SuppressWarnings("unused")
 public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
-    public static final Logger LOG = LogManager.getLogger("STELLAR_CORE");
-    public static final String LOG_PREFIX = "[STELLAR_CORE]" + ' ';
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
+        addModdedMixinCFG("mixins.stellar_core_advancedrocketry.json",     "advancedrocketry");
         addModdedMixinCFG("mixins.stellar_core_ae.json",                   "appliedenergistics2");
         addModdedMixinCFG("mixins.stellar_core_armourers_workshop.json",   "armourers_workshop");
         addModdedMixinCFG("mixins.stellar_core_astralsorcery.json",        "astralsorcery");
@@ -29,6 +28,8 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_botania.json",              "botania");
         addModdedMixinCFG("mixins.stellar_core_cfm.json",                  "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",               "chisel");
+        addModdedMixinCFG("mixins.stellar_core_cucumber.json",             "cucumber");
+        addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",    "draconicevolution");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",            "endercore");
         addModdedMixinCFG("mixins.stellar_core_enderio.json",              "enderio");
         addModdedMixinCFG("mixins.stellar_core_enderioconduits.json",      "enderio", "enderioconduits");
@@ -59,7 +60,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
                 if (hitokoto == null || hitokoto.isEmpty()) {
                     return;
                 }
-                LOG.info(LOG_PREFIX + hitokoto);
+                StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + hitokoto);
             }).start();
         }
     }
@@ -73,7 +74,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
     public boolean shouldMixinConfigQueue(final String mixinConfig) {
         BooleanSupplier supplier = MIXIN_CONFIGS.get(mixinConfig);
         if (supplier == null) {
-            LOG.warn(LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", mixinConfig);
+            StellarCoreEarlyMixinLoader.LOG.warn(StellarCoreEarlyMixinLoader.LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", mixinConfig);
             return false;
         }
         return supplier.getAsBoolean();

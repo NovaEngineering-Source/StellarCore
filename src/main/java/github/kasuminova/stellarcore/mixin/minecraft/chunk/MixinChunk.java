@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft;
+package github.kasuminova.stellarcore.mixin.minecraft.chunk;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.BlockPos2ValueMap;

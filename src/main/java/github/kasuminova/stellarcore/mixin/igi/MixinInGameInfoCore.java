@@ -57,9 +57,6 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
         }
         ci.cancel();
 
-        GlStateManager.pushMatrix();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.scale(ConfigurationHandler.scale, ConfigurationHandler.scale, ConfigurationHandler.scale);
 
         int timeRange = 1000 / StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameRate;
         if (System.currentTimeMillis() - stellar_core$lastRenderMS > timeRange) {
@@ -81,16 +78,22 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
 
         if (stellar_core$refreshFBO) {
             stellar_core$postDrawList.clear();
+            GlStateManager.pushMatrix();
             stellar_core$renderToFBO(minecraft);
+            GlStateManager.popMatrix();
             stellar_core$refreshFBO = false;
         }
+
+        GlStateManager.pushMatrix();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.scale(ConfigurationHandler.scale, ConfigurationHandler.scale, ConfigurationHandler.scale);
 
         RenderUtils.renderFramebuffer(minecraft, stellar_core$fbo);
         stellar_core$postDrawing = true;
         stellar_core$postDrawList.forEach(Runnable::run);
 
-        GlStateManager.popMatrix();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.popMatrix();
     }
 
     @Unique

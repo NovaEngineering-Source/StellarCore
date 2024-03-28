@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.1"
+version = "1.0.2"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -192,7 +192,7 @@ dependencies {
     implementation("com.cleanroommc:configanytime:2.0")
     implementation("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
     compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:4991928"))
-    implementation(rfg.deobf("curse.maven:had-enough-items-557549:4810661"))
+    implementation(rfg.deobf("curse.maven:had-enough-items-557549:5210315"))
     implementation(rfg.deobf("curse.maven:the-one-probe-245211:2667280"))
     compileOnly(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
@@ -242,10 +242,10 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:better-loading-screen-229302:3769828"))
     compileOnly(rfg.deobf("curse.maven:better-chat-363860:3048407"))
     compileOnly(rfg.deobf("curse.maven:mrcrayfish-furniture-mod-55438:3865259"))
-    compileOnly(rfg.deobf("curse.maven:extended-crafting-nomifactory-edition-398267:4592627"))
     compileOnly(rfg.deobf("curse.maven:cucumber-272335:2645867"))
-    compileOnly(rfg.deobf("curse.maven:better-builders-wands-238403:2691084"))
     compileOnly(rfg.deobf("curse.maven:sync-229090:2682824"))
+    compileOnly(rfg.deobf("curse.maven:libvulpes-236541:3801015"))
+    compileOnly(rfg.deobf("curse.maven:advanced-rocketry-236542:4671856"))
 }
 
 // Publishing to a Maven repository

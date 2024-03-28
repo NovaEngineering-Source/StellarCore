@@ -40,8 +40,8 @@ public class StellarCoreConfig {
         @Config.Name("AstralSorcery")
         public final AstralSorcery astralSorcery = new AstralSorcery();
 
-        @Config.Name("MrCrayfishFurniture")
-        public final MrCrayfishFurniture mrCrayfishFurniture = new MrCrayfishFurniture();
+        @Config.Name("DraconicEvolution")
+        public final DraconicEvolution draconicEvolution = new DraconicEvolution();
 
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
@@ -60,6 +60,9 @@ public class StellarCoreConfig {
 
         @Config.Name("MoreElectricTools")
         public final MoreElectricTools moreElectricTools = new MoreElectricTools();
+
+        @Config.Name("MrCrayfishFurniture")
+        public final MrCrayfishFurniture mrCrayfishFurniture = new MrCrayfishFurniture();
 
         @Config.Name("ScalingGuis")
         public final ScalingGuis scalingGuis = new ScalingGuis();
@@ -89,17 +92,11 @@ public class StellarCoreConfig {
 
         }
 
-        public static class MrCrayfishFurniture {
+        public static class DraconicEvolution {
 
-            @Config.RequiresMcRestart
-            @Config.Name("ImageCacheCrashFixes")
-            public boolean imageCache = true;
+            @Config.Name("CraftingInjectorFixes")
+            public boolean craftingInjector = true;
 
-            @Config.Name("RotatableFurniture")
-            public boolean rotatableFurniture = true;
-
-            @Config.Name("BlockFurnitureTileFixes")
-            public boolean blockFurnitureTile = true;
         }
 
         public static class EnderIOConduits {
@@ -145,6 +142,19 @@ public class StellarCoreConfig {
             @Config.Name("LifeSupportsFixes")
             public boolean fixLifeSupports = true;
 
+        }
+
+        public static class MrCrayfishFurniture {
+
+            @Config.RequiresMcRestart
+            @Config.Name("ImageCacheCrashFixes")
+            public boolean imageCache = true;
+
+            @Config.Name("RotatableFurniture")
+            public boolean rotatableFurniture = true;
+
+            @Config.Name("BlockFurnitureTileFixes")
+            public boolean blockFurnitureTile = true;
         }
 
         public static class ScalingGuis {
@@ -239,12 +249,11 @@ public class StellarCoreConfig {
 
         public static class Vanilla {
 
+            @Config.RequiresMcRestart
             @Config.Name("CapturedBlockSnapshotsImprovements")
             public boolean capturedBlockSnapshots = false;
 
-            @Config.Name("CapturedBlockSnapshotsImprovementsOreExcavationIntegration")
-            public boolean capturedBlockSnapshotsMiningAgentIntegration = false;
-
+            @Config.RequiresMcRestart
             @Config.Name("ChunkTileEntityMapImprovements")
             public boolean blockPos2ValueMap = true;
 
@@ -312,6 +321,7 @@ public class StellarCoreConfig {
 
         public static class CustomLoadingScreen {
 
+            @Config.RequiresMcRestart
             @Config.Name("TextureCleanup")
             public boolean splashProgress = true;
 

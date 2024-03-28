@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft;
+package github.kasuminova.stellarcore.mixin.minecraft.world;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.LinkedFakeArrayList;

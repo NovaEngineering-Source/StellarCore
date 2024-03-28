@@ -33,6 +33,9 @@ public class MixinBlockIETileProvider {
         }
         if (tile instanceof IIEInventory ieInv) {
             NonNullList<ItemStack> inventory = ieInv.getInventory();
+            if (inventory.isEmpty()) {
+                return false;
+            }
             Collections.fill(inventory, ItemStack.EMPTY);
         }
         return false;
