@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.mixin.cfm;
 
-import com.mrcrayfish.furniture.tileentity.TileEntityCookieJar;
 import com.mrcrayfish.furniture.tileentity.TileEntityKitchenCounterDrawer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.block.state.IBlockState;

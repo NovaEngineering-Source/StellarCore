@@ -41,7 +41,7 @@ public class ContainerTECache {
             if (type.isInstance(obj)) {
                 return type.cast(obj);
             }
-        } catch (IllegalAccessException e) {
+        } catch (Error | Exception e) {
             StellarCore.log.warn(e);
         }
         return null;
@@ -55,18 +55,26 @@ public class ContainerTECache {
         List<Field> teFields = new ArrayList<>();
 
         // 遍历当前类的声明字段
-        for (Field field : aClass.getDeclaredFields()) {
-            if (target.isAssignableFrom(field.getType())) {
-                field.setAccessible(true);
-                teFields.add(field);
+        try {
+            Field[] fields = aClass.getDeclaredFields();
+            for (Field field : fields) {
+                if (target.isAssignableFrom(field.getType())) {
+                    field.setAccessible(true);
+                    teFields.add(field);
+                }
             }
+            // 某些模组的黑魔法会导致扫 Field 的时候出现奇怪的问题，特此点名 AE2UEL 的 ContainerCraftConfirm。
+        } catch (Error | Exception ignored) {
         }
 
         // 检查是否有父类，如果有，则递归遍历父类
-        Class<?> superClass = aClass.getSuperclass();
-        if (superClass != null && superClass != Object.class) {
-            List<Field> parentFields = scanTileEntityFieldRecursive(superClass, target);
-            teFields.addAll(parentFields);
+        try {
+            Class<?> superClass = aClass.getSuperclass();
+            if (superClass != null && superClass != Object.class) {
+                List<Field> parentFields = scanTileEntityFieldRecursive(superClass, target);
+                teFields.addAll(parentFields);
+            }
+        } catch (Error | Exception ignored) {
         }
 
         return teFields;

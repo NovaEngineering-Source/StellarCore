@@ -36,6 +36,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_enderioconduits.json",      "enderio", "enderioconduits");
         addModdedMixinCFG("mixins.stellar_core_extrabotany.json",          "extrabotany");
         addModdedMixinCFG("mixins.stellar_core_fluxnetworks.json",         "fluxnetworks");
+        addModdedMixinCFG("mixins.stellar_core_guguutils.json",            "gugu-utils");
         addModdedMixinCFG("mixins.stellar_core_ic2.json",                  "ic2");
         addModdedMixinCFG("mixins.stellar_core_igi.json",                  "ingameinfoxml");
         addModdedMixinCFG("mixins.stellar_core_immersiveengineering.json", "immersiveengineering");

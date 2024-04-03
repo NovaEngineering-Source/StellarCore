@@ -34,6 +34,9 @@ public class StellarCoreConfig {
 
     public static class BugFixes {
         
+        @Config.Name("Critical")
+        public final Critical critical = new Critical();
+        
         @Config.Name("Container")
         public final Container container = new Container();
 
@@ -87,6 +90,14 @@ public class StellarCoreConfig {
 
         @Config.Name("ThermalExpansion")
         public final ThermalExpansion thermalExpansion = new ThermalExpansion();
+        
+        public static class Critical {
+
+            @Config.Comment("If you dont know what you're doing, don't set it to \"false\".")
+            @Config.Name("GuGuUtilsSetContainerPacket")
+            public boolean guguUtilsSetContainerPacket = true;
+
+        }
 
         public static class Container {
 

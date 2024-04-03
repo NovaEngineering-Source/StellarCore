@@ -1,13 +1,10 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.extrabotany",
+  "package": "github.kasuminova.stellarcore.mixin.gugu_utils",
   "refmap": "mixins.stellar_core.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
-  "client": [
-    "MixinClientProxy"
-  ],
   "mixins": [
-    "MixinTileManaLiquefaction"
+    "MixinPacketSetContainerSlot"
   ]
 }
