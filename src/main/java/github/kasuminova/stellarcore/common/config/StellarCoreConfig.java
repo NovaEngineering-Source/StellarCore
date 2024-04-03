@@ -33,12 +33,18 @@ public class StellarCoreConfig {
     }
 
     public static class BugFixes {
+        
+        @Config.Name("Container")
+        public final Container container = new Container();
 
         @Config.Name("ArmourersWorkshop")
         public final ArmourersWorkshop armourersWorkshop = new ArmourersWorkshop();
 
         @Config.Name("AstralSorcery")
         public final AstralSorcery astralSorcery = new AstralSorcery();
+
+        @Config.Name("CoFHCore")
+        public final CoFHCore coFHCore = new CoFHCore();
 
         @Config.Name("DraconicEvolution")
         public final DraconicEvolution draconicEvolution = new DraconicEvolution();
@@ -79,6 +85,16 @@ public class StellarCoreConfig {
         @Config.Name("ThermalDynamics")
         public final ThermalDynamics thermalDynamics = new ThermalDynamics();
 
+        @Config.Name("ThermalExpansion")
+        public final ThermalExpansion thermalExpansion = new ThermalExpansion();
+
+        public static class Container {
+
+            @Config.Name("ContainerUnloadTileEntityFixes")
+            public boolean containerTileEntityFixes = true;
+
+        }
+
         public static class ArmourersWorkshop {
             @Config.Name("SkinTextureCrashFixes")
             public boolean skinTexture = true;
@@ -89,6 +105,16 @@ public class StellarCoreConfig {
             @Config.RequiresWorldRestart
             @Config.Name("PlayerAttributeMapCrashFixes")
             public boolean playerAttributeMap = true;
+            
+            @Config.Name("ContainerJournalFixes")
+            public boolean containerJournal = true;
+
+        }
+
+        public static class CoFHCore {
+
+            @Config.Name("ContainerInventoryItemFixes")
+            public boolean containerInventoryItem = true;
 
         }
 
@@ -195,6 +221,13 @@ public class StellarCoreConfig {
 
             @Config.Name("FluidDuplicateFixes")
             public boolean fixFluidDuplicate = true;
+
+        }
+        
+        public static class ThermalExpansion {
+
+            @Config.Name("ContainerSatchelFilterFixes")
+            public boolean containerSatchelFilter = true;
 
         }
 

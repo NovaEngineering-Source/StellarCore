@@ -28,6 +28,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_botania.json",              "botania");
         addModdedMixinCFG("mixins.stellar_core_cfm.json",                  "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",               "chisel");
+        addModdedMixinCFG("mixins.stellar_core_cofhcore.json",             "cofhcore");
         addModdedMixinCFG("mixins.stellar_core_cucumber.json",             "cucumber");
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",    "draconicevolution");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",            "endercore");
@@ -50,6 +51,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_techguns.json",             "techguns");
         addModdedMixinCFG("mixins.stellar_core_theoneprobe.json",          "theoneprobe");
         addModdedMixinCFG("mixins.stellar_core_thermaldynamics.json",      "thermaldynamics");
+        addModdedMixinCFG("mixins.stellar_core_thermalexpansion.json",     "thermalexpansion");
     }
 
     static {

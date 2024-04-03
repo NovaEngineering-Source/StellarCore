@@ -31,6 +31,10 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, boolean hasTag
         return new HashedItemStack(copied, Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage(), copied.getMetadata()), false);
     }
 
+    public static HashedItemStack ofMetaUnsafe(final ItemStack stack) {
+        return new HashedItemStack(stack, Objects.hash(stack.getItem().getRegistryName(), stack.getItemDamage(), stack.getMetadata()), false);
+    }
+
     public static String stackToString(final ItemStack stack) {
         String stackTagStr = null;
         String registryName = Objects.requireNonNull(stack.getItem().getRegistryName()).toString();

@@ -25,10 +25,10 @@ public class MixinPlayerAttributeMap {
             ),
             remap = false)
     public Object redirectApplyModifierComputeIfAbsent(final Map map, final Object key, final Function _f) {
-        if (StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
-            return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
+        if (!StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
+            return map.computeIfAbsent(key, t -> new ArrayList<>());
         }
-        return map.computeIfAbsent(key, t -> new ArrayList<>());
+        return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
     }
 
     @Redirect(
@@ -40,10 +40,10 @@ public class MixinPlayerAttributeMap {
             ),
             remap = false)
     public Object redirectRemoveModifierComputeIfAbsent(final Map map, final Object key, final Function _f) {
-        if (StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
-            return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
+        if (!StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
+            return map.computeIfAbsent(key, t -> new ArrayList<>());
         }
-        return map.computeIfAbsent(key, t -> new ArrayList<>());
+        return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
     }
 
     @Redirect(
@@ -55,10 +55,10 @@ public class MixinPlayerAttributeMap {
             ),
             remap = false)
     public Object redirectGetModifiersByTypeComputeIfAbsent(final Map map, final Object key, final Function _f) {
-        if (StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
-            return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
+        if (!StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
+            return map.computeIfAbsent(key, t -> new ArrayList<>());
         }
-        return map.computeIfAbsent(key, t -> new ArrayList<>());
+        return map.computeIfAbsent(key, t -> new CopyOnWriteArrayList<>());
     }
 
 }

@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.mekanism;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import mekanism.api.Coord4D;
 import mekanism.common.frequency.Frequency;
 import net.minecraft.nbt.NBTTagCompound;
@@ -26,7 +27,7 @@ public class MixinFrequency {
         if (!StellarCoreConfig.PERFORMANCE.mekanism.frequency) {
             return;
         }
-        this.activeCoords = Collections.newSetFromMap(new Object2ObjectOpenHashMap<>());
+        this.activeCoords = new ObjectOpenHashSet<>();
     }
 
     @Inject(method = "<init>(Ljava/lang/String;Ljava/util/UUID;)V", at = @At("RETURN"), remap = false)
@@ -34,7 +35,7 @@ public class MixinFrequency {
         if (!StellarCoreConfig.PERFORMANCE.mekanism.frequency) {
             return;
         }
-        this.activeCoords = Collections.newSetFromMap(new Object2ObjectOpenHashMap<>());
+        this.activeCoords = new ObjectOpenHashSet<>();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"), remap = false)
@@ -42,7 +43,7 @@ public class MixinFrequency {
         if (!StellarCoreConfig.PERFORMANCE.mekanism.frequency) {
             return;
         }
-        this.activeCoords = Collections.newSetFromMap(new Object2ObjectOpenHashMap<>());
+        this.activeCoords = new ObjectOpenHashSet<>();
     }
 
 }

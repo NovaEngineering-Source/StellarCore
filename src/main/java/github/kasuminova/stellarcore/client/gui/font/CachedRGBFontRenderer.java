@@ -47,7 +47,9 @@ public class CachedRGBFontRenderer extends FontRenderer {
 
             int lastMappedStrIndex = 0;
             StringBuilder sb = new StringBuilder();
-            for (final char ch : s.toCharArray()) {
+            char[] charArray = s.toCharArray();
+            for (int j = 0, strLen = charArray.length; j < strLen; j++) {
+                final char ch = charArray[j];
                 mapping.append(ch);
 
                 String strFirst = strList.getFirst();
@@ -56,7 +58,7 @@ public class CachedRGBFontRenderer extends FontRenderer {
                     continue;
                 }
 
-                if (strFirst.contentEquals(mapping)) {
+                if (strFirst.contentEquals(mapping) || (j + 1 >= strLen && strFirst.equals(mapping.toString() + ' '))) {
                     String color = colors.pollFirst();
                     sb.insert(lastMappedStrIndex, color);
                     sb.append(ch);

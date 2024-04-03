@@ -30,7 +30,7 @@ public class MixinBlockIEMultiblock {
             return false;
         }
         NonNullList<ItemStack> inventory = master.getInventory();
-        if (inventory.isEmpty()) {
+        if (inventory == null || inventory.isEmpty()) {
             return false;
         }
         Collections.fill(inventory, ItemStack.EMPTY);
