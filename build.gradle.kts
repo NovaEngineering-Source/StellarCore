@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.4"
+version = "1.0.7"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -100,8 +100,16 @@ tasks.jar.configure {
         val attributes = manifest.attributes
         attributes["FMLCorePlugin"] = "github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader"
         attributes["FMLCorePluginContainsFMLMod"] = true
+//        attributes["FMLAT"] = "stellar_core_at.cfg"
     }
 }
+
+//tasks.deobfuscateMergedJarToSrg.configure {
+//    accessTransformerFiles.from("src/main/resources/META-INF/stellar_core_at.cfg")
+//}
+//tasks.srgifyBinpatchedJar.configure {
+//    accessTransformerFiles.from("src/main/resources/META-INF/stellar_core_at.cfg")
+//}
 
 // Create a new dependency type for runtime-only dependencies that don't get included in the maven publication
 val runtimeOnlyNonPublishable: Configuration by configurations.creating {
@@ -247,26 +255,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:libvulpes-236541:3801015"))
     compileOnly(rfg.deobf("curse.maven:advanced-rocketry-236542:4671856"))
     compileOnly(rfg.deobf("curse.maven:gugu-utils-530919:3652765"))
-}
-
-// Publishing to a Maven repository
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-        }
-    }
-    repositories {
-//        // Example: publishing to the GTNH Maven repository
-//        maven {
-//            url = uri("http://jenkins.usrv.eu:8081/nexus/content/repositories/releases")
-//            isAllowInsecureProtocol = true
-//            credentials {
-//                username = System.getenv("MAVEN_USER") ?: "NONE"
-//                password = System.getenv("MAVEN_PASSWORD") ?: "NONE"
-//            }
-//        }
-    }
+    compileOnly(rfg.deobf("curse.maven:not-enough-energistics-515565:4690660"))
 }
 
 // IDE Settings
@@ -300,33 +289,6 @@ idea {
                     self.add(Gradle("4. Run Obfuscated Server").apply {
                         setProperty("taskNames", listOf("runObfServer"))
                     })
-                    /*
-                    These require extra configuration in IntelliJ, so are not enabled by default
-                    self.add(Application("Run Client (IJ Native, Deprecated)", project).apply {
-                      mainClass = "GradleStart"
-                      moduleName = project.name + ".ideVirtualMain"
-                      afterEvaluate {
-                        val runClient = tasks.runClient.get()
-                        workingDirectory = runClient.workingDir.absolutePath
-                        programParameters = runClient.calculateArgs(project).map { '"' + it + '"' }.joinToString(" ")
-                        jvmArgs = runClient.calculateJvmArgs(project).map { '"' + it + '"' }.joinToString(" ") +
-                          ' ' + runClient.systemProperties.map { "\"-D" + it.key + '=' + it.value.toString() + '"' }
-                          .joinToString(" ")
-                      }
-                    })
-                    self.add(Application("Run Server (IJ Native, Deprecated)", project).apply {
-                      mainClass = "GradleStartServer"
-                      moduleName = project.name + ".ideVirtualMain"
-                      afterEvaluate {
-                        val runServer = tasks.runServer.get()
-                        workingDirectory = runServer.workingDir.absolutePath
-                        programParameters = runServer.calculateArgs(project).map { '"' + it + '"' }.joinToString(" ")
-                        jvmArgs = runServer.calculateJvmArgs(project).map { '"' + it + '"' }.joinToString(" ") +
-                          ' ' + runServer.systemProperties.map { "\"-D" + it.key + '=' + it.value.toString() + '"' }
-                          .joinToString(" ")
-                      }
-                    })
-                    */
                 }
                 "compiler" {
                     val self = this.delegate as org.jetbrains.gradle.ext.IdeaCompilerConfiguration

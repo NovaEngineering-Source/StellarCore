@@ -19,20 +19,32 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, boolean hasTag
         boolean hasTag = tag == null || tag.isEmpty();
         int hash;
         if (hasTag) {
-            hash = Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage(), tag);
+            hash = Objects.hash(copied.getItem(), copied.getItemDamage(), tag);
         } else {
-            hash = Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage());
+            hash = Objects.hash(copied.getItem(), copied.getItemDamage());
         }
         return new HashedItemStack(copied, hash, hasTag);
     }
 
+    public static HashedItemStack ofTagUnsafe(final ItemStack stack) {
+        NBTTagCompound tag = stack.getTagCompound();
+        boolean hasTag = tag == null || tag.isEmpty();
+        int hash;
+        if (hasTag) {
+            hash = Objects.hash(stack.getItem(), stack.getItemDamage(), tag);
+        } else {
+            hash = Objects.hash(stack.getItem(), stack.getItemDamage());
+        }
+        return new HashedItemStack(stack, hash, hasTag);
+    }
+
     public static HashedItemStack ofMeta(final ItemStack stack) {
         ItemStack copied = stack.copy();
-        return new HashedItemStack(copied, Objects.hash(copied.getItem().getRegistryName(), copied.getItemDamage(), copied.getMetadata()), false);
+        return new HashedItemStack(copied, Objects.hash(copied.getItem(), copied.getMetadata()), false);
     }
 
     public static HashedItemStack ofMetaUnsafe(final ItemStack stack) {
-        return new HashedItemStack(stack, Objects.hash(stack.getItem().getRegistryName(), stack.getItemDamage(), stack.getMetadata()), false);
+        return new HashedItemStack(stack, Objects.hash(stack.getItem(), stack.getMetadata()), false);
     }
 
     public static String stackToString(final ItemStack stack) {

@@ -33,10 +33,10 @@ public class StellarCoreConfig {
     }
 
     public static class BugFixes {
-        
+
         @Config.Name("Critical")
         public final Critical critical = new Critical();
-        
+
         @Config.Name("Container")
         public final Container container = new Container();
 
@@ -126,6 +126,9 @@ public class StellarCoreConfig {
 
             @Config.Name("ContainerInventoryItemFixes")
             public boolean containerInventoryItem = true;
+            
+            @Config.Name("TileInventoryFixes")
+            public boolean tileInventory = true;
 
         }
 
@@ -300,6 +303,13 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("ChunkTileEntityMapImprovements")
             public boolean blockPos2ValueMap = true;
+
+            /**
+             * TODO 真的有用吗？
+             */
+            @Config.RequiresMcRestart
+            @Config.Name("NonNullListImprovements")
+            public boolean nonNullList = true;
 
         }
 
