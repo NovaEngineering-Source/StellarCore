@@ -3,22 +3,24 @@ package github.kasuminova.stellarcore.mixin.extrabotany;
 import com.meteor.extrabotany.common.block.fluid.ModFluid;
 import com.meteor.extrabotany.common.block.tile.TileManaLiquefaction;
 import com.meteor.extrabotany.common.core.config.ConfigHandler;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import vazkii.botania.common.block.tile.TileMod;
 import vazkii.botania.common.block.tile.mana.TileSpreader;
 
 @Mixin(TileManaLiquefaction.class)
-public abstract class MixinTileManaLiquefaction extends TileMod implements ITickable {
+public abstract class MixinTileManaLiquefaction extends TileMod {
 
     @Shadow(remap = false)
     public abstract boolean isFull();
@@ -41,10 +43,14 @@ public abstract class MixinTileManaLiquefaction extends TileMod implements ITick
      * @author Kasumi_Nova
      * @reason 修复液态魔力溢出。
      */
-    @Override
-    @Overwrite(remap = false)
-    public void update() {
-        // 极其具有迷惑性的变量
+    @Inject(method = "update", at = @At("HEAD"), cancellable = true)
+    public void update(final CallbackInfo ci) {
+        if (!StellarCoreConfig.BUG_FIXES.extraBotany.tileManaLiquefaction) {
+            return;
+        }
+        ci.cancel();
+
+        // 极其具有迷惑性的变量。
         if (!ConfigHandler.DISABLE_MANALIQUEFICATION) {
             return;
         }

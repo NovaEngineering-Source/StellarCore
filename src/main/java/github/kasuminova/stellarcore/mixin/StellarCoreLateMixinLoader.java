@@ -3,12 +3,9 @@ package github.kasuminova.stellarcore.mixin;
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraftforge.fml.common.Loader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
 @SuppressWarnings("unused")
@@ -22,6 +19,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_armourers_workshop.json",   "armourers_workshop");
         addModdedMixinCFG("mixins.stellar_core_astralsorcery.json",        "astralsorcery");
         addModdedMixinCFG("mixins.stellar_core_avaritia.json",             "avaritia");
+        addModdedMixinCFG("mixins.stellar_core_avaritiaddons.json",        "avaritiaddons");
         addModdedMixinCFG("mixins.stellar_core_betterchat.json",           "betterchat");
         addModdedMixinCFG("mixins.stellar_core_biomesoplenty.json",        "biomesoplenty");
         addModdedMixinCFG("mixins.stellar_core_bloodmagic.json",           "bloodmagic");
@@ -30,6 +28,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_chisel.json",               "chisel");
         addModdedMixinCFG("mixins.stellar_core_cofhcore.json",             "cofhcore");
         addModdedMixinCFG("mixins.stellar_core_cucumber.json",             "cucumber");
+        addModdedMixinCFG("mixins.stellar_core_customstartinggear.json",   "customstartinggear");
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",    "draconicevolution");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",            "endercore");
         addModdedMixinCFG("mixins.stellar_core_enderio.json",              "enderio");

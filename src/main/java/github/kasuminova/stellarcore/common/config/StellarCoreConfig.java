@@ -46,14 +46,23 @@ public class StellarCoreConfig {
         @Config.Name("AstralSorcery")
         public final AstralSorcery astralSorcery = new AstralSorcery();
 
+        @Config.Name("Avaritaddons")
+        public final Avaritaddons avaritaddons = new Avaritaddons();
+
         @Config.Name("CoFHCore")
         public final CoFHCore coFHCore = new CoFHCore();
+
+        @Config.Name("CustomStartingGear")
+        public final CustomStartingGear customStartingGear = new CustomStartingGear();
 
         @Config.Name("DraconicEvolution")
         public final DraconicEvolution draconicEvolution = new DraconicEvolution();
 
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
+
+        @Config.Name("ExtraBotany")
+        public final ExtraBotany extraBotany = new ExtraBotany();
 
         @Config.Name("FluxNetworks")
         public final FluxNetworks fluxNetworks = new FluxNetworks();
@@ -122,6 +131,13 @@ public class StellarCoreConfig {
 
         }
 
+        public static class Avaritaddons {
+
+            @Config.Name("TileEntityExtremeAutoCrafterFixes")
+            public boolean tileEntityExtremeAutoCrafter = true;
+
+        }
+
         public static class CoFHCore {
 
             @Config.Name("ContainerInventoryItemFixes")
@@ -129,6 +145,13 @@ public class StellarCoreConfig {
             
             @Config.Name("TileInventoryFixes")
             public boolean tileInventory = true;
+
+        }
+
+        public static class CustomStartingGear {
+
+            @Config.Name("DataManagerCharSetFixes")
+            public boolean dataManager = true;
 
         }
 
@@ -144,6 +167,13 @@ public class StellarCoreConfig {
             @Config.Name("ItemConduitItemStackCache")
             public boolean cachedItemConduit = true;
 
+        }
+        
+        public static class ExtraBotany {
+            
+            @Config.Name("TileManaLiquefactionFixes")
+            public boolean tileManaLiquefaction = true;
+            
         }
 
         public static class FluxNetworks {
@@ -310,6 +340,10 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("NonNullListImprovements")
             public boolean nonNullList = true;
+
+            @Config.RequiresMcRestart
+            @Config.Name("NoGLError")
+            public boolean noGlError = false;
 
         }
 

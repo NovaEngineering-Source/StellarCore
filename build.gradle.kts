@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.7"
+version = "1.0.9"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -256,6 +256,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:advanced-rocketry-236542:4671856"))
     compileOnly(rfg.deobf("curse.maven:gugu-utils-530919:3652765"))
     compileOnly(rfg.deobf("curse.maven:not-enough-energistics-515565:4690660"))
+    compileOnly(rfg.deobf("curse.maven:avaritiaddons-248873:4745387"))
+    compileOnly(rfg.deobf("curse.maven:custom-starter-gear-253735:2514705"))
 }
 
 // IDE Settings
