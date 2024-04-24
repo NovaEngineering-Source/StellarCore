@@ -28,7 +28,7 @@ public class MixinTileEntityExtremeAutoCrafter {
         if (!StellarCoreConfig.BUG_FIXES.avaritaddons.tileEntityExtremeAutoCrafter) {
             return;
         }
-        if (!recipeStack.isEmpty() && !recipeStack.isItemEqual(outputStack)) {
+        if (!recipeStack.isEmpty() && (!outputStack.isEmpty() && !recipeStack.isItemEqual(outputStack))) {
             ci.cancel();
         }
     }

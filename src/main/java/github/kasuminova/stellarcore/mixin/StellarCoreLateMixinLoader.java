@@ -48,6 +48,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_scalingguis.json",          "scalingguis");
         addModdedMixinCFG("mixins.stellar_core_sync.json",                 "sync");
         addModdedMixinCFG("mixins.stellar_core_sync_techguns.json",        "sync", "techguns");
+        addModdedMixinCFG("mixins.stellar_core_tconstruct.json",           "tconstruct");
         addModdedMixinCFG("mixins.stellar_core_techguns.json",             "techguns");
         addModdedMixinCFG("mixins.stellar_core_theoneprobe.json",          "theoneprobe");
         addModdedMixinCFG("mixins.stellar_core_thermaldynamics.json",      "thermaldynamics");

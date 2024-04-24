@@ -43,7 +43,7 @@ public class TileEntityContainerFixes {
         for (final TileEntity te : teList) {
             BlockPos pos = te.getPos();
             World world = te.getWorld();
-            if (te.isInvalid() || (world != null && !world.isBlockLoaded(pos))) {
+            if (te.isInvalid() || world == null || !world.isBlockLoaded(pos) || world.getTileEntity(pos) != te) {
                 player.closeScreen();
                 StellarCore.log.warn(String.format(
                         "Detected invalid TileEntity GUI, World: %s, Pos: %s, GUI Class: %s, TileEntity Class: %s",

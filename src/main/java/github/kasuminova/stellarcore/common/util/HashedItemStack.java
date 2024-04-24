@@ -15,15 +15,7 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, boolean hasTag
 
     public static HashedItemStack ofTag(final ItemStack stack) {
         ItemStack copied = stack.copy();
-        NBTTagCompound tag = copied.getTagCompound();
-        boolean hasTag = tag == null || tag.isEmpty();
-        int hash;
-        if (hasTag) {
-            hash = Objects.hash(copied.getItem(), copied.getItemDamage(), tag);
-        } else {
-            hash = Objects.hash(copied.getItem(), copied.getItemDamage());
-        }
-        return new HashedItemStack(copied, hash, hasTag);
+        return ofTagUnsafe(copied);
     }
 
     public static HashedItemStack ofTagUnsafe(final ItemStack stack) {
@@ -88,6 +80,10 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, boolean hasTag
         } else {
             return sItem.equals(other.getItem());
         }
+    }
+
+    public HashedItemStack copy() {
+        return new HashedItemStack(stack.copy(), stackHashCode, hasTag);
     }
 
     @Override

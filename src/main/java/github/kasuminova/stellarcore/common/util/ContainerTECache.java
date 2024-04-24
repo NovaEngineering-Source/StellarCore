@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.common.util;
 
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 public class ContainerTECache {
 
     private static final Map<Class<? extends Container>, Function<Container, List<TileEntity>>> CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Map<Class<?>, List<Field>>> CLASS_FILED_TYPE_CACHE = new ConcurrentHashMap<>();
 
     public static List<TileEntity> getTileEntityList(final Container container) {
         Function<Container, List<TileEntity>> func = CACHE.get(container.getClass());
@@ -30,6 +32,17 @@ public class ContainerTECache {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         };
+        if (StellarCoreConfig.DEBUG.enableDebugLog && !availableFields.isEmpty()) {
+            StringBuilder sb = new StringBuilder("[DEBUG] Registered TileEntity container, available fields: \n");
+            for (Iterator<Field> it = availableFields.iterator(); it.hasNext(); ) {
+                final Field field = it.next();
+                sb.append(field.getType().getName()).append(": ").append(field.getName());
+                if (it.hasNext()) {
+                    sb.append(";\n");
+                }
+            }
+            StellarCore.log.info(sb.toString());
+        }
         CACHE.put(cClass, func);
         return func;
     }
@@ -40,6 +53,8 @@ public class ContainerTECache {
             obj = field.get(instance);
             if (type.isInstance(obj)) {
                 return type.cast(obj);
+            } else if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                StellarCore.log.warn("[DEBUG] Field {} {} is not assignable to {}", field.getType(), field.getName(), type.getName());
             }
         } catch (Error | Exception e) {
             StellarCore.log.warn(e);
@@ -52,13 +67,28 @@ public class ContainerTECache {
     }
 
     private static List<Field> scanTileEntityFieldRecursive(Class<?> aClass, Class<?> target) {
+        Map<Class<?>, List<Field>> cachedFieldMap = CLASS_FILED_TYPE_CACHE.computeIfAbsent(aClass, v -> new ConcurrentHashMap<>());
+        List<Field> fieldCache = cachedFieldMap.get(target);
+        if (fieldCache != null) {
+            return fieldCache;
+        }
+
         List<Field> teFields = new ArrayList<>();
 
         // 遍历当前类的声明字段
         try {
             Field[] fields = aClass.getDeclaredFields();
+            if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                StellarCore.log.info("[DEBUG] Scanning fields for class {}, required: {}", aClass.getName(), target.getName());
+            }
+
             for (Field field : fields) {
-                if (target.isAssignableFrom(field.getType())) {
+                boolean assignable = target.isAssignableFrom(field.getType());
+                if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                    StellarCore.log.info("[DEBUG] Field: {} {} (targetAssignable = {})", field.getType().getName(), field.getName(), assignable);
+                }
+
+                if (assignable) {
                     field.setAccessible(true);
                     teFields.add(field);
                 }
@@ -77,6 +107,7 @@ public class ContainerTECache {
         } catch (Error | Exception ignored) {
         }
 
+        cachedFieldMap.put(target, teFields);
         return teFields;
     }
 

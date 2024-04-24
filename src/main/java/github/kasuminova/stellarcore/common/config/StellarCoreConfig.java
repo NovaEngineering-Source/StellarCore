@@ -16,6 +16,9 @@ public class StellarCoreConfig {
         ConfigAnytime.register(StellarCoreConfig.class);
     }
 
+    @Config.Name("Debug")
+    public static final Debug DEBUG = new Debug();
+
     @Config.Name("BugFixes")
     public static final BugFixes BUG_FIXES = new BugFixes();
 
@@ -32,7 +35,17 @@ public class StellarCoreConfig {
         }
     }
 
+    public static class Debug {
+
+        @Config.Name("EnableDebugLog")
+        public boolean enableDebugLog = false;
+
+    }
+
     public static class BugFixes {
+
+        @Config.Name("Vanilla")
+        public final Vanilla vanilla = new Vanilla();
 
         @Config.Name("Critical")
         public final Critical critical = new Critical();
@@ -99,7 +112,24 @@ public class StellarCoreConfig {
 
         @Config.Name("ThermalExpansion")
         public final ThermalExpansion thermalExpansion = new ThermalExpansion();
-        
+
+        public static class Vanilla {
+
+            @Config.RequiresMcRestart
+            @Config.Name("LongNBTKiller")
+            public boolean longNBTKiller = true;
+
+            @Config.Name("MaxNBTDepth")
+            public int maxNBTDepth = 2048;
+
+            @Config.Name("MaxNBTSize")
+            public int maxNBTSize = 1024 * 1024 * 2 * 8;
+
+            @Config.Name("DisplayLargeNBTWarning")
+            public boolean displayLargeNBTWarning = true;
+
+        }
+
         public static class Critical {
 
             @Config.Comment("If you dont know what you're doing, don't set it to \"false\".")
@@ -324,6 +354,9 @@ public class StellarCoreConfig {
         @Config.Name("Mekanism")
         public final Mekanism mekanism = new Mekanism();
 
+        @Config.Name("TConstruct")
+        public final TConstruct tConstruct = new TConstruct();
+
         public static class Vanilla {
 
             @Config.RequiresMcRestart
@@ -479,6 +512,19 @@ public class StellarCoreConfig {
 
             @Config.Name("FrequencyImprovements")
             public boolean frequency = true;
+
+        }
+
+        public static class TConstruct {
+
+            @Config.Name("MeltingRecipeSearchImprovements")
+            public boolean meltingRecipeSearch = true;
+
+            @Config.Name("TableCastingRecipeSearchImprovements")
+            public boolean tableCastingSearch = true;
+
+            @Config.Name("BasinCastingRecipeSearchImprovements")
+            public boolean basinCastingSearch = true;
 
         }
 

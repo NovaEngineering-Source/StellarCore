@@ -17,11 +17,12 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
-        addMixinCFG("mixins.stellar_core_minecraft_chunk.json",     () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
-        addMixinCFG("mixins.stellar_core_minecraft_noglerror.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
-        addMixinCFG("mixins.stellar_core_minecraft_world.json",     () -> StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots);
-        addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
-        addMixinCFG("mixins.stellar_core_forge.json",               () -> StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress);
+        addMixinCFG("mixins.stellar_core_minecraft_chunk.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
+        addMixinCFG("mixins.stellar_core_minecraft_longnbtkiller.json", () -> StellarCoreConfig.BUG_FIXES.vanilla.longNBTKiller);
+        addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
+        addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",     () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
+        addMixinCFG("mixins.stellar_core_minecraft_world.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots);
+        addMixinCFG("mixins.stellar_core_forge.json",                   () -> StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress);
     }
 
     @Override

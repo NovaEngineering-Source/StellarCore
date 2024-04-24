@@ -39,7 +39,7 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
     private int stellar_core$displayWidth = 0;
     @Unique
     private int stellar_core$displayHeight = 0;
-    
+
     @Unique
     private long stellar_core$lastRenderMS = 0;
 
