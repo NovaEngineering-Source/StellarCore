@@ -85,7 +85,7 @@ public class TitleUtils {
         boolean useHitokoto = StellarCoreConfig.FEATURES.hitokoto;
         if (state == null) {
             if (!useHitokoto || hitokoto == null) {
-                currentTitle = String.format("%s", title);
+                return title;
             }
             return String.format("%s | %s", title, hitokoto);
         }

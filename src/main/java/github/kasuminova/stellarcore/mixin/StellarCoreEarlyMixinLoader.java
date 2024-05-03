@@ -17,6 +17,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
+        addMixinCFG("mixins.stellar_core_minecraft_advancements.json",  () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
         addMixinCFG("mixins.stellar_core_minecraft_chunk.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
         addMixinCFG("mixins.stellar_core_minecraft_longnbtkiller.json", () -> StellarCoreConfig.BUG_FIXES.vanilla.longNBTKiller);
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);

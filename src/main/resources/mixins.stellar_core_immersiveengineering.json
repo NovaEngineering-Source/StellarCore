@@ -7,6 +7,7 @@
   "mixins": [
     "MixinBlockIEMultiblock",
     "MixinBlockIETileProvider",
-    "MixinRecipeJerrycan"
+    "MixinRecipeJerrycan",
+    "MixinTileEntityExcavator"
   ]
 }

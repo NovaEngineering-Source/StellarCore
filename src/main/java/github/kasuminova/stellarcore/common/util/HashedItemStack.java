@@ -20,19 +20,21 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, boolean hasTag
 
     public static HashedItemStack ofTagUnsafe(final ItemStack stack) {
         NBTTagCompound tag = stack.getTagCompound();
-        boolean hasTag = tag == null || tag.isEmpty();
+        boolean hasTag = tag != null && !tag.isEmpty();
         int hash;
         if (hasTag) {
-            hash = Objects.hash(stack.getItem(), stack.getItemDamage(), tag);
+            hash = Objects.hash(stack.getItem(),
+                    stack.isItemStackDamageable() ? stack.getItemDamage() : stack.getHasSubtypes() ? stack.getMetadata() : 0, tag);
         } else {
-            hash = Objects.hash(stack.getItem(), stack.getItemDamage());
+            hash = Objects.hash(stack.getItem(), 
+                    stack.isItemStackDamageable() ? stack.getItemDamage() : stack.getHasSubtypes() ? stack.getMetadata() : 0);
         }
         return new HashedItemStack(stack, hash, hasTag);
     }
 
     public static HashedItemStack ofMeta(final ItemStack stack) {
         ItemStack copied = stack.copy();
-        return new HashedItemStack(copied, Objects.hash(copied.getItem(), copied.getMetadata()), false);
+        return ofMetaUnsafe(copied);
     }
 
     public static HashedItemStack ofMetaUnsafe(final ItemStack stack) {

@@ -26,7 +26,7 @@ public class LinkedFakeArrayList<E> extends ArrayList<E> {
 
     public LinkedFakeArrayList(final Collection<? extends E> c) {
         super(c);
-        this.internal = new LinkedList<>();
+        this.internal = new LinkedList<>(c);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class LinkedFakeArrayList<E> extends ArrayList<E> {
     @Override
     protected void removeRange(final int fromIndex, final int toIndex) {
         ListIterator<E> it = internal.listIterator(fromIndex);
-        for (int i=0, n=toIndex-fromIndex; i<n; i++) {
+        for (int i = 0, n = toIndex - fromIndex; i < n; i++) {
             it.next();
             it.remove();
         }

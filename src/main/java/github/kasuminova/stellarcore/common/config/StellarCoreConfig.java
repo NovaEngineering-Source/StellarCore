@@ -235,6 +235,9 @@ public class StellarCoreConfig {
             @Config.Name("JerryCanFixes")
             public boolean fixJerryCanRecipe = true;
 
+            @Config.Name("TileEntityExcavatorDigBlockFixes")
+            public boolean tileEntityExcavator = true;
+
         }
 
         public static class MoreElectricTools {
@@ -526,6 +529,13 @@ public class StellarCoreConfig {
             @Config.Name("BasinCastingRecipeSearchImprovements")
             public boolean basinCastingSearch = true;
 
+            @Config.Name("TileSmelteryAlloyRecipeSearchImprovements")
+            public boolean tileSmelteryAlloyRecipeSearch = true;
+
+            @Config.RangeInt(min = 1, max = 100)
+            @Config.Name("TileSmelteryMaxAlloyRecipePerTick")
+            public int tileSmelteryMaxAlloyRecipePerTick = 5;
+
         }
 
     }
@@ -539,6 +549,9 @@ public class StellarCoreConfig {
 
         @Config.Name("CustomGameTitle")
         public String title = "Minecraft 1.12.2";
+
+        @Config.Name("Vanilla")
+        public final Vanilla vanilla = new Vanilla();
 
         @Config.Name("FontScale")
         public final FontScale fontScale = new FontScale();
@@ -569,6 +582,14 @@ public class StellarCoreConfig {
 
         @Config.Name("MoreElectricTools")
         public final MoreElectricTools moreElectricTools = new MoreElectricTools();
+
+        public static class Vanilla {
+
+            @Config.RequiresMcRestart
+            @Config.Name("AsyncAdvancementSerialize")
+            public boolean asyncAdvancementSerialize = true;
+
+        }
 
         public static class FontScale {
 

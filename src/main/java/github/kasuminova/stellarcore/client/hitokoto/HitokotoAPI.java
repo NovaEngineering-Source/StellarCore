@@ -2,6 +2,8 @@ package github.kasuminova.stellarcore.client.hitokoto;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.util.JsonUtils;
 
 import java.io.BufferedReader;
@@ -14,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 public class HitokotoAPI {
     public static final String API_URL = "https://v1.hitokoto.cn/";
+    public static final String INTERNATIONAL_API_URL = "https://international.v1.hitokoto.cn";
 
     public static String hitokotoCache = null;
 
@@ -34,7 +37,15 @@ public class HitokotoAPI {
         try {
             jsonStr = getStringFromURL(API_URL);
         } catch (IOException e) {
-            return "";
+            try {
+                jsonStr = getStringFromURL(INTERNATIONAL_API_URL);
+            } catch (IOException ex) {
+                if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                    StellarCore.log.warn("[DEBUG] Failed to fetch Hitokoto API.", e);
+                    StellarCore.log.warn(ex);
+                }
+                return "";
+            }
         }
 
         if (jsonStr == null || jsonStr.isEmpty()) {
@@ -45,6 +56,9 @@ public class HitokotoAPI {
         try {
             hitokoto = JsonUtils.fromJson(DESERIALIZER, jsonStr, HitokotoResult.class, true);
         } catch (Exception e) {
+            if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                StellarCore.log.warn("[DEBUG] Failed to fetch Hitokoto API.", e);
+            }
             return "";
         }
 

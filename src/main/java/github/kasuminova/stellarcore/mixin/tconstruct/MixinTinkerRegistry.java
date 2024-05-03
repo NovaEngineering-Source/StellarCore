@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.tconstruct;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.HashedItemStack;
 import github.kasuminova.stellarcore.common.util.HashedStackFluidPair;
+import github.kasuminova.stellarcore.mixin.util.TinkerRegistryUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,8 +11,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import slimeknights.tconstruct.library.TinkerRegistry;
+import slimeknights.tconstruct.library.smeltery.AlloyRecipe;
 import slimeknights.tconstruct.library.smeltery.ICastingRecipe;
 import slimeknights.tconstruct.library.smeltery.MeltingRecipe;
 
@@ -41,7 +44,7 @@ public class MixinTinkerRegistry {
     @Shadow(remap = false)
     private static List<ICastingRecipe> basinCastRegistry;
 
-    @Inject(method = "getMelting", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "getMelting", at = @At("HEAD" ), cancellable = true, remap = false)
     private static void injectGetMelting(final ItemStack stack, final CallbackInfoReturnable<MeltingRecipe> cir) {
         if (!StellarCoreConfig.PERFORMANCE.tConstruct.meltingRecipeSearch) {
             return;
@@ -70,7 +73,7 @@ public class MixinTinkerRegistry {
         cir.setReturnValue(null);
     }
 
-    @Inject(method = "getTableCasting", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "getTableCasting", at = @At("HEAD" ), cancellable = true, remap = false)
     private static void injectGetTableCasting(final ItemStack cast, final Fluid fluid, final CallbackInfoReturnable<ICastingRecipe> cir) {
         if (!StellarCoreConfig.PERFORMANCE.tConstruct.tableCastingSearch) {
             return;
@@ -126,6 +129,19 @@ public class MixinTinkerRegistry {
         // Save result...
         BASIN_CASTING_RECIPE_CACHE.put(hashed.copy(), Optional.empty());
         cir.setReturnValue(null);
+    }
+
+    @Inject(
+            method = "registerAlloy(Lslimeknights/tconstruct/library/smeltery/AlloyRecipe;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Ljava/util/List;add(Ljava/lang/Object;)Z",
+                    remap = false
+            ),
+            remap = false
+    )
+    private static void injectRegistryAlloy(final AlloyRecipe recipe, final CallbackInfo ci) {
+        TinkerRegistryUtils.stellar_core$alloyRecipeDirty = true;
     }
 
 }

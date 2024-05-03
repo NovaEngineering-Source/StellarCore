@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.13"
+version = "1.0.15"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -258,6 +258,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:not-enough-energistics-515565:4690660"))
     compileOnly(rfg.deobf("curse.maven:avaritiaddons-248873:4745387"))
     compileOnly(rfg.deobf("curse.maven:custom-starter-gear-253735:2514705"))
+    compileOnly(rfg.deobf("curse.maven:modular-routers-250294:2954953"))
 }
 
 // IDE Settings
