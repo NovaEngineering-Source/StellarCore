@@ -44,7 +44,7 @@ public class MixinTinkerRegistry {
     @Shadow(remap = false)
     private static List<ICastingRecipe> basinCastRegistry;
 
-    @Inject(method = "getMelting", at = @At("HEAD" ), cancellable = true, remap = false)
+    @Inject(method = "getMelting", at = @At("HEAD"), cancellable = true, remap = false)
     private static void injectGetMelting(final ItemStack stack, final CallbackInfoReturnable<MeltingRecipe> cir) {
         if (!StellarCoreConfig.PERFORMANCE.tConstruct.meltingRecipeSearch) {
             return;
@@ -73,7 +73,7 @@ public class MixinTinkerRegistry {
         cir.setReturnValue(null);
     }
 
-    @Inject(method = "getTableCasting", at = @At("HEAD" ), cancellable = true, remap = false)
+    @Inject(method = "getTableCasting", at = @At("HEAD"), cancellable = true, remap = false)
     private static void injectGetTableCasting(final ItemStack cast, final Fluid fluid, final CallbackInfoReturnable<ICastingRecipe> cir) {
         if (!StellarCoreConfig.PERFORMANCE.tConstruct.tableCastingSearch) {
             return;
