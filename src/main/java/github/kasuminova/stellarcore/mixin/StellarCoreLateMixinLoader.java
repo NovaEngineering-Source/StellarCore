@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin;
 
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import net.minecraftforge.fml.common.Loader;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
@@ -41,7 +42,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_immersiveengineering.json", "immersiveengineering");
         addModdedMixinCFG("mixins.stellar_core_legendarytooltips.json",    "legendarytooltips");
         addModdedMixinCFG("mixins.stellar_core_mek_top.json",        new String[]{"mekanism", "theoneprobe"}, () -> StellarCoreConfig.FEATURES.mekanism.topSupport);
-        addModdedMixinCFG("mixins.stellar_core_mekanism.json",             "mekanism");
+        addMixinCFG(      "mixins.stellar_core_mekanism.json",                    () -> Mods.MEK.loaded() && !Mods.MEKCEU.loaded());
         addModdedMixinCFG("mixins.stellar_core_mets.json",                 "mets");
         addModdedMixinCFG("mixins.stellar_core_nco.json",                  "nuclearcraft");
         addModdedMixinCFG("mixins.stellar_core_rgb_chat.json",             "jianghun");

@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.16"
+version = "1.0.17"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -206,7 +206,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
     compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
     compileOnly(rfg.deobf("curse.maven:industrialcraft-2-242638:3078604"))
-    compileOnly(rfg.deobf("curse.maven:mekanism-unofficial-edition-v10-edition-840735:4464199"))
+    compileOnly(rfg.deobf("curse.maven:mekanism-ce-unofficial-840735:5130458"))
+//    compileOnly(rfg.deobf("curse.maven:mekanism-unofficial-edition-v10-edition-840735:4464199"))
     compileOnly(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
     compileOnly(rfg.deobf("curse.maven:cofh-core-69162:2920433"))
     compileOnly(rfg.deobf("curse.maven:cofh-world-271384:2920434"))

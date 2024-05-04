@@ -1,11 +1,11 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.rgbchat",
-  "refmap": "mixins.stellar_core.refmap.json",
-  "target": "@env(DEFAULT)",
-  "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
-  "client": [
-    "MixinRGBChat",
-    "MixinRGBSettings"
-  ]
+    "package": "github.kasuminova.stellarcore.mixin.rgbchat",
+    "refmap": "mixins.stellar_core.refmap.json",
+    "target": "@env(DEFAULT)",
+    "minVersion": "0.8",
+    "compatibilityLevel": "JAVA_8",
+    "client": [
+        "MixinRGBChat",
+        "MixinRGBSettings"
+    ]
 }

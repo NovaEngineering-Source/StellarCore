@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.common.integration.fluxnetworks;
 
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import sonar.fluxnetworks.common.handler.TileEntityHandler;
@@ -9,7 +10,7 @@ public class IntegrationsFluxNetworks {
 
     @Optional.Method(modid = "fluxnetworks")
     public static void preInit() {
-        if (Loader.isModLoaded("mekanism")) {
+        if (Mods.MEK.loaded() && !Mods.MEKCEU.loaded()) {
             initMekanismIntegration();
         }
     }

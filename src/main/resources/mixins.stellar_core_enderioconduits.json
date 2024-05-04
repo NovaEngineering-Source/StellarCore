@@ -1,15 +1,15 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.enderioconduits",
-  "refmap": "mixins.stellar_core.refmap.json",
-  "target": "@env(DEFAULT)",
-  "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "AccessorTarget",
-    "InvokerNetworkedInventory",
-    "MixinAbstractConduit",
-    "MixinItemConduit",
-    "MixinNetworkedInventory",
-    "MixinTileConduitBundle"
-  ]
+    "package": "github.kasuminova.stellarcore.mixin.enderioconduits",
+    "refmap": "mixins.stellar_core.refmap.json",
+    "target": "@env(DEFAULT)",
+    "minVersion": "0.8",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "AccessorTarget",
+        "InvokerNetworkedInventory",
+        "MixinAbstractConduit",
+        "MixinItemConduit",
+        "MixinNetworkedInventory",
+        "MixinTileConduitBundle"
+    ]
 }

@@ -1,13 +1,13 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.immersiveengineering",
-  "refmap": "mixins.stellar_core.refmap.json",
-  "target": "@env(DEFAULT)",
-  "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "MixinBlockIEMultiblock",
-    "MixinBlockIETileProvider",
-    "MixinRecipeJerrycan",
-    "MixinTileEntityExcavator"
-  ]
+    "package": "github.kasuminova.stellarcore.mixin.immersiveengineering",
+    "refmap": "mixins.stellar_core.refmap.json",
+    "target": "@env(DEFAULT)",
+    "minVersion": "0.8",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "MixinBlockIEMultiblock",
+        "MixinBlockIETileProvider",
+        "MixinRecipeJerrycan",
+        "MixinTileEntityExcavator"
+    ]
 }

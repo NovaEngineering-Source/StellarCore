@@ -218,6 +218,9 @@ public class StellarCoreConfig {
             @Config.Name("GradualRecipeFixes")
             public boolean gradualRecipe = true;
 
+            @Config.Name("BlockTileEntityDropFixes")
+            public boolean blockTileEntityDrop = true;
+
         }
 
         public static class InGameInfoXML {
@@ -453,6 +456,9 @@ public class StellarCoreConfig {
 
         public static class EnderCore {
 
+            @Config.Name("ThingsImprovements")
+            public boolean things = true;
+            
             @Config.Name("OreThingImprovements")
             public boolean oreThing = true;
 

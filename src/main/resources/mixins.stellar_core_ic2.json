@@ -1,13 +1,14 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.ic2",
-  "refmap": "mixins.stellar_core.refmap.json",
-  "target": "@env(DEFAULT)",
-  "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "MixinEnergyCalculatorLeg",
-    "MixinGradualRecipe",
-    "MixinGrid",
-    "MixinItemUpgradeModule"
-  ]
+    "package": "github.kasuminova.stellarcore.mixin.ic2",
+    "refmap": "mixins.stellar_core.refmap.json",
+    "target": "@env(DEFAULT)",
+    "minVersion": "0.8",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "MixinBlockTileEntity",
+        "MixinEnergyCalculatorLeg",
+        "MixinGradualRecipe",
+        "MixinGrid",
+        "MixinItemUpgradeModule"
+    ]
 }

@@ -1,20 +1,20 @@
 {
-  "package": "github.kasuminova.stellarcore.mixin.cfm",
-  "refmap": "mixins.stellar_core.refmap.json",
-  "target": "@env(DEFAULT)",
-  "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "MixinBlockFurnitureTile",
-    "MixinTileEntityCookieJar",
-    "MixinTileEntityDeskCabinet",
-    "MixinTileEntityFurniture",
-    "MixinTileEntityKitchenCounter",
-    "MixinTileEntityKitchenCounterDrawer",
-    "MixinTileEntitySyncClient",
-    "MixinTileEntityTVStand"
-  ],
-  "client": [
-    "MixinImageCache"
-  ]
+    "package": "github.kasuminova.stellarcore.mixin.cfm",
+    "refmap": "mixins.stellar_core.refmap.json",
+    "target": "@env(DEFAULT)",
+    "minVersion": "0.8",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "MixinBlockFurnitureTile",
+        "MixinTileEntityCookieJar",
+        "MixinTileEntityDeskCabinet",
+        "MixinTileEntityFurniture",
+        "MixinTileEntityKitchenCounter",
+        "MixinTileEntityKitchenCounterDrawer",
+        "MixinTileEntitySyncClient",
+        "MixinTileEntityTVStand"
+    ],
+    "client": [
+        "MixinImageCache"
+    ]
 }

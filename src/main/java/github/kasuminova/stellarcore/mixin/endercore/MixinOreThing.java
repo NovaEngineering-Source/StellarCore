@@ -58,7 +58,7 @@ public class MixinOreThing {
 
     @Inject(method = "is(Lnet/minecraft/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true, remap = false)
     public void injectItemStackIs(final ItemStack stack, final CallbackInfoReturnable<Boolean> cir) {
-        if (stellar_core$checkShouldCached()) {
+        if (!StellarCoreConfig.PERFORMANCE.enderCore.oreThing) {
             return;
         }
 
@@ -73,19 +73,11 @@ public class MixinOreThing {
 
     @Inject(method = "is(Lnet/minecraft/item/Item;)Z", at = @At("HEAD"), cancellable = true, remap = false)
     public void injectItemIs(final Item item, final CallbackInfoReturnable<Boolean> cir) {
-        if (stellar_core$checkShouldCached()) {
+        if (!StellarCoreConfig.PERFORMANCE.enderCore.oreThing) {
             return;
         }
 
         cir.setReturnValue(stellar_core$itemCache.contains(item));
-    }
-
-    @Unique
-    private boolean stellar_core$checkShouldCached() {
-        if (!StellarCoreConfig.PERFORMANCE.enderCore.oreThing) {
-            return true;
-        }
-        return this.ores.size() <= 4;
     }
 
 }
