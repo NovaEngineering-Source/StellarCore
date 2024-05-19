@@ -218,8 +218,11 @@ public class StellarCoreConfig {
             @Config.Name("GradualRecipeFixes")
             public boolean gradualRecipe = true;
 
-            @Config.Name("BlockTileEntityDropFixes")
-            public boolean blockTileEntityDrop = true;
+//            @Config.Name("BlockTileEntityDropFixes")
+//            public boolean blockTileEntityDrop = true;
+
+            @Config.Name("StackUtilInvFacingFixes")
+            public boolean stackUtilInvFacingFixes = true;
 
         }
 
@@ -318,6 +321,9 @@ public class StellarCoreConfig {
         @Config.Name("Vanilla")
         public final Vanilla vanilla = new Vanilla();
 
+        @Config.Name("Forge")
+        public final Forge forge = new Forge();
+
         @Config.Name("Avaritia")
         public final Avaritia avaritia = new Avaritia();
 
@@ -351,6 +357,9 @@ public class StellarCoreConfig {
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
+        @Config.Name("FTBQuests")
+        public final FTBQuests ftbQuests = new FTBQuests();
+
         @Config.Name("IndustrialCraft2")
         public final IndustrialCraft2 industrialCraft2 = new IndustrialCraft2();
 
@@ -383,6 +392,18 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("NoGLError")
             public boolean noGlError = false;
+
+            @Config.RequiresMcRestart
+            @Config.Name("AlwaysDeferChunkUpdates")
+            public boolean alwaysDeferChunkUpdates = true;
+
+        }
+
+        public static class Forge {
+
+            @Config.RequiresMcRestart
+            @Config.Name("ASMDataTableCPUUsageImprovements")
+            public boolean asmDataTable = false;
 
         }
 
@@ -481,6 +502,13 @@ public class StellarCoreConfig {
 
             @Config.Name("TileConduitBundleImprovements")
             public boolean tileConduitBundle = true;
+
+        }
+
+        public static class FTBQuests {
+
+            @Config.Name("QuestInventoryListenerImprovements")
+            public boolean questInventoryListener = true;
 
         }
 

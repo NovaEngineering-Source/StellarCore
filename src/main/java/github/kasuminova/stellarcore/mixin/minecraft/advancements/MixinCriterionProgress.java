@@ -39,6 +39,7 @@ public class MixinCriterionProgress {
             ),
             remap = true
     )
+    @SuppressWarnings("UseOfObsoleteDateTimeApi")
     private static Date redirectFromDateTimeParse(final SimpleDateFormat instance, final String s) throws ParseException {
         return DATE_TIME_FORMATTER.get().parse(s);
     }

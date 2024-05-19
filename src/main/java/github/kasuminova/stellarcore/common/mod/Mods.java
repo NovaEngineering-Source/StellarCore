@@ -26,6 +26,8 @@ public enum Mods {
             }
         }
     },
+    
+    FTBQ("ftbquests"),
 
     ;
 

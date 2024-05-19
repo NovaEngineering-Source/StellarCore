@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.17"
+version = "1.0.20"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -205,7 +205,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
     compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
-    compileOnly(rfg.deobf("curse.maven:industrialcraft-2-242638:3078604"))
+    compileOnly(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
     compileOnly(rfg.deobf("curse.maven:mekanism-ce-unofficial-840735:5130458"))
 //    compileOnly(rfg.deobf("curse.maven:mekanism-unofficial-edition-v10-edition-840735:4464199"))
     compileOnly(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
@@ -260,6 +260,9 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:avaritiaddons-248873:4745387"))
     compileOnly(rfg.deobf("curse.maven:custom-starter-gear-253735:2514705"))
     compileOnly(rfg.deobf("curse.maven:modular-routers-250294:2954953"))
+    compileOnly(rfg.deobf("curse.maven:ftb-library-legacy-forge-237167:2985811"))
+    compileOnly(rfg.deobf("curse.maven:item-filters-309674:3003364"))
+    compileOnly(rfg.deobf("curse.maven:ftb-quests-forge-289412:3156637"))
 }
 
 // IDE Settings

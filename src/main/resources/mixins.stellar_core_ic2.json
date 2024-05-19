@@ -5,10 +5,10 @@
     "minVersion": "0.8",
     "compatibilityLevel": "JAVA_8",
     "mixins": [
-        "MixinBlockTileEntity",
         "MixinEnergyCalculatorLeg",
         "MixinGradualRecipe",
         "MixinGrid",
-        "MixinItemUpgradeModule"
+        "MixinItemUpgradeModule",
+        "MixinStackUtil"
     ]
 }

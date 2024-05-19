@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.common;
 
 import github.kasuminova.stellarcore.common.bugfix.TileEntityContainerFixes;
+import github.kasuminova.stellarcore.common.handler.StellarCoreTickHandler;
 import github.kasuminova.stellarcore.common.integration.fluxnetworks.IntegrationsFluxNetworks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
@@ -20,6 +21,7 @@ public class CommonProxy {
             IntegrationsFluxNetworks.preInit();
         }
         MinecraftForge.EVENT_BUS.register(TileEntityContainerFixes.INSTANCE);
+        MinecraftForge.EVENT_BUS.register(StellarCoreTickHandler.class);
     }
 
     public void init() {
