@@ -4,10 +4,10 @@ import net.minecraftforge.fml.common.Loader;
 
 public enum Mods {
 
-    MEK("mekanism"),
-
+    FTBLIB("ftblib"),
+    FTBQ(  "ftbquests"),
+    MEK(   "mekanism"),
     MEKCEU("mekanism") {
-
         @Override
         public boolean loaded() {
             if (!MEK.loaded()) {
@@ -26,8 +26,6 @@ public enum Mods {
             }
         }
     },
-    
-    FTBQ("ftbquests"),
 
     ;
 

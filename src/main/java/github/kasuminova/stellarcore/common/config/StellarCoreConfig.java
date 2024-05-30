@@ -12,10 +12,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config(modid = StellarCore.MOD_ID, name = StellarCore.MOD_ID)
 public class StellarCoreConfig {
 
-    static {
-        ConfigAnytime.register(StellarCoreConfig.class);
-    }
-
     @Config.Name("Debug")
     public static final Debug DEBUG = new Debug();
 
@@ -27,13 +23,6 @@ public class StellarCoreConfig {
 
     @Config.Name("Features")
     public static final Features FEATURES = new Features();
-
-    @SubscribeEvent
-    public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.getModID().equals(StellarCore.MOD_ID)) {
-            ConfigManager.sync(StellarCore.MOD_ID, Config.Type.INSTANCE);
-        }
-    }
 
     public static class Debug {
 
@@ -357,6 +346,9 @@ public class StellarCoreConfig {
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
+        @Config.Name("FTBLib")
+        public final FTBLib ftbLib = new FTBLib();
+
         @Config.Name("FTBQuests")
         public final FTBQuests ftbQuests = new FTBQuests();
 
@@ -502,6 +494,13 @@ public class StellarCoreConfig {
 
             @Config.Name("TileConduitBundleImprovements")
             public boolean tileConduitBundle = true;
+
+        }
+
+        public static class FTBLib {
+
+            @Config.Name("InvUtilsForceUpdateImprovements")
+            public boolean invUtilForceUpdate = true;
 
         }
 
@@ -703,6 +702,20 @@ public class StellarCoreConfig {
 
         }
 
+    }
+
+    /*
+        必须在最后加载。
+     */
+    static {
+        ConfigAnytime.register(StellarCoreConfig.class);
+    }
+
+    @SubscribeEvent
+    public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (event.getModID().equals(StellarCore.MOD_ID)) {
+            ConfigManager.sync(StellarCore.MOD_ID, Config.Type.INSTANCE);
+        }
     }
 
 }

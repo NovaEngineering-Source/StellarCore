@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.20"
+version = "1.0.21"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -263,6 +263,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ftb-library-legacy-forge-237167:2985811"))
     compileOnly(rfg.deobf("curse.maven:item-filters-309674:3003364"))
     compileOnly(rfg.deobf("curse.maven:ftb-quests-forge-289412:3156637"))
+    compileOnly(rfg.deobf("curse.maven:ftb-utilities-forge-237102:3157548"))
 }
 
 // IDE Settings

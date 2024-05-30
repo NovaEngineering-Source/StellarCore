@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.common.handler;
 
 
+import github.kasuminova.stellarcore.common.integration.ftblib.FTBLibInvUtilsQueue;
 import github.kasuminova.stellarcore.common.integration.ftbquests.FTBQInvListener;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import net.minecraftforge.fml.common.Optional;
@@ -13,14 +14,23 @@ public class StellarCoreTickHandler {
 
     @SubscribeEvent
     public static void onServerTick(final TickEvent.ServerTickEvent event) {
-        if (event.side.isClient() || event.phase != TickEvent.Phase.END) {
+        if (event.side.isClient()) {
+//        if (event.side.isClient() || event.phase != TickEvent.Phase.END) {
             return;
         }
         tickExisted++;
 
+        if (Mods.FTBLIB.loaded()) {
+            updatePlayerInv();
+        }
         if (Mods.FTBQ.loaded()) {
             detectFTBQTasks();
         }
+    }
+
+    @Optional.Method(modid = "ftblib")
+    protected static void updatePlayerInv() {
+        FTBLibInvUtilsQueue.INSTANCE.updateAll();
     }
 
     @Optional.Method(modid = "ftbquests")

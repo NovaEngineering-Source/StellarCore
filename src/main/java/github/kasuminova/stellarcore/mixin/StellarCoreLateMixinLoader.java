@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin;
 
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
+import github.kasuminova.stellarcore.client.hitokoto.HitokotoResult;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import net.minecraftforge.fml.common.Loader;
@@ -9,7 +10,7 @@ import zone.rong.mixinbooter.ILateMixinLoader;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SameParameterValue"})
 public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
@@ -36,6 +37,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_enderioconduits.json",      "enderio", "enderioconduits");
         addModdedMixinCFG("mixins.stellar_core_extrabotany.json",          "extrabotany");
         addModdedMixinCFG("mixins.stellar_core_fluxnetworks.json",         "fluxnetworks");
+        addModdedMixinCFG("mixins.stellar_core_ftblib.json",               "ftblib");
         addModdedMixinCFG("mixins.stellar_core_ftbquests.json",            "ftbquests");
         addModdedMixinCFG("mixins.stellar_core_guguutils.json",            "gugu-utils");
         addModdedMixinCFG("mixins.stellar_core_ic2.json",                  "ic2");
@@ -59,6 +61,8 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
     static {
         if (StellarCoreConfig.FEATURES.hitokoto) {
+            // TODO ?
+            Class<HitokotoResult> toInitialize = HitokotoResult.class;
             new Thread(() -> {
                 Thread.currentThread().setName("Stellar Core Hitokoto Initializer");
                 String hitokoto = HitokotoAPI.getRandomHitokoto();
@@ -82,7 +86,11 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
             StellarCoreEarlyMixinLoader.LOG.warn(StellarCoreEarlyMixinLoader.LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", mixinConfig);
             return false;
         }
-        return supplier.getAsBoolean();
+        boolean shouldLoad = supplier.getAsBoolean();
+        if (!shouldLoad) {
+            StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + "Mixin config {} is disabled by config or mod is not loaded.", mixinConfig);
+        }
+        return shouldLoad;
     }
 
     private static boolean modLoaded(final String modID) {

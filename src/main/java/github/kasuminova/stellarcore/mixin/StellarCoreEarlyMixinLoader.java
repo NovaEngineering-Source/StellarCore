@@ -40,7 +40,11 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
             LOG.warn(LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", mixinConfig);
             return false;
         }
-        return supplier.getAsBoolean();
+        boolean shouldLoad = supplier.getAsBoolean();
+        if (!shouldLoad) {
+            LOG.info(LOG_PREFIX + "Mixin config {} is disabled by config or mod is not loaded.", mixinConfig);
+        }
+        return shouldLoad;
     }
 
     private static void addMixinCFG(final String mixinConfig) {
