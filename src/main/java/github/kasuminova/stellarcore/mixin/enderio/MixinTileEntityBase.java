@@ -24,11 +24,13 @@ public abstract class MixinTileEntityBase extends TileEntity {
         if (!StellarCoreConfig.PERFORMANCE.enderIO.tileEntityBase) {
             return;
         }
-        long totalWorldTime = this.world.getTotalWorldTime();
-        if (ConfigHandler.allowExternalTickSpeedup || totalWorldTime != this.lastUpdate) {
-            this.lastUpdate = totalWorldTime;
-            this.doUpdate();
-            this.sendProgressIf();
+        if (this.world.getTileEntity(this.getPos()) == this) {
+            long totalWorldTime = this.world.getTotalWorldTime();
+            if (ConfigHandler.allowExternalTickSpeedup || totalWorldTime != this.lastUpdate) {
+                this.lastUpdate = totalWorldTime;
+                this.doUpdate();
+                this.sendProgressIf();
+            }
         }
         ci.cancel();
     }
