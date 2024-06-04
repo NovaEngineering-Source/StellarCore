@@ -8,7 +8,10 @@
         "MixinEnchantmentManager",
         "MixinFirstAidLifeSupport",
         "MixinForceFieldGenerator",
+        "MixinItemStackUtils",
         "MixinLifeSupportRing",
-        "MixinNutritionSupply"
+        "MixinNutritionSupply",
+        "MixinThoriumBattery",
+        "MixinUniformElectricItem"
     ]
 }

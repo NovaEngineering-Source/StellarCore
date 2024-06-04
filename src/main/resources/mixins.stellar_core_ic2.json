@@ -4,10 +4,17 @@
     "target": "@env(DEFAULT)",
     "minVersion": "0.8",
     "compatibilityLevel": "JAVA_8",
+    "client": [
+        "MixinItemBattery"
+    ],
     "mixins": [
+        "MixinBaseElectricItem",
+        "MixinElectricItemManager",
         "MixinEnergyCalculatorLeg",
         "MixinGradualRecipe",
         "MixinGrid",
+        "MixinItemArmorElectric",
+        "MixinItemElectricTool",
         "MixinItemUpgradeModule",
         "MixinStackUtil"
     ]

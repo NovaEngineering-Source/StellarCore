@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.23"
+version = "1.0.24"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -205,7 +205,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
     compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
-    compileOnly(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
+    implementation(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
     compileOnly(rfg.deobf("curse.maven:mekanism-ce-unofficial-840735:5130458"))
 //    compileOnly(rfg.deobf("curse.maven:mekanism-unofficial-edition-v10-edition-840735:4464199"))
     compileOnly(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
@@ -233,7 +233,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ore-excavation-250898:2897369"))
     compileOnly(rfg.deobf("curse.maven:techguns-244201:2958103"))
     compileOnly(rfg.deobf("curse.maven:biomes-o-plenty-220318:3558882"))
-    compileOnly(rfg.deobf("curse.maven:more-electric-tools-366298:3491973"))
+    implementation(rfg.deobf("curse.maven:more-electric-tools-366298:3491973"))
     compileOnly(rfg.deobf("curse.maven:brandonscore-231382:3051539"))
     compileOnly(rfg.deobf("curse.maven:draconicevolution-223565:3051542"))
     compileOnly(rfg.deobf("curse.maven:mantle-74924:2713386"))

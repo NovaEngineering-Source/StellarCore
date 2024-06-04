@@ -598,6 +598,9 @@ public class StellarCoreConfig {
         @Config.Name("Botania")
         public final Botania botania = new Botania();
 
+        @Config.Name("IC2")
+        public final IC2 ic2 = new IC2();
+
         @Config.Name("LegendaryTooltips")
         public final LegendaryTooltips legendaryTooltips = new LegendaryTooltips();
 
@@ -650,6 +653,13 @@ public class StellarCoreConfig {
 
             @Config.Name("DisableCosmeticRecipe")
             public boolean disableCosmeticRecipe = false;
+
+        }
+
+        public static class IC2 {
+
+            @Config.Name("ElectricItemNonDurability")
+            public boolean electricItemNonDurability = true;
 
         }
 
