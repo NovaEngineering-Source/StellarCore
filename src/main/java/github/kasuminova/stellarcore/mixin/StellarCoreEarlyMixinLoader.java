@@ -4,6 +4,7 @@ import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Mixins;
 import zone.rong.mixinbooter.IEarlyMixinLoader;
 
 import javax.annotation.Nullable;
@@ -15,6 +16,8 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
     public static final Logger LOG = LogManager.getLogger("STELLAR_CORE");
     public static final String LOG_PREFIX = "[STELLAR_CORE]" + ' ';
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
+    
+    private static boolean mixinInitialized = false;
 
     static {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",  () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
@@ -30,6 +33,10 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
 
     @Override
     public List<String> getMixinConfigs() {
+        if (mixinInitialized) {
+            return Collections.emptyList();
+        }
+        mixinInitialized = true;
         return new ArrayList<>(MIXIN_CONFIGS.keySet());
     }
 
@@ -75,7 +82,25 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin, IEarlyMix
 
     @Override
     public void injectData(final Map<String, Object> data) {
-
+        if (mixinInitialized) {
+            return;
+        }
+        mixinInitialized = true;
+        // If MixinBooter is not loaded before StellarCore, add the Mixin configuration.
+        LOG.warn(LOG_PREFIX + "MixinBooter is not loaded before StellarCore, force adding mixin configurations!");
+        MIXIN_CONFIGS.forEach((config, supplier) -> {
+            if (supplier == null) {
+                LOG.warn(LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", config);
+                return;
+            }
+            boolean shouldLoad = supplier.getAsBoolean();
+            if (!shouldLoad) {
+                LOG.info(LOG_PREFIX + "Mixin config {} is disabled by config or mod is not loaded.", config);
+                return;
+            }
+            Mixins.addConfiguration(config);
+            LOG.info(LOG_PREFIX + "Adding {} mixin configuration.", config);
+        });
     }
 
     @Override
