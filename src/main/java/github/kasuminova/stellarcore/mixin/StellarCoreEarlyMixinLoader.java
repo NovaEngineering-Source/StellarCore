@@ -16,6 +16,8 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
     public static final Logger LOG = LogManager.getLogger("STELLAR_CORE");
     public static final String LOG_PREFIX = "[STELLAR_CORE]" + ' ';
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
+    
+    private static boolean mixinInitialized = false;
 
     static {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",  () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
@@ -57,7 +59,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     @Override
     public void injectData(final Map<String, Object> data) {
-        MIXIN_CONFIGS.forEach((config, supplier)->{
+        MIXIN_CONFIGS.forEach((config, supplier) -> {
             if (supplier == null) {
                 LOG.warn(LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", config);
                 return;
