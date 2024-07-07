@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.0.24"
+version = "1.0.25"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -199,7 +199,7 @@ dependencies {
     // Mod Dependencies
     implementation("com.cleanroommc:configanytime:2.0")
     implementation("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
-    compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:4991928"))
+    compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:5375642"))
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:5210315"))
     implementation(rfg.deobf("curse.maven:the-one-probe-245211:2667280"))
     compileOnly(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))

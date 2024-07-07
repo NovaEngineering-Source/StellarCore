@@ -16,8 +16,6 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
     public static final Logger LOG = LogManager.getLogger("STELLAR_CORE");
     public static final String LOG_PREFIX = "[STELLAR_CORE]" + ' ';
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
-    
-    private static boolean mixinInitialized = false;
 
     static {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",  () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
@@ -37,6 +35,15 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     private static void addMixinCFG(final String mixinConfig, final BooleanSupplier conditions) {
         MIXIN_CONFIGS.put(mixinConfig, conditions);
+    }
+
+    public static boolean isCleanroomLoader() {
+        try {
+            Class.forName("com.cleanroommc.boot.Main");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     // Noop

@@ -1,9 +1,12 @@
 package github.kasuminova.stellarcore.client.util;
 
+import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import org.lwjgl.opengl.Display;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
 
 public class TitleUtils {
@@ -11,6 +14,7 @@ public class TitleUtils {
 
     public static String currentTitle = null;
     public static String lastCurrentTitle = null;
+    public static boolean unsupportedPlatform = false;
 
     /**
      * 设置一言随机标题，必须在客户端主线程使用。
@@ -27,11 +31,11 @@ public class TitleUtils {
         String hitokotoCache = HitokotoAPI.getHitokotoCache();
         if (hitokotoCache != null) {
             currentTitle = buildTitle(state, hitokotoCache);
-            Display.setTitle(currentTitle);
+            setTitle();
         } else {
             CompletableFuture.runAsync(HitokotoAPI::getRandomHitokoto);
             currentTitle = buildTitle(state, null);
-            Display.setTitle(currentTitle);
+            setTitle();
         }
     }
 
@@ -49,10 +53,10 @@ public class TitleUtils {
 
         if (hitokotoCache != null) {
             currentTitle = buildTitle(null, hitokotoCache);
-            Display.setTitle(currentTitle);
+            setTitle();
         } else {
             currentTitle = buildTitle(null, null);
-            Display.setTitle(currentTitle);
+            setTitle();
         }
     }
 
@@ -106,7 +110,27 @@ public class TitleUtils {
 
         String title = Display.getTitle();
         if (!title.equals(currentTitle)) {
-            Display.setTitle(currentTitle);
+            setTitle();
         }
+    }
+
+    private static void setTitle() {
+        if (StellarCoreEarlyMixinLoader.isCleanroomLoader() && !unsupportedPlatform) {
+            try {
+                Class<?> Display = Class.forName("org.lwjgl.opengl.Display");
+                Method getWindow = Display.getDeclaredMethod("getWindow");
+                long result = (long) getWindow.invoke(null);
+                if (result != 0) {
+                    Class<?> GLFW = Class.forName("org.lwjgl3.glfw.GLFW");
+                    Method glfwSetWindowTitle = GLFW.getDeclaredMethod("glfwSetWindowTitle", long.class, CharSequence.class);
+                    glfwSetWindowTitle.invoke(null, result, currentTitle);
+                }
+            } catch (Exception e) {
+                StellarCore.log.warn("Failed to set CleanroomLoader title, maybe platform is unsupported.", e);
+                unsupportedPlatform = true;
+            }
+            return;
+        }
+        Display.setTitle(currentTitle);
     }
 }
