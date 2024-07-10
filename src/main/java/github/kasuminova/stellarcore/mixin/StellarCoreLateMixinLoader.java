@@ -59,21 +59,6 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_thermalexpansion.json",     "thermalexpansion");
     }
 
-    static {
-        if (StellarCoreConfig.FEATURES.hitokoto) {
-            // TODO ?
-            Class<HitokotoResult> toInitialize = HitokotoResult.class;
-            new Thread(() -> {
-                Thread.currentThread().setName("Stellar Core Hitokoto Initializer");
-                String hitokoto = HitokotoAPI.getRandomHitokoto();
-                if (hitokoto == null || hitokoto.isEmpty()) {
-                    return;
-                }
-                StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + hitokoto);
-            }).start();
-        }
-    }
-
     @Override
     public List<String> getMixinConfigs() {
         return new ArrayList<>(MIXIN_CONFIGS.keySet());

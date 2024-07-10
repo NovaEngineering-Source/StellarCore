@@ -1,6 +1,10 @@
 package github.kasuminova.stellarcore;
 
+import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
+import github.kasuminova.stellarcore.client.hitokoto.HitokotoResult;
 import github.kasuminova.stellarcore.common.CommonProxy;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.*;
@@ -27,6 +31,19 @@ public class StellarCore {
     @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
     public static CommonProxy proxy = null;
     public static Logger log = null;
+
+    static {
+        if (StellarCoreConfig.FEATURES.hitokoto) {
+            new Thread(() -> {
+                Thread.currentThread().setName("Stellar Core Hitokoto Initializer");
+                String hitokoto = HitokotoAPI.getRandomHitokoto();
+                if (hitokoto == null || hitokoto.isEmpty()) {
+                    return;
+                }
+                StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + hitokoto);
+            }).start();
+        }
+    }
 
     @Mod.EventHandler
     public void construction(FMLConstructionEvent event) {
