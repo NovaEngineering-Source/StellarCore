@@ -27,6 +27,29 @@ public enum Mods {
         }
     },
 
+    MM("modularmachinery"),
+
+    MMCE("modularmachinery") {
+        @Override
+        public boolean loaded() {
+            if (!MM.loaded()) {
+                return false;
+            }
+            if (initialized) {
+                return loaded;
+            }
+
+            try {
+                Class.forName("github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader");
+                initialized = true;
+                return loaded = true;
+            } catch (Throwable e) {
+                return loaded = false;
+            }
+        }
+    },
+
+    REPLAY("replaymod")
     ;
 
     protected final String modID;

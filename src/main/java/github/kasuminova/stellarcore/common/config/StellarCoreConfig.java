@@ -377,6 +377,14 @@ public class StellarCoreConfig {
         public static class Vanilla {
 
             @Config.RequiresMcRestart
+            @Config.Name("HudCaching")
+            public boolean hudCaching = true;
+
+            @Config.RangeInt(min = 5, max = 240)
+            @Config.Name("HudCachingFPSLimit")
+            public int hudCachingFPSLimit = 20;
+
+            @Config.RequiresMcRestart
             @Config.Name("CapturedBlockSnapshotsImprovements")
             public boolean capturedBlockSnapshots = false;
 

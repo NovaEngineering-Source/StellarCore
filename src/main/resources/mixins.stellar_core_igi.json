@@ -9,6 +9,7 @@
     ],
     "client": [
         "MixinInfoItem",
-        "MixinInGameInfoCore"
+        "MixinInGameInfoCore",
+        "MixinTicker"
     ]
 }
