@@ -34,14 +34,15 @@ public class StellarCore {
 
     static {
         if (StellarCoreConfig.FEATURES.hitokoto) {
-            new Thread(() -> {
-                Thread.currentThread().setName("Stellar Core Hitokoto Initializer");
+            Thread thread = new Thread(() -> {
                 String hitokoto = HitokotoAPI.getRandomHitokoto();
                 if (hitokoto == null || hitokoto.isEmpty()) {
                     return;
                 }
                 StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + hitokoto);
-            }).start();
+            });
+            thread.setName("Stellar Core Hitokoto Initializer");
+            thread.start();
         }
     }
 

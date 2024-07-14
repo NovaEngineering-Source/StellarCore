@@ -90,6 +90,9 @@ public class StellarCoreConfig {
         @Config.Name("Sync")
         public final Sync sync = new Sync();
 
+        @Config.Name("TConEvo")
+        public final TConEvo tConEvo = new TConEvo();
+
         @Config.Name("Techguns")
         public final Techguns techguns = new Techguns();
 
@@ -269,6 +272,13 @@ public class StellarCoreConfig {
 
             @Config.Name("RidingFixes")
             public boolean ridingFixes = true;
+
+        }
+
+        public static class TConEvo {
+
+            @Config.Name("HandleCosmicLightingNPEFixes")
+            public boolean handleCosmicLightingNPEFixes = true;
 
         }
 

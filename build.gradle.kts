@@ -264,6 +264,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:item-filters-309674:3003364"))
     compileOnly(rfg.deobf("curse.maven:ftb-quests-forge-289412:3156637"))
     compileOnly(rfg.deobf("curse.maven:ftb-utilities-forge-237102:3157548"))
+    compileOnly(rfg.deobf("curse.maven:tinkers-evolution-384589:4941753"))
 }
 
 // IDE Settings
