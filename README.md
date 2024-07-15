@@ -1,3 +1,5 @@
+# StellarCore Project
+
 This mod requires **MixinBooter 8.0+** and **ConfigAnyTime 2.0+** to work!
 Introduction
 
