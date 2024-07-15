@@ -71,8 +71,6 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Shadow(remap = false)
     protected abstract IModel getMissingModel();
 
-
-
     @Redirect(method = "setupModelRegistry",
             at = @At(
                     value = "INVOKE",

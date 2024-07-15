@@ -210,9 +210,6 @@ public class StellarCoreConfig {
             @Config.Name("GradualRecipeFixes")
             public boolean gradualRecipe = true;
 
-//            @Config.Name("BlockTileEntityDropFixes")
-//            public boolean blockTileEntityDrop = true;
-
             @Config.Name("StackUtilInvFacingFixes")
             public boolean stackUtilInvFacingFixes = true;
 
@@ -383,6 +380,14 @@ public class StellarCoreConfig {
             @Config.RangeInt(min = 5, max = 240)
             @Config.Name("HudCachingFPSLimit")
             public int hudCachingFPSLimit = 20;
+
+            @Config.RequiresMcRestart
+            @Config.Name("ParallelModelLoader")
+            public boolean parallelModelLoader = true;
+
+            @Config.RequiresMcRestart
+            @Config.Name("StateMapperBaseImprovements")
+            public boolean stateMapperBase = true;
 
             @Config.RequiresMcRestart
             @Config.Name("CapturedBlockSnapshotsImprovements")
