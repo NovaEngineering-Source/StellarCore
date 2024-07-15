@@ -33,7 +33,7 @@ public class MixinNBTSizeTracker {
         ci.cancel();
 
         this.read += bits / 8L;
-        if (this.read < StellarCoreConfig.BUG_FIXES.vanilla.maxNBTSize && !StellarCoreConfig.BUG_FIXES.vanilla.displayLargeNBTWarning) {
+        if (this.read < StellarCoreConfig.BUG_FIXES.vanilla.maxNBTSize || !StellarCoreConfig.BUG_FIXES.vanilla.displayLargeNBTWarning) {
             return;
         }
 

@@ -1,7 +1,5 @@
 package github.kasuminova.stellarcore.mixin;
 
-import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
-import github.kasuminova.stellarcore.client.hitokoto.HitokotoResult;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import net.minecraftforge.fml.common.Loader;

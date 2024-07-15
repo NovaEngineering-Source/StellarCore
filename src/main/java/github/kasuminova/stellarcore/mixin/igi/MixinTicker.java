@@ -15,7 +15,7 @@ public class MixinTicker {
 
     @Inject(method = "onRenderTick", at = @At("HEAD"), remap = false, cancellable = true)
     private void injectOnRenderTick(final TickEvent.RenderTickEvent event, final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer && StellarCoreConfig.PERFORMANCE.vanilla.hudCaching && !HUDCaching.igiRendering) {
+        if (StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer && StellarCoreConfig.PERFORMANCE.vanilla.hudCaching && !HUDCaching.igiRendering) {
             ci.cancel();
         }
     }

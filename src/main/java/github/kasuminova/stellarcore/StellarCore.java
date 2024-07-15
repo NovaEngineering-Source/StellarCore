@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore;
 
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
-import github.kasuminova.stellarcore.client.hitokoto.HitokotoResult;
 import github.kasuminova.stellarcore.common.CommonProxy;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
