@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinNBTSizeTracker {
 
     @Final
+    @Shadow
     @Mutable
-    @Shadow(remap = false)
     private long max;
 
     @Shadow
