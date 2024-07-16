@@ -113,7 +113,7 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("LongNBTKiller")
-            public boolean longNBTKiller = true;
+            public boolean longNBTKiller = false;
 
             @Config.Comment({
                     "The maximum depth of NBTTagCompound and NBTTagList.", 
@@ -153,7 +153,7 @@ public class StellarCoreConfig {
                     "it also forces the player's open GUI to be closed."
             })
             @Config.Name("ContainerUnloadTileEntityFixes")
-            public boolean containerTileEntityFixes = true;
+            public boolean containerTileEntityFixes = false;
 
         }
 
@@ -229,7 +229,7 @@ public class StellarCoreConfig {
                     "but may introduce a slight performance overhead and some unexpected filter issues."
             })
             @Config.Name("ItemConduitItemStackCache")
-            public boolean cachedItemConduit = true;
+            public boolean cachedItemConduit = false;
 
         }
 
@@ -302,7 +302,7 @@ public class StellarCoreConfig {
 
             @Config.Comment("Make blocks be rotated without losing their internal attributes and items (possibly not all blocks).")
             @Config.Name("RotatableFurniture")
-            public boolean rotatableFurniture = true;
+            public boolean rotatableFurniture = false;
 
             @Config.Comment("Problem preventing certain container items from duplicate.")
             @Config.Name("BlockFurnitureTileFixes")
@@ -447,7 +447,7 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("HudCaching")
-            public boolean hudCaching = true;
+            public boolean hudCaching = false;
 
             @Config.Comment("Select a restricted HUD FPS that is only valid when HudCaching is enabled.")
             @Config.RangeInt(min = 5, max = 240)
@@ -475,7 +475,7 @@ public class StellarCoreConfig {
             @Config.Comment("(Client/Server Performance) Modified Chunk's TileEntityMap to a special data structure to improve performance (experimental, may not work).")
             @Config.RequiresMcRestart
             @Config.Name("ChunkTileEntityMapImprovements")
-            public boolean blockPos2ValueMap = true;
+            public boolean blockPos2ValueMap = false;
 
             @Config.Comment("(Client/Server Performance) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (experimental, may not work).")
             @Config.RequiresMcRestart
@@ -493,7 +493,7 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("AlwaysDeferChunkUpdates")
-            public boolean alwaysDeferChunkUpdates = true;
+            public boolean alwaysDeferChunkUpdates = false;
 
         }
 
@@ -560,7 +560,7 @@ public class StellarCoreConfig {
 
             @Config.Comment("(Server Performance) A feature with some side effects to make sparks use less performance through dynamic Tick acceleration.")
             @Config.Name("SparkEntityImprovements")
-            public boolean sparkImprovements = true;
+            public boolean sparkImprovements = false;
 
             @Config.Comment({
                     "What is the maximum working interval of the sparks? They will eventually be accelerated to 1 tick.",
@@ -654,7 +654,7 @@ public class StellarCoreConfig {
 
             @Config.Comment("(Server Performance) Improved performance of item quest checking (but may result in longer intervals between quest checks).")
             @Config.Name("QuestInventoryListenerImprovements")
-            public boolean questInventoryListener = true;
+            public boolean questInventoryListener = false;
 
         }
 
@@ -688,7 +688,7 @@ public class StellarCoreConfig {
                     "may not be compatible with older devices."
             })
             @Config.Name("HUDFramebuffer")
-            public boolean hudFrameBuffer = true;
+            public boolean hudFrameBuffer = false;
 
             @Config.Name("HUDFPS")
             @Config.Comment("Select a restricted HUD FPS that is only valid when HUDFramebuffer is enabled.")
@@ -760,7 +760,7 @@ public class StellarCoreConfig {
 
         @Config.Comment("Does the CustomGameTitle use Hitokoto API to get random messages? (Chinese Only)")
         @Config.Name("TitleUseHitokotoAPI")
-        public boolean hitokoto = true;
+        public boolean hitokoto = false;
 
         @Config.Comment("The title.")
         @Config.Name("CustomGameTitle")
@@ -851,7 +851,7 @@ public class StellarCoreConfig {
                     "display power, but instead use a special display, a feature that disables the endurance value and helps automate the crafting."
             })
             @Config.Name("ElectricItemNonDurability")
-            public boolean electricItemNonDurability = true;
+            public boolean electricItemNonDurability = false;
 
         }
 
@@ -906,7 +906,7 @@ public class StellarCoreConfig {
 
             @Config.Comment("Are bullets treated as projectiles (affecting damage determination)?")
             @Config.Name("BulletIsProjectile")
-            public boolean tgDamageSource = true;
+            public boolean tgDamageSource = false;
 
         }
 
