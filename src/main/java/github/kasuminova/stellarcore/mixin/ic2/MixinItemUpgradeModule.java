@@ -19,7 +19,8 @@ public class MixinItemUpgradeModule {
             at = @At(
                     value = "INVOKE",
                     target = "Lic2/core/util/StackUtil;getSize(Lnet/minecraft/item/ItemStack;)I",
-                    remap = false),
+                    remap = false
+            ),
             remap = false,
             cancellable = true
     )

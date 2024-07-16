@@ -11,7 +11,7 @@ public class MixinGlStateManager {
      * @author Kasumi_Nova
      * @reason NoGLError
      */
-    @Overwrite(remap = false)
+    @Overwrite
     public static int glGetError() {
         return 0;
     }
