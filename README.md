@@ -37,7 +37,7 @@ Key Mod Points:
 - ThermalDynamics
   - Fluid duplication fixes.
 
-And many more... small features and fixes not listed here! [Check out](https://github.com/NovaEngineering-Source/StellarCore/tree/master/src/main/java/github/kasuminova/stellarcore/mixin) other features here!
+And many more... small features and fixes not listed here! [Check out](https://github.com/NovaEngineering-Source/StellarCore/blob/master/ExampleConfiguration.cfg) other features here!
 
 ### How is it different from xxx?
 
