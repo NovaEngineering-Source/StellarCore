@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.1.2"
+version = "1.1.4"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -265,6 +265,10 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ftb-quests-forge-289412:3156637"))
     compileOnly(rfg.deobf("curse.maven:ftb-utilities-forge-237102:3157548"))
     compileOnly(rfg.deobf("curse.maven:tinkers-evolution-384589:4941753"))
+    compileOnly(rfg.deobf("curse.maven:foamfix-optimization-mod-278494:3973967"))
+    compileOnly(rfg.deobf("curse.maven:neverenoughanimation-1062347:5531863"))
+    compileOnly(rfg.deobf("curse.maven:ctm-267602:2915363"))
+    compileOnly(rfg.deobf("curse.maven:chisel-235279:2915375"))
 }
 
 // IDE Settings

@@ -1,5 +1,5 @@
 {
-    "package": "github.kasuminova.stellarcore.mixin.minecraft.forge",
+    "package": "github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader",
     "refmap": "mixins.stellar_core.refmap.json",
     "target": "@env(DEFAULT)",
     "minVersion": "0.8",

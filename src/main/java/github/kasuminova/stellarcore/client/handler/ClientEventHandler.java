@@ -1,5 +1,7 @@
 package github.kasuminova.stellarcore.client.handler;
 
+import com.cleanroommc.neverenoughanimations.NEAConfig;
+import com.cleanroommc.neverenoughanimations.animations.HotbarAnimation;
 import com.llamalad7.betterchat.gui.GuiBetterChat;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
@@ -40,16 +42,26 @@ public class ClientEventHandler {
         if (Loader.isModLoaded("betterchat")) {
             handleBetterChatAnim();
         }
+        if (Loader.isModLoaded("neverenoughanimations")) {
+            handleNEAAnim();
+        }
     }
 
     @Optional.Method(modid = "betterchat")
-    protected static void handleBetterChatAnim() {
+    private static void handleBetterChatAnim() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.gameSettings.hideGUI) {
             return;
         }
         GuiNewChat gui = mc.ingameGUI.getChatGUI();
         if (gui instanceof GuiBetterChat && GuiBetterChat.percentComplete < 1F && StellarCoreConfig.PERFORMANCE.vanilla.hudCaching) {
+            HUDCaching.dirty = true;
+        }
+    }
+
+    @Optional.Method(modid = "neverenoughanimations")
+    private static void handleNEAAnim() {
+        if (NEAConfig.hotbarAnimationTime != 0 && HotbarAnimation.isAnimationInProgress()) {
             HUDCaching.dirty = true;
         }
     }

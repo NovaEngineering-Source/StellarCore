@@ -405,6 +405,9 @@ public class StellarCoreConfig {
         @Config.Name("Chisel")
         public final Chisel chisel = new Chisel();
 
+        @Config.Name("CTM")
+        public final CTM ctm = new CTM();
+
         @Config.Name("Cucumber")
         public final Cucumber cucumber = new Cucumber();
 
@@ -461,6 +464,14 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("ParallelModelLoader")
             public boolean parallelModelLoader = true;
+
+            @Config.Comment({
+                    "(Client Performance) An experimental feature that uses parallel loading of texture files.",
+                    "It is usually not turned on due to being highly invasive and incompatible with VintageFix and Optifine."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ParallelTextureMapLoad")
+            public boolean parallelTextureMapLoad = false;
 
             @Config.Comment("(Client Performance) Improve the Map data structures of StateMapperBase to make them faster (~30%).")
             @Config.RequiresMcRestart
@@ -590,6 +601,18 @@ public class StellarCoreConfig {
             public int autoChiselMaxWorkDelay = 100;
 
         }
+        
+        public static class CTM {
+
+            @Config.Comment({
+                    "(Client Performance) An experimental feature that loads CTM's Metadata data faster (~60%) using parallelStream,",
+                    "usually with few conflict issues. If enabling this feature causes a problem, please report it immediately."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("TextureMetadataHandlerImprovements")
+            public boolean textureMetadataHandler = false;
+
+        }
 
         public static class CustomLoadingScreen {
 
@@ -597,6 +620,11 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("TextureCleanup")
             public boolean splashProgress = true;
+
+            @Config.Comment("(Recommend) (Client Performance) We'll never know why we have to wait an extra (20*5)ms for each module loaded.")
+            @Config.RequiresMcRestart
+            @Config.Name("ModLoadingListenerImprovements")
+            public boolean modLoadingListener = true;
 
         }
 

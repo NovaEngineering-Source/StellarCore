@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft.forge;
+package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;

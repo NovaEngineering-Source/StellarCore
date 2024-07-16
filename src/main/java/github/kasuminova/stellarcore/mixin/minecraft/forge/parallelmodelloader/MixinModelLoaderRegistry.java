@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft.forge;
+package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
 import net.minecraft.util.ResourceLocation;

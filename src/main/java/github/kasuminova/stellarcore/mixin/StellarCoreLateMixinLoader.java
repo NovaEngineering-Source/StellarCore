@@ -27,7 +27,9 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_cfm.json",                  "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",               "chisel");
         addModdedMixinCFG("mixins.stellar_core_cofhcore.json",             "cofhcore");
+        addModdedMixinCFG("mixins.stellar_core_ctm.json",                  "ctm", () -> StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler);
         addModdedMixinCFG("mixins.stellar_core_cucumber.json",             "cucumber");
+        addModdedMixinCFG("mixins.stellar_core_customloadingscreen.json",  "customloadingscreen");
         addModdedMixinCFG("mixins.stellar_core_customstartinggear.json",   "customstartinggear");
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",    "draconicevolution");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",            "endercore");

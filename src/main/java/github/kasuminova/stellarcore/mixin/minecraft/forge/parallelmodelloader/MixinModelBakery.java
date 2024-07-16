@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft.forge;
+package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.ModelBakery;
