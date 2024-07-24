@@ -31,15 +31,17 @@ public class MixinTileEntityArcFurnace {
             return;
         }
         this.inputHandler = new IItemHandler() {
+            private final IItemHandler parent = inputHandler;
+
             @Override
             public int getSlots() {
-                return inputHandler.getSlots();
+                return parent.getSlots();
             }
 
             @Nonnull
             @Override
             public ItemStack getStackInSlot(final int slot) {
-                return inputHandler.getStackInSlot(slot);
+                return parent.getStackInSlot(slot);
             }
 
             @Nonnull
@@ -95,12 +97,12 @@ public class MixinTileEntityArcFurnace {
             @Nonnull
             @Override
             public ItemStack extractItem(final int slot, final int amount, final boolean simulate) {
-                return inputHandler.extractItem(slot, amount, simulate);
+                return parent.extractItem(slot, amount, simulate);
             }
 
             @Override
             public int getSlotLimit(final int slot) {
-                return inputHandler.getSlotLimit(slot);
+                return parent.getSlotLimit(slot);
             }
         };
     }
