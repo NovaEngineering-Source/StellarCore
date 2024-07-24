@@ -63,6 +63,9 @@ public class MixinTileEntityArcFurnace {
                                 here.setCount(maxStackSize);
                                 stack.shrink(maxStackSize);
                                 inventory.set(i, here);
+                                if (stack.isEmpty()) {
+                                    return ItemStack.EMPTY;
+                                }
                             } else {
                                 inventory.set(i, stack);
                                 return ItemStack.EMPTY;
