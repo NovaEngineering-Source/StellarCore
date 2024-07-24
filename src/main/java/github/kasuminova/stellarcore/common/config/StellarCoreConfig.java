@@ -283,6 +283,13 @@ public class StellarCoreConfig {
             @Config.Name("TileEntityExcavatorDigBlockFixes")
             public boolean tileEntityExcavator = true;
 
+            @Config.Comment({
+                    "Fixes an issue that caused ArcFurnace's item bar items to stack",
+                    "more than their items themselves under certain special circumstances, helping to fix item duplication."
+            })
+            @Config.Name("TileEntityArcFurnaceInventoryFixes")
+            public boolean tileEntityArcFurnace = true;
+
         }
 
         public static class MoreElectricTools {

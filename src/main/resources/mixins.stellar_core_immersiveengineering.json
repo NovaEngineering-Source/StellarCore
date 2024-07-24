@@ -8,6 +8,7 @@
         "MixinBlockIEMultiblock",
         "MixinBlockIETileProvider",
         "MixinRecipeJerrycan",
+        "MixinTileEntityArcFurnace",
         "MixinTileEntityExcavator"
     ]
 }

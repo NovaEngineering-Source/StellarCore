@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.1.4"
+version = "1.1.5"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -202,7 +202,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:5375642"))
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:5210315"))
     implementation(rfg.deobf("curse.maven:the-one-probe-245211:2667280"))
-    compileOnly(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
+    implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
     compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
     compileOnly(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
@@ -218,11 +218,12 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
     compileOnly(rfg.deobf("curse.maven:baubles-227083:2518667"))
     compileOnly(rfg.deobf("curse.maven:zenutil-401178:4394263"))
-    compileOnly(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
-    compileOnly(rfg.deobf("curse.maven:immersive-petroleum-268250:3382321"))
+    implementation(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
+    implementation(rfg.deobf("curse.maven:immersive-petroleum-268250:3382321"))
     compileOnly(rfg.deobf("curse.maven:smooth-font-285742:3944565"))
     compileOnly(rfg.deobf("curse.maven:athenaeum-284350:4633750"))
     compileOnly(rfg.deobf("curse.maven:artisan-worktables-284351:3205284"))
+    compileOnly(rfg.deobf("curse.maven:artisan-automation-373329:2994098"))
     compileOnly(rfg.deobf("curse.maven:touhou-little-maid-355044:3576415"))
     implementation(rfg.deobf("curse.maven:ingame-info-xml-225604:2489566"))
     implementation(rfg.deobf("curse.maven:lunatriuscore-225605:2489549"))

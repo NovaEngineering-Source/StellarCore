@@ -56,20 +56,7 @@ public abstract class MixinModelBakery {
     @Overwrite
     protected ModelBlockDefinition getModelBlockDefinition(ResourceLocation location) {
         ResourceLocation resourcelocation = this.getBlockstateLocation(location);
-        ModelBlockDefinition modelblockdefinition = this.blockDefinitions.get(resourcelocation);
-
-        if (modelblockdefinition == null) {
-            synchronized (this.blockDefinitions) {
-                modelblockdefinition = this.blockDefinitions.get(resourcelocation);
-                if (modelblockdefinition != null) {
-                    return modelblockdefinition;
-                }
-                modelblockdefinition = this.loadMultipartMBD(location, resourcelocation);
-                this.blockDefinitions.put(resourcelocation, modelblockdefinition);
-            }
-        }
-
-        return modelblockdefinition;
+        return this.blockDefinitions.computeIfAbsent(resourcelocation, (key) -> this.loadMultipartMBD(location, resourcelocation));
     }
 
 }
