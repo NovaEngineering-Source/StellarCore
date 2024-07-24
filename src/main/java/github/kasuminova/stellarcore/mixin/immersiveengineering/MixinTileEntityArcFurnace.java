@@ -31,7 +31,7 @@ public class MixinTileEntityArcFurnace {
             return;
         }
         this.inputHandler = new IItemHandler() {
-            private final IItemHandler parent = inputHandler;
+            final IItemHandler parent = inputHandler;
 
             @Override
             public int getSlots() {
@@ -70,8 +70,9 @@ public class MixinTileEntityArcFurnace {
                                 inventory.set(i, stack);
                                 return ItemStack.EMPTY;
                             }
+                        } else {
+                            possibleSlots.add(i);
                         }
-                        continue;
                     }
 
                     if (ItemHandlerHelper.canItemStacksStack(stack, here) && here.getCount() < here.getMaxStackSize()) {
