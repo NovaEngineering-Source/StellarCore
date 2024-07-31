@@ -1,17 +1,14 @@
 package github.kasuminova.stellarcore.mixin.appeng;
 
-import appeng.client.render.StackSizeRenderer;
+import appeng.fluids.client.render.FluidStackSizeRenderer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-/**
- * 允许自行调节小字体的缩放。
- */
-@Mixin(value = StackSizeRenderer.class, remap = false)
 @SuppressWarnings("MethodMayBeStatic")
-public class MixinStackSizeRenderer {
+@Mixin(value = FluidStackSizeRenderer.class, remap = false)
+public class MixinFluidStackSizeRenderer {
 
     @ModifyConstant(method = "renderStackSize", constant = @Constant(floatValue = 0.5F))
     public float onRenderStackSize(final float ci) {

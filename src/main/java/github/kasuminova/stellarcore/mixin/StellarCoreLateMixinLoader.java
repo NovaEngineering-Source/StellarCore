@@ -32,9 +32,11 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_customloadingscreen.json",  "customloadingscreen");
         addModdedMixinCFG("mixins.stellar_core_customstartinggear.json",   "customstartinggear");
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",    "draconicevolution");
+        addModdedMixinCFG("mixins.stellar_core_ebwizardry.json",           "ebwizardry");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",            "endercore");
         addModdedMixinCFG("mixins.stellar_core_enderio.json",              "enderio");
         addModdedMixinCFG("mixins.stellar_core_enderioconduits.json",      "enderio", "enderioconduits");
+        addModdedMixinCFG("mixins.stellar_core_enderutilities.json",       "enderutilities");
         addModdedMixinCFG("mixins.stellar_core_extrabotany.json",          "extrabotany");
         addModdedMixinCFG("mixins.stellar_core_fluxnetworks.json",         "fluxnetworks");
         addModdedMixinCFG("mixins.stellar_core_ftblib.json",               "ftblib");
@@ -43,10 +45,13 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_ic2.json",                  "ic2");
         addModdedMixinCFG("mixins.stellar_core_igi.json",                  "ingameinfoxml");
         addModdedMixinCFG("mixins.stellar_core_immersiveengineering.json", "immersiveengineering");
+        addModdedMixinCFG("mixins.stellar_core_lazyae2.json",              "lazyae2");
         addModdedMixinCFG("mixins.stellar_core_legendarytooltips.json",    "legendarytooltips");
+        addModdedMixinCFG("mixins.stellar_core_libnine.json",              "libnine", () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addModdedMixinCFG("mixins.stellar_core_mek_top.json",        new String[]{"mekanism", "theoneprobe"}, () -> StellarCoreConfig.FEATURES.mekanism.topSupport);
         addMixinCFG(      "mixins.stellar_core_mekanism.json",                    () -> Mods.MEK.loaded() && !Mods.MEKCEU.loaded());
         addModdedMixinCFG("mixins.stellar_core_mets.json",                 "mets");
+        addModdedMixinCFG("mixins.stellar_core_modularrouters.json",       "modularrouters");
         addModdedMixinCFG("mixins.stellar_core_nco.json",                  "nuclearcraft");
         addModdedMixinCFG("mixins.stellar_core_rgb_chat.json",             "jianghun");
         addModdedMixinCFG("mixins.stellar_core_scalingguis.json",          "scalingguis");

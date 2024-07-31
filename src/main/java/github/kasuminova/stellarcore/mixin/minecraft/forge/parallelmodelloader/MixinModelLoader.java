@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -112,7 +113,9 @@ public abstract class MixinModelLoader extends ModelBakery {
             try {
                 bakedModelsConcurrent.put(model, model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, new DefaultTextureGetter()));
             } catch (Exception e) {
-                FMLLog.log.error("Exception baking model for location(s) {}:", modelLocations, e);
+                if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
+                    FMLLog.log.error("Exception baking model for location(s) {}:", modelLocations, e);
+                }
                 bakedModelsConcurrent.put(model, missingBaked);
             }
         });
@@ -127,6 +130,8 @@ public abstract class MixinModelLoader extends ModelBakery {
             List<Block> blocks,
             @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
             @Local(name = "mapper") BlockStateMapper mapper) {
+        
+        
         long startTime = System.currentTimeMillis();
 
         blocks.parallelStream().forEach(block -> {
@@ -182,16 +187,16 @@ public abstract class MixinModelLoader extends ModelBakery {
                 } catch (Exception blockstateException) {
                     try {
                         model = ModelLoaderRegistry.getModel(file);
-                        synchronized (items) {
-                            stellar_core$addAlias(memory, file);
-                        }
+                        stellar_core$addAlias(memory, file);
                     } catch (Exception normalException) {
                         exception = stellar_core$createItemLoadingException("Could not load item model either from the normal location " + file + " or from the blockstate", normalException, blockstateException);
                     }
                 }
                 if (exception != null) {
-                    synchronized (loadingExceptions) {
-                        storeException(memory, exception);
+                    if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
+                        synchronized (loadingExceptions) {
+                            storeException(memory, exception);
+                        }
                     }
                     model = stellar_core$getMissingModel(memory, exception);
                 }

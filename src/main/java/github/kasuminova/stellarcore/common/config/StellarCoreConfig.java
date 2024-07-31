@@ -2,11 +2,17 @@ package github.kasuminova.stellarcore.common.config;
 
 import com.cleanroommc.configanytime.ConfigAnytime;
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = StellarCore.MOD_ID)
 @Config(modid = StellarCore.MOD_ID, name = StellarCore.MOD_ID)
@@ -77,6 +83,9 @@ public class StellarCoreConfig {
 
         @Config.Name("ImmersiveEngineering")
         public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
+
+        @Config.Name("ModularRouters")
+        public final ModularRouters modularRouters = new ModularRouters();
 
         @Config.Name("MoreElectricTools")
         public final MoreElectricTools moreElectricTools = new MoreElectricTools();
@@ -292,6 +301,14 @@ public class StellarCoreConfig {
 
         }
 
+        public static class ModularRouters {
+
+            @Config.Comment("Prevent routers from recognizing fluid bucket containers to avoid unexpected fluid replication problems.")
+            @Config.Name("BufferHandlerFluidHandlerFixes")
+            public boolean bufferHandler = true;
+
+        }
+
         public static class MoreElectricTools {
 
             @Config.Comment("Items such as Electric First Aid Life Support do not continue to work if the player has died.")
@@ -421,6 +438,9 @@ public class StellarCoreConfig {
         @Config.Name("CustomLoadingScreen")
         public final CustomLoadingScreen customLoadingScreen = new CustomLoadingScreen();
 
+        @Config.Name("EBWizardry")
+        public final EBWizardry ebWizardry = new EBWizardry();
+
         @Config.Name("EnderCore")
         public final EnderCore enderCore = new EnderCore();
 
@@ -448,6 +468,7 @@ public class StellarCoreConfig {
         @Config.Name("TConstruct")
         public final TConstruct tConstruct = new TConstruct();
 
+        @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
         public static class Vanilla {
 
             @Config.Comment({
@@ -466,11 +487,21 @@ public class StellarCoreConfig {
 
             @Config.Comment({
                     "(Client Performance) An experimental feature that helps speed up game loading by modifying the model loader's code to enable parallel loading capabilities (5s ~ 40s faster).",
+                    "Incompatible with some mod's models because they use their own model loader, if you encounter a missing model, please report it to the StellarCore author for manual compatibility.",
+                    "Compatible model loader: CTM，LibNine，TConstruct",
                     "Contrary to VintageFix's DynamicResource functionality and therefore incompatible, you can only choose one."
             })
             @Config.RequiresMcRestart
             @Config.Name("ParallelModelLoader")
             public boolean parallelModelLoader = true;
+
+            @Config.Comment({
+                    "Defining which ModelLoader cannot be safely asynchronized to allow StellarCore to load models",
+                    "using a synchronous approach, usually requires no modification to it."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ParallelModelLoaderBlackList")
+            public String[] parallelModelLoaderBlackList = {"slimeknights.tconstruct.library.client.model.ModifierModelLoader"};
 
             @Config.Comment({
                     "(Client Performance) An experimental feature that uses parallel loading of texture files.",
@@ -494,6 +525,11 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("ChunkTileEntityMapImprovements")
             public boolean blockPos2ValueMap = false;
+
+            @Config.Comment("(Server Performance) Improving the performance of ClassInheritanceMultiMap (up to ~40%).")
+            @Config.RequiresMcRestart
+            @Config.Name("ClassInheritanceMultiMapImprovements")
+            public boolean classMultiMap = true;
 
             @Config.Comment("(Client/Server Performance) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (experimental, may not work).")
             @Config.RequiresMcRestart
@@ -532,6 +568,10 @@ public class StellarCoreConfig {
             @Config.Comment("(Server Performance) Removing some unnecessary Server to Client synchronization helps ease network bandwidth usage.")
             @Config.Name("TileBaseImprovements")
             public boolean tileBase = true;
+
+            @Config.Comment("(Client / Server Performance) Speed up recipe loading with parallel loading.")
+            @Config.Name("AvaritiaRecipeManagerImprovements")
+            public boolean avaritiaRecipeManager = true;
 
         }
 
@@ -632,6 +672,17 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("ModLoadingListenerImprovements")
             public boolean modLoadingListener = true;
+
+        }
+
+        public static class EBWizardry {
+
+            @Config.Comment({
+                    "(Server Performance) Improved event listening performance for DispenserCastingData.",
+                    "Note: We are currently experiencing strange issues on some devices during testing, please report any unknown crashes with this feature enabled immediately."
+            })
+            @Config.Name("DispenserCastingDataImprovements")
+            public boolean dispenserCastingData = false;
 
         }
 
@@ -816,8 +867,14 @@ public class StellarCoreConfig {
         @Config.Name("Botania")
         public final Botania botania = new Botania();
 
+        @Config.Name("EnderIOConduits")
+        public final EnderIOConduits enderIOConduits = new EnderIOConduits();
+
         @Config.Name("IC2")
         public final IC2 ic2 = new IC2();
+
+        @Config.Name("LazyAE2")
+        public final LazyAE2 lazyAE2 = new LazyAE2();
 
         @Config.Name("LegendaryTooltips")
         public final LegendaryTooltips legendaryTooltips = new LegendaryTooltips();
@@ -844,14 +901,27 @@ public class StellarCoreConfig {
             @Config.Name("AsyncAdvancementSerialize")
             public boolean asyncAdvancementSerialize = true;
 
+            @Config.Comment({
+                    "An extra feature that stops the model loader from printing errors, neat log, no?",
+                    "May have implications for Debug, cannot prevent errors in the output of custom loaders. only available if ParallelModelLoader is enabled."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ShutUpModelLoader")
+            public boolean shutUpModelLoader = false;
+
         }
 
         public static class FontScale {
 
             @Config.Comment("(Client) Allows you to modify the specific scaling of small fonts in the AE2 GUI.")
-            @Config.RangeDouble(min = 0F, max = 1.0F)
+            @Config.RangeDouble(min = 0.25F, max = 1.0F)
             @Config.Name("AppliedEnergetics2")
             public float ae2 = 0.5F;
+
+            @Config.Comment("(Client) Allows you to modify the specific scaling of small fonts in the EnderUtilities GUI.")
+            @Config.RangeDouble(min = 0.25F, max = 1.0F)
+            @Config.Name("EnderUtilities")
+            public float enderUtilities = 0.5F;
 
         }
 
@@ -879,6 +949,14 @@ public class StellarCoreConfig {
 
         }
 
+        public static class EnderIOConduits {
+
+            @Config.Comment("If you're really tired of all this useless logging, set it to true (filter only the no side effects section).")
+            @Config.Name("PrevEnderLiquidConduitNetworkLogSpam")
+            public boolean prevEnderLiquidConduitLogSpam = true;
+
+        }
+
         public static class IC2 {
 
             @Config.Comment({
@@ -887,6 +965,14 @@ public class StellarCoreConfig {
             })
             @Config.Name("ElectricItemNonDurability")
             public boolean electricItemNonDurability = false;
+
+        }
+
+        public static class LazyAE2 {
+
+            @Config.Comment("The Level Maintainer request synthesis will always be made to the set value, not just to the critical value.")
+            @Config.Name("LevelMaintainerRequestCountImprovements")
+            public boolean levelMaintainerRequest = false;
 
         }
 
@@ -966,6 +1052,10 @@ public class StellarCoreConfig {
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (event.getModID().equals(StellarCore.MOD_ID)) {
             ConfigManager.sync(StellarCore.MOD_ID, Config.Type.INSTANCE);
+
+            if (FMLLaunchHandler.side().isClient()) {
+                ParallelModelLoaderAsyncBlackList.INSTANCE.reload();
+            }
         }
     }
 

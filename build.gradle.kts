@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.1.5"
+version = "1.1.8"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -201,6 +201,7 @@ dependencies {
     compileOnly("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
     compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:5375642"))
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:5210315"))
+    compileOnly(rfg.deobf("curse.maven:jei-utilities-616190:4630499"))
     implementation(rfg.deobf("curse.maven:the-one-probe-245211:2667280"))
     implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
@@ -218,8 +219,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
     compileOnly(rfg.deobf("curse.maven:baubles-227083:2518667"))
     compileOnly(rfg.deobf("curse.maven:zenutil-401178:4394263"))
-    implementation(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
-    implementation(rfg.deobf("curse.maven:immersive-petroleum-268250:3382321"))
+    compileOnly(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
+    compileOnly(rfg.deobf("curse.maven:immersive-petroleum-268250:3382321"))
     compileOnly(rfg.deobf("curse.maven:smooth-font-285742:3944565"))
     compileOnly(rfg.deobf("curse.maven:athenaeum-284350:4633750"))
     compileOnly(rfg.deobf("curse.maven:artisan-worktables-284351:3205284"))
@@ -270,6 +271,10 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:neverenoughanimation-1062347:5531863"))
     compileOnly(rfg.deobf("curse.maven:ctm-267602:2915363"))
     compileOnly(rfg.deobf("curse.maven:chisel-235279:2915375"))
+    compileOnly(rfg.deobf("curse.maven:libnine-322344:3509087"))
+    compileOnly(rfg.deobf("curse.maven:lazy-ae2-322347:3254160"))
+    compileOnly(rfg.deobf("curse.maven:electroblobs-wizardry-265642:5354477"))
+    implementation(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
 }
 
 // IDE Settings

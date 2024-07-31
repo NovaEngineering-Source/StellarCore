@@ -1,18 +1,24 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
+import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings({"StaticVariableUsedBeforeInitialization", "StaticVariableMayNotBeInitialized"})
+@SuppressWarnings({"StaticVariableUsedBeforeInitialization", "StaticVariableMayNotBeInitialized", "SynchronizeOnNonFinalField"})
 @Mixin(value = ModelLoaderRegistry.class, remap = false)
 public abstract class MixinModelLoaderRegistry {
 
@@ -21,10 +27,12 @@ public abstract class MixinModelLoaderRegistry {
 
     @Final
     @Shadow
+    // TODO Modify map to ConcurrentMap.
     private static Map<ResourceLocation, IModel> cache;
 
     @Final
     @Shadow
+    // TODO Modify map to ConcurrentMap.
     private static Map<ResourceLocation, ResourceLocation> aliases;
 
     @Final
@@ -33,6 +41,7 @@ public abstract class MixinModelLoaderRegistry {
 
     @Final
     @Shadow
+    // TODO Modify set to ConcurrentSet.
     private static Set<ResourceLocation> textures;
 
     @Shadow
@@ -49,6 +58,15 @@ public abstract class MixinModelLoaderRegistry {
     public static IModel getModelOrMissing(final ResourceLocation location) {
         return null;
     }
+    
+    @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
+    private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
+        Class<? extends ICustomModelLoader> loaderClass = loader.getClass();
+        StellarCore.log.info("[StellarCore-MixinModelLoaderRegistry] Registered model loader: {}, AsyncBlackListed: {}",
+                loaderClass.getName(),
+                ParallelModelLoaderAsyncBlackList.INSTANCE.isInBlackList(loaderClass)
+        );
+    }
 
     /**
      * @author Kasumi_Nova
@@ -58,8 +76,10 @@ public abstract class MixinModelLoaderRegistry {
     public static IModel getModel(ResourceLocation location) throws Exception {
         IModel model;
 
-        IModel cached = cache.get(location);
-        if (cached != null) return cached;
+        synchronized (cache) {
+            IModel cached = cache.get(location);
+            if (cached != null) return cached;
+        }
 
         for (ResourceLocation loading : LOADING_MODELS.get()) {
             if (location.getClass() == loading.getClass() && location.equals(loading)) {
@@ -68,8 +88,12 @@ public abstract class MixinModelLoaderRegistry {
         }
         LOADING_MODELS.get().addLast(location);
         try {
-            ResourceLocation aliased = aliases.get(location);
-            if (aliased != null) return getModel(aliased);
+            synchronized (aliases) {
+                ResourceLocation aliased = aliases.get(location);
+                if (aliased != null) {
+                    return getModel(aliased);
+                }
+            }
 
             ResourceLocation actual = getActualLocation(location);
             ICustomModelLoader accepted = null;
@@ -103,7 +127,13 @@ public abstract class MixinModelLoaderRegistry {
                 throw new ModelLoaderRegistry.LoaderException("no suitable loader found for the model " + location + ", skipping");
             }
             try {
-                model = accepted.loadModel(actual);
+                if (ParallelModelLoaderAsyncBlackList.INSTANCE.isInBlackList(accepted.getClass())) {
+                    synchronized (accepted) {
+                        model = accepted.loadModel(actual);
+                    }
+                } else {
+                    model = accepted.loadModel(actual);
+                }
             } catch (Exception e) {
                 throw new ModelLoaderRegistry.LoaderException(String.format("Exception loading model %s with loader %s, skipping", location, accepted), e);
             }
@@ -129,6 +159,13 @@ public abstract class MixinModelLoaderRegistry {
             getModelOrMissing(dep);
         }
         return model;
+    }
+
+    @Redirect(method = "addAlias", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private static Object redirectAddAlias(final Map<ResourceLocation, ResourceLocation> instance, final Object k, final Object v) {
+        synchronized (aliases) {
+            return instance.put((ResourceLocation) k, (ResourceLocation) v);
+        }
     }
 
     @Unique
