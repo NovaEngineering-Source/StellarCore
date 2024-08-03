@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 import com.google.common.base.Joiner;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
+import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
@@ -58,11 +59,11 @@ public abstract class MixinModelLoaderRegistry {
     public static IModel getModelOrMissing(final ResourceLocation location) {
         return null;
     }
-    
+
     @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
     private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
         Class<? extends ICustomModelLoader> loaderClass = loader.getClass();
-        StellarCore.log.info("[StellarCore-MixinModelLoaderRegistry] Registered model loader: {}, AsyncBlackListed: {}",
+        StellarCoreEarlyMixinLoader.LOG.info("[StellarCore-MixinModelLoaderRegistry] Registered model loader: {}, AsyncBlackListed: {}",
                 loaderClass.getName(),
                 ParallelModelLoaderAsyncBlackList.INSTANCE.isInBlackList(loaderClass)
         );

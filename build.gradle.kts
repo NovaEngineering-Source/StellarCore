@@ -248,7 +248,6 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ftb-quests-forge-289412:3156637"))
     compileOnly(rfg.deobf("curse.maven:flux-networks-248020:3178199"))
     compileOnly(rfg.deobf("curse.maven:scalingguis-319656:2716334"))
-    compileOnly(rfg.deobf("curse.maven:chisel-235279:2915375"))
     compileOnly(rfg.deobf("curse.maven:extrabotany-299086:3112313"))
     compileOnly(rfg.deobf("curse.maven:better-loading-screen-229302:3769828"))
     compileOnly(rfg.deobf("curse.maven:better-chat-363860:3048407"))
@@ -274,7 +273,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:libnine-322344:3509087"))
     compileOnly(rfg.deobf("curse.maven:lazy-ae2-322347:3254160"))
     compileOnly(rfg.deobf("curse.maven:electroblobs-wizardry-265642:5354477"))
-    implementation(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
+    compileOnly(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
 }
 
 // IDE Settings
