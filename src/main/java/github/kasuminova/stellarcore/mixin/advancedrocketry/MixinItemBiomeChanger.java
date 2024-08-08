@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.advancedrocketry;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,6 +24,10 @@ public class MixinItemBiomeChanger {
             )
     )
     private SatelliteBase wrapAddInformationNullCheck(final ItemStack stack) {
+        if (!StellarCoreConfig.BUG_FIXES.advancedRocketry.itemBiomeChanger) {
+            return SatelliteRegistry.getSatellite(stack);
+        }
+
         SatelliteBase sat = SatelliteRegistry.getSatellite(stack);
         if (sat instanceof SatelliteBiomeChanger) {
             SatelliteBiomeChanger mapping = (SatelliteBiomeChanger) sat;

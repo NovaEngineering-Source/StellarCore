@@ -16,6 +16,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
     static {
         addModdedMixinCFG("mixins.stellar_core_advancedrocketry.json",     "advancedrocketry");
         addModdedMixinCFG("mixins.stellar_core_ae.json",                   "appliedenergistics2");
+        addModdedMixinCFG("mixins.stellar_core_ancientspellcraft.json",    "ancientspellcraft");
         addModdedMixinCFG("mixins.stellar_core_armourers_workshop.json",   "armourers_workshop");
         addModdedMixinCFG("mixins.stellar_core_astralsorcery.json",        "astralsorcery");
         addModdedMixinCFG("mixins.stellar_core_avaritia.json",             "avaritia");

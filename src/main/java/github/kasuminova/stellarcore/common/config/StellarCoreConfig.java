@@ -10,10 +10,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 @Mod.EventBusSubscriber(modid = StellarCore.MOD_ID)
 @Config(modid = StellarCore.MOD_ID, name = StellarCore.MOD_ID)
 public class StellarCoreConfig {
@@ -48,6 +44,12 @@ public class StellarCoreConfig {
         @Config.Name("Container")
         public final Container container = new Container();
 
+        @Config.Name("AdvancedRocketry")
+        public final AdvancedRocketry advancedRocketry = new AdvancedRocketry();
+
+        @Config.Name("AncientSpellCraft")
+        public final AncientSpellCraft ancientSpellCraft = new AncientSpellCraft();
+
         @Config.Name("ArmourersWorkshop")
         public final ArmourersWorkshop armourersWorkshop = new ArmourersWorkshop();
 
@@ -56,6 +58,9 @@ public class StellarCoreConfig {
 
         @Config.Name("Avaritaddons")
         public final Avaritaddons avaritaddons = new Avaritaddons();
+
+        @Config.Name("Botania")
+        public final Botania botania = new Botania();
 
         @Config.Name("CoFHCore")
         public final CoFHCore coFHCore = new CoFHCore();
@@ -84,6 +89,15 @@ public class StellarCoreConfig {
         @Config.Name("ImmersiveEngineering")
         public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
 
+        @Config.Name("JourneyMap")
+        public final JourneyMap journeyMap = new JourneyMap();
+
+        @Config.Name("LibVulpes")
+        public final LibVulpes libVulpes = new LibVulpes();
+
+        @Config.Name("Mekanism")
+        public final Mekanism mekanism = new Mekanism();
+
         @Config.Name("ModularRouters")
         public final ModularRouters modularRouters = new ModularRouters();
 
@@ -92,6 +106,9 @@ public class StellarCoreConfig {
 
         @Config.Name("MrCrayfishFurniture")
         public final MrCrayfishFurniture mrCrayfishFurniture = new MrCrayfishFurniture();
+
+        @Config.Name("RPSIdeas")
+        public final RPSIdeas rpsIdeas = new RPSIdeas();
 
         @Config.Name("ScalingGuis")
         public final ScalingGuis scalingGuis = new ScalingGuis();
@@ -166,6 +183,33 @@ public class StellarCoreConfig {
 
         }
 
+        public static class AdvancedRocketry {
+
+            @Config.Comment("Fix the NPE problem that occasionally occurs with BiomeChanger.")
+            @Config.Name("ItemBiomeChanger")
+            public boolean itemBiomeChanger = true;
+
+            @Config.Comment({
+                    "When the planetDefs.xml file is corrupted, make it regenerate the file instead of letting it damn near crash.",
+                    "This is usually only a problem if the game process is unexpectedly exited, and the file is usually unrecoverable without a backup."
+            })
+            @Config.Name("PreventDimensionManagerCrash")
+            public boolean dimensionManager = true;
+
+        }
+
+        public static class AncientSpellCraft {
+
+            @Config.Comment({
+                    "(Client Only) Fix a memory leak caused by AncientSpellCraft's FakePlayer,",
+                    "mainly in that it would cause the first world loaded not to be cleaned up by Java GC.",
+                    "Experimental, if a crash occurs with anything related to ASFakePlayer, please report this issue immediately."
+            })
+            @Config.Name("ASFakePlayerFixes")
+            public boolean asFakePlayer = false;
+
+        }
+
         public static class ArmourersWorkshop {
 
             @Config.Comment("Cleanroom only, used to fix an issue that caused the game to crash when unloading skin texture files.")
@@ -192,6 +236,14 @@ public class StellarCoreConfig {
             @Config.Comment("This option is used to fix some item duplication issues with Auto Extreme Crafting Table.")
             @Config.Name("TileEntityExtremeAutoCrafterFixes")
             public boolean tileEntityExtremeAutoCrafter = true;
+
+        }
+
+        public static class Botania {
+
+            @Config.Comment("(Client Only) Automatically clean up data when the player switches worlds, optional feature as WeakHashMap does not usually cause memory leaks.")
+            @Config.Name("AutoCleanManaNetworkHandler")
+            public boolean manaNetworkHandler = true;
 
         }
 
@@ -299,6 +351,43 @@ public class StellarCoreConfig {
             @Config.Name("TileEntityArcFurnaceInventoryFixes")
             public boolean tileEntityArcFurnace = true;
 
+            @Config.Comment({
+                    "(Client Only) Clear the model cache when the player switches worlds to avoid memory leaks.",
+                    "Minor performance impact. Mainly a problem when installing with other mods."
+            })
+            @Config.Name("AutoCleanRenderCache")
+            public boolean renderCache = true;
+
+        }
+
+        public static class JourneyMap {
+
+            @Config.Comment("(Client Only) Automatically clears the radar player cache when a player switches worlds to avoid memory leaks caused in the client.")
+            @Config.Name("AutoCleanPlayerRadar")
+            public boolean playerRadar = true;
+
+        }
+
+        public static class LibVulpes {
+
+            @Config.Comment({
+                    "(Client Only) Automatically clean up InputSyncHandler's spaceDown data when the player switches worlds.",
+                    "Although libvulpes has already coded this judgment, there is still a small chance that it will trigger a memory leak."
+            })
+            @Config.Name("AutoCleanInputSyncHandlerData")
+            public boolean inputSyncHandler = true;
+
+        }
+
+        public static class Mekanism {
+
+            @Config.Comment({
+                    "(Client Only) Automatically clean up old player data when the player switches worlds to address some memory leaks,",
+                    "and while Mekanism has written cleanup features, they will only clean up when returning to the main menu."
+            })
+            @Config.Name("AutoCleanPortableTeleports")
+            public boolean portableTeleports = true;
+
         }
 
         public static class ModularRouters {
@@ -331,6 +420,14 @@ public class StellarCoreConfig {
             @Config.Comment("Problem preventing certain container items from duplicate.")
             @Config.Name("BlockFurnitureTileFixes")
             public boolean blockFurnitureTile = true;
+
+        }
+
+        public static class RPSIdeas {
+
+            @Config.Comment("(Client Only) Fix memory leaks caused by improper object management on the client side.")
+            @Config.Name("ItemBioticSensorMemoryLeakFixes")
+            public boolean itemBioticSensor = true;
 
         }
 
@@ -468,7 +565,6 @@ public class StellarCoreConfig {
         @Config.Name("TConstruct")
         public final TConstruct tConstruct = new TConstruct();
 
-        @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
         public static class Vanilla {
 
             @Config.Comment({
@@ -714,6 +810,10 @@ public class StellarCoreConfig {
             @Config.Name("TileEntityBaseImprovements")
             public boolean tileEntityBase = true;
 
+            @Config.Comment("(Server Performance) Improve the performance of item determination in FarmerStation using caching (mainly related to the canPlant() method).")
+            @Config.Name("FarmerImprovements")
+            public boolean commune = true;
+
         }
 
         public static class EnderIOConduits {
@@ -908,6 +1008,11 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("ShutUpModelLoader")
             public boolean shutUpModelLoader = false;
+
+            @Config.Comment("(Client Only) Listening to clients loading/unloading new worlds, disabling this option will cause some features on memory leak fixing to fail.")
+            @Config.RequiresMcRestart
+            @Config.Name("HandleClientWorldLoad")
+            public boolean handleClientWorldLoad = true;
 
         }
 
