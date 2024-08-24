@@ -358,6 +358,13 @@ public class StellarCoreConfig {
             @Config.Name("AutoCleanRenderCache")
             public boolean renderCache = true;
 
+            @Config.Comment({
+                    "Immediately exit the thread when `Immersive Engineering Contributors Thread` encounters an error while reading JSON,",
+                    "instead of always printing the error."
+            })
+            @Config.Name("IEContributorsThreadExceptionFixes")
+            public boolean contributorSpecialsDownloader = true;
+
         }
 
         public static class JourneyMap {

@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings("MethodMayBeStatic")
+@SuppressWarnings({"MethodMayBeStatic", "SynchronizeOnNonFinalField", "FieldAccessedSynchronizedAndUnsynchronized"})
 @Mixin(ModelBakery.class)
 public abstract class MixinModelBakery {
 

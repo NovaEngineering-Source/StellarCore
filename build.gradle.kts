@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.1.11"
+version = "1.2.0"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -277,6 +277,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ancient-spellcraft-358124:5413256"))
     compileOnly(rfg.deobf("curse.maven:random-psideas-302313:3215550"))
     compileOnly(rfg.deobf("curse.maven:journeymap-32274:5172461"))
+    compileOnly(rfg.deobf("curse.maven:abyssalcraft-53686:5330323"))
 }
 
 // IDE Settings

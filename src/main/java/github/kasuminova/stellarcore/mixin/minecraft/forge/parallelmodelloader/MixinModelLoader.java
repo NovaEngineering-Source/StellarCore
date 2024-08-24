@@ -155,58 +155,59 @@ public abstract class MixinModelLoader extends ModelBakery {
         return Collections.emptyIterator();
     }
 
-    @Redirect(
-            method = "loadItemModels",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Ljava/util/List;iterator()Ljava/util/Iterator;",
-                    ordinal = 0
-            )
-    )
-    private Iterator<Object> stellar_core$injectLoadItemModels(
-            List<Item> items,
-            @Local(name = "itemBar") ProgressManager.ProgressBar itemBar) {
-        if (!stellar_core$reflectInitialized) {
-            stellar_core$initializeReflect();
-        }
-
-        long startTime = System.currentTimeMillis();
-
-        items.parallelStream().forEach(item -> {
-            synchronized (itemBar) {
-                itemBar.step(item.getRegistryName().toString());
-            }
-
-            getVariantNames(item).parallelStream().forEach(s -> {
-                ResourceLocation file = getItemLocation(s);
-                ModelResourceLocation memory = getInventoryVariant(s);
-                IModel model = getMissingModel();
-                Exception exception = null;
-                try {
-                    model = ModelLoaderRegistry.getModel(memory);
-                } catch (Exception blockstateException) {
-                    try {
-                        model = ModelLoaderRegistry.getModel(file);
-                        stellar_core$addAlias(memory, file);
-                    } catch (Exception normalException) {
-                        exception = stellar_core$createItemLoadingException("Could not load item model either from the normal location " + file + " or from the blockstate", normalException, blockstateException);
-                    }
-                }
-                if (exception != null) {
-                    if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
-                        synchronized (loadingExceptions) {
-                            storeException(memory, exception);
-                        }
-                    }
-                    model = stellar_core$getMissingModel(memory, exception);
-                }
-                stateModels.put(memory, model);
-            });
-        });
-
-        StellarCore.log.info("[StellarCore-MixinModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
-        return Collections.emptyIterator();
-    }
+    // TODO required to fix
+//    @Redirect(
+//            method = "loadItemModels",
+//            at = @At(
+//                    value = "INVOKE",
+//                    target = "Ljava/util/List;iterator()Ljava/util/Iterator;",
+//                    ordinal = 0
+//            )
+//    )
+//    private Iterator<Object> stellar_core$injectLoadItemModels(
+//            List<Item> items,
+//            @Local(name = "itemBar") ProgressManager.ProgressBar itemBar) {
+//        if (!stellar_core$reflectInitialized) {
+//            stellar_core$initializeReflect();
+//        }
+//
+//        long startTime = System.currentTimeMillis();
+//
+//        items.parallelStream().forEach(item -> {
+//            synchronized (itemBar) {
+//                itemBar.step(item.getRegistryName().toString());
+//            }
+//
+//            getVariantNames(item).parallelStream().forEach(s -> {
+//                ResourceLocation file = getItemLocation(s);
+//                ModelResourceLocation memory = getInventoryVariant(s);
+//                IModel model = getMissingModel();
+//                Exception exception = null;
+//                try {
+//                    model = ModelLoaderRegistry.getModel(memory);
+//                } catch (Exception blockstateException) {
+//                    try {
+//                        model = ModelLoaderRegistry.getModel(file);
+//                        stellar_core$addAlias(memory, file);
+//                    } catch (Exception normalException) {
+//                        exception = stellar_core$createItemLoadingException("Could not load item model either from the normal location " + file + " or from the blockstate", normalException, blockstateException);
+//                    }
+//                }
+//                if (exception != null) {
+//                    if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
+//                        synchronized (loadingExceptions) {
+//                            storeException(memory, exception);
+//                        }
+//                    }
+//                    model = stellar_core$getMissingModel(memory, exception);
+//                }
+//                stateModels.put(memory, model);
+//            });
+//        });
+//
+//        StellarCore.log.info("[StellarCore-MixinModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
+//        return Collections.emptyIterator();
+//    }
 
     // Reflection. So many magic fields...
 

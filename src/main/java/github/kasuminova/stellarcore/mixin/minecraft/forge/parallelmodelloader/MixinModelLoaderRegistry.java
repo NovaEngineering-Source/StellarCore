@@ -1,12 +1,13 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,36 +15,28 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings({"StaticVariableUsedBeforeInitialization", "StaticVariableMayNotBeInitialized", "SynchronizeOnNonFinalField"})
+@SuppressWarnings("StaticVariableMayNotBeInitialized")
 @Mixin(value = ModelLoaderRegistry.class, remap = false)
 public abstract class MixinModelLoaderRegistry {
 
     @Unique
-    private static final ThreadLocal<Deque<ResourceLocation>> LOADING_MODELS = ThreadLocal.withInitial(ArrayDeque::new);
+    private static final ThreadLocal<Deque<ResourceLocation>> stellar_core$LOADING_MODELS = ThreadLocal.withInitial(ArrayDeque::new);
 
-    @Final
-    @Shadow
-    // TODO Modify map to ConcurrentMap.
-    private static Map<ResourceLocation, IModel> cache;
+    @Unique
+    private static final Map<ResourceLocation, IModel> stellar_core$CACHE = new ConcurrentHashMap<>();
 
-    @Final
-    @Shadow
-    // TODO Modify map to ConcurrentMap.
-    private static Map<ResourceLocation, ResourceLocation> aliases;
+    @Unique
+    private static final Map<ResourceLocation, ResourceLocation> stellar_core$ALIASES = new ConcurrentHashMap<>();
+
+    @Unique
+    private static final Set<ResourceLocation> stellar_core$TEXTURES = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Final
     @Shadow
     private static Set<ICustomModelLoader> loaders;
-
-    @Final
-    @Shadow
-    // TODO Modify set to ConcurrentSet.
-    private static Set<ResourceLocation> textures;
 
     @Shadow
     public static ResourceLocation getActualLocation(final ResourceLocation location) {
@@ -59,6 +52,9 @@ public abstract class MixinModelLoaderRegistry {
     public static IModel getModelOrMissing(final ResourceLocation location) {
         return null;
     }
+
+    @Shadow
+    private static IResourceManager manager;
 
     @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
     private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
@@ -77,20 +73,20 @@ public abstract class MixinModelLoaderRegistry {
     public static IModel getModel(ResourceLocation location) throws Exception {
         IModel model;
 
-        synchronized (cache) {
-            IModel cached = cache.get(location);
-            if (cached != null) return cached;
+        IModel cached = stellar_core$CACHE.get(location);
+        if (cached != null) {
+            return cached;
         }
 
-        for (ResourceLocation loading : LOADING_MODELS.get()) {
+        for (ResourceLocation loading : stellar_core$LOADING_MODELS.get()) {
             if (location.getClass() == loading.getClass() && location.equals(loading)) {
-                throw new ModelLoaderRegistry.LoaderException("circular model dependencies, stack: [" + Joiner.on(", ").join(LOADING_MODELS.get()) + "]");
+                throw new ModelLoaderRegistry.LoaderException("circular model dependencies, stack: [" + Joiner.on(", ").join(stellar_core$LOADING_MODELS.get()) + "]");
             }
         }
-        LOADING_MODELS.get().addLast(location);
+        stellar_core$LOADING_MODELS.get().addLast(location);
         try {
-            synchronized (aliases) {
-                ResourceLocation aliased = aliases.get(location);
+            synchronized (stellar_core$ALIASES) {
+                ResourceLocation aliased = stellar_core$ALIASES.get(location);
                 if (aliased != null) {
                     return getModel(aliased);
                 }
@@ -144,29 +140,70 @@ public abstract class MixinModelLoaderRegistry {
             if (model == null) {
                 throw new ModelLoaderRegistry.LoaderException(String.format("Loader %s returned null while loading model %s", accepted, location));
             }
-            synchronized (textures) {
-                textures.addAll(model.getTextures());
-            }
+            stellar_core$TEXTURES.addAll(model.getTextures());
         } finally {
-            ResourceLocation popLoc = LOADING_MODELS.get().removeLast();
+            ResourceLocation popLoc = stellar_core$LOADING_MODELS.get().removeLast();
             if (popLoc != location) {
                 throw new IllegalStateException("Corrupted loading model stack: " + popLoc + " != " + location);
             }
         }
-        synchronized (cache) {
-            cache.put(location, model);
-        }
+        stellar_core$CACHE.put(location, model);
         for (ResourceLocation dep : model.getDependencies()) {
             getModelOrMissing(dep);
         }
         return model;
     }
 
+    /**
+     * @author Kasumi_Nova
+     * @reason Allow multithreaded model loading.
+     */
+    @Overwrite
+    public static boolean loaded(ResourceLocation location) {
+        return stellar_core$CACHE.containsKey(location);
+    }
+
+    /**
+     * @author Kasumi_Nova
+     * @reason Allow multithreaded model loading.
+     */
+    @Overwrite
+    public static void clearModelCache(IResourceManager newManager) {
+        manager = newManager;
+        stellar_core$ALIASES.clear();
+        stellar_core$TEXTURES.clear();
+        stellar_core$CACHE.clear();
+        // putting the builtin models in
+        stellar_core$CACHE.put(new ResourceLocation("minecraft:builtin/generated"), ItemLayerModel.INSTANCE);
+        stellar_core$CACHE.put(new ResourceLocation("minecraft:block/builtin/generated"), ItemLayerModel.INSTANCE);
+        stellar_core$CACHE.put(new ResourceLocation("minecraft:item/builtin/generated"), ItemLayerModel.INSTANCE);
+    }
+
+    /**
+     * @author Kasumi_Nova
+     * @reason Allow multithreaded model loading.
+     */
+    @Overwrite
+    static Iterable<ResourceLocation> getTextures() {
+        return stellar_core$TEXTURES;
+    }
+
     @Redirect(method = "addAlias", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private static Object redirectAddAlias(final Map<ResourceLocation, ResourceLocation> instance, final Object k, final Object v) {
-        synchronized (aliases) {
-            return instance.put((ResourceLocation) k, (ResourceLocation) v);
+        synchronized (stellar_core$ALIASES) {
+            return stellar_core$ALIASES.put((ResourceLocation) k, (ResourceLocation) v);
         }
+    }
+
+    @Redirect(
+            method = "getMissingModel(Lnet/minecraft/util/ResourceLocation;Ljava/lang/Throwable;)Lnet/minecraftforge/client/model/IModel;",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z"
+            )
+    )
+    private static boolean redirectGetMissingModel(final Set<ResourceLocation> instance, final Collection<ResourceLocation> es) {
+        return stellar_core$TEXTURES.addAll(es);
     }
 
     @Unique
