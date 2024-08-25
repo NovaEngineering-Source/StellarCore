@@ -151,9 +151,10 @@ public class StitcherCache {
     }
 
     public boolean holdersEquals(Set<Stitcher.Holder> targetHolders) {
-//        if (targetHolders.size() != this.holders.size()) {
-//            return false;
-//        }
+        if (targetHolders.size() != this.holders.size()) {
+            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holders size not equals.");
+            return false;
+        }
         Map<String, Stitcher.Holder> holders = new Object2ObjectOpenHashMap<>(this.holders);
         for (final Stitcher.Holder holder : targetHolders) {
             Stitcher.Holder cachedHolder = holders.get(holder.getAtlasSprite().getIconName());

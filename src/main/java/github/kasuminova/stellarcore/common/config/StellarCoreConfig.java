@@ -652,6 +652,16 @@ public class StellarCoreConfig {
             @Config.Name("AlwaysDeferChunkUpdates")
             public boolean alwaysDeferChunkUpdates = false;
 
+            @Config.Comment({
+                    "(Client Performance) Enabling Stitcher caching improves the game loading speed.",
+                    "The main principle is to cache the Stitcher's splicing results and save them to the hard drive for next time reading, so",
+                    "you need to pre-launch the game once before you can see the effect.",
+                    "Not compatible with VintageFix's DynamicResource, but should work well with VintageFix's TurboStitcher."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("StitcherCache")
+            public boolean stitcherCache = false;
+
         }
 
         public static class Forge {
