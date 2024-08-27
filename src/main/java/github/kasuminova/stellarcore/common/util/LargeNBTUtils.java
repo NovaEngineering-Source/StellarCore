@@ -7,7 +7,6 @@ import net.minecraft.nbt.NBTSizeTracker;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagEnd;
 import net.minecraft.util.ReportedException;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 import java.io.*;
@@ -30,7 +29,7 @@ public class LargeNBTUtils {
     }
 
     public static NBTTagCompound readInfinityDepth(DataInput input, NBTSizeTracker accounter) throws IOException {
-        NBTBase nbtbase = readInfinityDepth(input, Integer.MIN_VALUE /* XD */, accounter);
+        NBTBase nbtbase = read(input, Integer.MIN_VALUE /* XD */, accounter);
 
         if (nbtbase instanceof NBTTagCompound) {
             return (NBTTagCompound) nbtbase;
@@ -39,7 +38,7 @@ public class LargeNBTUtils {
         }
     }
 
-    private static NBTBase readInfinityDepth(DataInput input, int depth, NBTSizeTracker accounter) throws IOException {
+    private static NBTBase read(DataInput input, int depth, NBTSizeTracker accounter) throws IOException {
         byte b0 = input.readByte();
         accounter.read(8); // Forge: Count everything!
 

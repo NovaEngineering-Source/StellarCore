@@ -25,6 +25,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_renderglobal.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.alwaysDeferChunkUpdates);
+        addMixinCFG("mixins.stellar_core_minecraft_resourcepack.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache);
         addMixinCFG("mixins.stellar_core_minecraft_world.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots);
         addMixinCFG("mixins.stellar_core_minecraft_world_load.json",      () -> StellarCoreConfig.FEATURES.vanilla.handleClientWorldLoad);
         addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);

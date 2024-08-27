@@ -660,7 +660,17 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("StitcherCache")
-            public boolean stitcherCache = false;
+            public boolean stitcherCache = true;
+
+            @Config.Comment({
+                    "(Client Performance) Caches the state of existence of each resource file in the ResourcePack,",
+                    "avoiding the use of the resourceExists method with its excessive overhead to improve game loading performance.",
+                    "Effective in large ModPacks and optimises the impact on startup time when installing with Optifine, with good compatibility.",
+                    "If you encounter some resources that don't load properly (which they usually don't), reload the resource packs, this will reset the cache."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ResourceExistStateCache")
+            public boolean resourceExistStateCache = true;
 
         }
 

@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft.stitcher;
+package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -24,15 +24,9 @@ public class MixinTextureMap {
     @Mutable
     private Map<String, TextureAtlasSprite> mapRegisteredSprites;
 
-    @Final
-    @Shadow
-    @Mutable
-    private Map<String, TextureAtlasSprite> mapUploadedSprites;
-
     @Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/renderer/texture/ITextureMapPopulator;Z)V", at = @At("RETURN"))
     private void injectInit(final String basePathIn, final ITextureMapPopulator iconCreatorIn, final boolean skipFirst, final CallbackInfo ci) {
-        this.mapUploadedSprites = new Object2ObjectOpenHashMap<>();
-        if (StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad) {
+        if (StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad || StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache) {
             return;
         }
         this.mapRegisteredSprites = new ConcurrentHashMap<>();

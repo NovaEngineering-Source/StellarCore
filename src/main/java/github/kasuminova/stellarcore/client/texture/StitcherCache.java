@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.client.texture;
 
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.LargeNBTUtils;
 import github.kasuminova.stellarcore.mixin.minecraft.stitcher.AccessorStitcher;
 import github.kasuminova.stellarcore.mixin.util.AccessorStitcherHolder;
@@ -111,14 +112,7 @@ public class StitcherCache {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(cacheFile);
-            try {
-                readTag = CompressedStreamTools.readCompressed(fis);
-            } catch (RuntimeException e) {
-                StellarCore.log.warn("[StellarCore-StitcherCache] File read failed, try to use specially method.");
-                StellarCore.log.warn("[StellarCore-StitcherCache] {}", e.getMessage());
-                fis = new FileInputStream(cacheFile); // Re-open stream
-                readTag = LargeNBTUtils.readCompressed(fis);
-            }
+            readTag = LargeNBTUtils.readCompressed(fis);
             fis.close();
             this.cacheState = State.TAG_READY;
             StellarCore.log.info("[StellarCore-StitcherCache] Successfully read stitcher cache file from `{}`.", cacheFile.getAbsolutePath());
@@ -152,8 +146,8 @@ public class StitcherCache {
 
     public boolean holdersEquals(Set<Stitcher.Holder> targetHolders) {
         if (targetHolders.size() != this.holders.size()) {
-            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holders size not equals.");
-            return false;
+            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache may be unavailable, holders size not equals ({} ≠ {}).", targetHolders.size(), this.holders.size());
+//            return false;
         }
         Map<String, Stitcher.Holder> holders = new Object2ObjectOpenHashMap<>(this.holders);
         for (final Stitcher.Holder holder : targetHolders) {
@@ -170,7 +164,9 @@ public class StitcherCache {
         }
         if (!holders.isEmpty()) {
             StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} holders not found in runtime.", holders.size());
-            holders.keySet().forEach(holderName -> StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` not found in runtime.", holderName));
+            if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                holders.keySet().forEach(holderName -> StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` not found in runtime.", holderName));
+            }
             return false;
         }
         return true;
