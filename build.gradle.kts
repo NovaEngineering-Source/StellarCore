@@ -185,7 +185,7 @@ dependencies {
 
     // Mixins
 //    implementation("zone.rong:mixinbooter:7.1")
-    val mixin : String = modUtils.enableMixins("zone.rong:mixinbooter:8.9", "mixins.stellar_core.refmap.json").toString()
+    val mixin : String = modUtils.enableMixins("zone.rong:mixinbooter:9.3", "mixins.stellar_core.refmap.json").toString()
     api (mixin) {
         isTransitive = false
     }
