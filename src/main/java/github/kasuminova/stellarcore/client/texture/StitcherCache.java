@@ -146,8 +146,8 @@ public class StitcherCache {
 
     public boolean holdersEquals(Set<Stitcher.Holder> targetHolders) {
         if (targetHolders.size() != this.holders.size()) {
-            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache may be unavailable, holders size not equals ({} ≠ {}).", targetHolders.size(), this.holders.size());
-//            return false;
+            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holders size not equals ({} ≠ {}).", targetHolders.size(), this.holders.size());
+            return false;
         }
         Map<String, Stitcher.Holder> holders = new Object2ObjectOpenHashMap<>(this.holders);
         for (final Stitcher.Holder holder : targetHolders) {

@@ -660,7 +660,7 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("StitcherCache")
-            public boolean stitcherCache = true;
+            public boolean stitcherCache = false;
 
             @Config.Comment({
                     "(Client Performance) Caches the state of existence of each resource file in the ResourcePack,",
