@@ -5,6 +5,9 @@ import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraft.client.resources.ResourceIndex;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -29,10 +32,10 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
      * @author Kasumi_Nova
      * @reason Cache
      */
-    @Overwrite
-    public boolean resourceExists(ResourceLocation location) {
-        return stellar_core$resourceExistsCache.computeIfAbsent(location, (key) -> 
-                this.getResourceStream(location) != null || this.resourceIndex.isFileExisting(location));
+    @Inject(method = "resourceExists", at = @At("HEAD"), cancellable = true)
+    public void resourceExists(final ResourceLocation location, final CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(stellar_core$resourceExistsCache.computeIfAbsent(location, (key) -> 
+                this.getResourceStream(location) != null || this.resourceIndex.isFileExisting(location)));
     }
 
     @Unique
