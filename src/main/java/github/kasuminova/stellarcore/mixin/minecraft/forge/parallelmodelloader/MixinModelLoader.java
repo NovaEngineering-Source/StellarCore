@@ -4,8 +4,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BlockModelShapes;
@@ -17,11 +19,10 @@ import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.spongepowered.asm.mixin.*;
@@ -29,13 +30,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings("SynchronizeOnNonFinalField")
+@SuppressWarnings({"SynchronizeOnNonFinalField", "MethodMayBeStatic"})
 @Mixin(ModelLoader.class)
 public abstract class MixinModelLoader extends ModelBakery {
 
@@ -59,6 +61,10 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Shadow(remap = false)
     private Map<ModelBlockDefinition, IModel> loadingExceptions;
 
+    @Unique
+    private boolean stellar_core$concurrent = true;
+
+    @SuppressWarnings("DataFlowIssue")
     public MixinModelLoader() {
         super(null, null, null);
     }
@@ -73,14 +79,6 @@ public abstract class MixinModelLoader extends ModelBakery {
 
     @Shadow(remap = false)
     protected abstract IModel getMissingModel();
-
-    @Shadow(remap = false)
-    protected abstract void storeException(final ResourceLocation location, final Exception exception);
-
-    @Shadow(remap = false)
-    public static ModelResourceLocation getInventoryVariant(final String s) {
-        return null;
-    }
 
     @Redirect(method = "setupModelRegistry",
             at = @At(
@@ -120,7 +118,7 @@ public abstract class MixinModelLoader extends ModelBakery {
             }
         });
 
-        StellarCore.log.info("[StellarCore-MixinModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
+        StellarCore.log.info("[StellarCore-ParallelModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
         bakedModels.putAll(bakedModelsConcurrent);
         return Collections.emptySet();
     }
@@ -130,9 +128,8 @@ public abstract class MixinModelLoader extends ModelBakery {
             List<Block> blocks,
             @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
             @Local(name = "mapper") BlockStateMapper mapper) {
-        
-        
         long startTime = System.currentTimeMillis();
+        stellar_core$toConcurrent();
 
         blocks.parallelStream().forEach(block -> {
             synchronized (blockBar) {
@@ -151,8 +148,29 @@ public abstract class MixinModelLoader extends ModelBakery {
             }
         });
 
-        StellarCore.log.info("[StellarCore-MixinModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
+        stellar_core$toDefault();
+        StellarCore.log.info("[StellarCore-ParallelModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
         return Collections.emptyIterator();
+    }
+
+    @Unique
+    private void stellar_core$toConcurrent() {
+        if (!stellar_core$concurrent) {
+            stateModels = new ConcurrentHashMap<>(stateModels);
+            multipartDefinitions = new ConcurrentHashMap<>(multipartDefinitions);
+            multipartModels = new ConcurrentHashMap<>(multipartModels);
+            loadingExceptions = new ConcurrentHashMap<>(loadingExceptions);
+            stellar_core$concurrent = true;
+        }
+    }
+
+    @Unique
+    private void stellar_core$toDefault() {
+        stateModels = new Object2ObjectOpenHashMap<>(stateModels);
+        multipartDefinitions = new Object2ObjectOpenHashMap<>(multipartDefinitions);
+        multipartModels = new Object2ObjectOpenHashMap<>(multipartModels);
+        loadingExceptions = new Object2ObjectOpenHashMap<>(loadingExceptions);
+        stellar_core$concurrent = false;
     }
 
     // TODO required to fix
@@ -205,7 +223,7 @@ public abstract class MixinModelLoader extends ModelBakery {
 //            });
 //        });
 //
-//        StellarCore.log.info("[StellarCore-MixinModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
+//        StellarCore.log.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
 //        return Collections.emptyIterator();
 //    }
 
@@ -222,9 +240,6 @@ public abstract class MixinModelLoader extends ModelBakery {
     private static Method stellar_core$addAlias = null;
     @Unique
     private static Method stellar_core$getMissingModel = null;
-
-    @Unique
-    private static boolean stellar_core$reflectInitialized = false;
 
     @Unique
     private static Exception stellar_core$createItemLoadingException(final String message, final Exception normalException, final Exception blockstateException) {
@@ -266,9 +281,8 @@ public abstract class MixinModelLoader extends ModelBakery {
             stellar_core$getMissingModel.setAccessible(true);
         } catch (Throwable e) {
             // Always throws exception because it cannot be failure.
-            throw new RuntimeException("[StellarCore-MixinModelLoader] Caught a fatal exception, please report to mod author!", e);
+            throw new RuntimeException("[StellarCore-ParallelModelLoader] Caught a fatal exception, please report to mod author!", e);
         }
-        stellar_core$reflectInitialized = true;
     }
 
 }

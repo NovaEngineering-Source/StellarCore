@@ -51,6 +51,8 @@ public abstract class MixinStitcher {
             stellar_core$applyCache(cache);
             StellarCore.log.info("[StellarCore-MixinStitcher] Stitched {} texture sprites, cache state: {}, took {}ms.", setStitchHolders.size(), cacheState, System.currentTimeMillis() - stellar_core$startTime);
             ci.cancel();
+        } else {
+            cache.clear();
         }
     }
 
@@ -77,6 +79,7 @@ public abstract class MixinStitcher {
     private void stellar_core$storeCache(final StitcherCache cache) {
         synchronized (cache) {
             if (cache.getCacheState() == StitcherCache.State.AVAILABLE) {
+                cache.clear();
                 StellarCore.log.info("[StellarCore-MixinStitcher] Stitching cache is already available, skipped storing...");
                 return;
             }
@@ -86,6 +89,7 @@ public abstract class MixinStitcher {
                     StellarCore.log.info("[StellarCore-MixinStitcher] Storing stitcher cache...");
                     cache.cache(setStitchHolders, stitchSlots, currentWidth, currentHeight);
                     cache.writeToFile();
+                    cache.clear();
                     StellarCore.log.info("[StellarCore-MixinStitcher] Stored stitcher cache, took {}ms.", System.currentTimeMillis() - startTime);
                 }
             });

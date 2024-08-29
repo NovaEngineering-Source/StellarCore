@@ -181,6 +181,15 @@ public class StitcherCache {
         this.height = height;
         this.cacheState = State.AVAILABLE;
     }
+    
+    public void clear() {
+        this.holders.clear();
+        this.slots.clear();
+        this.readTag = null;
+        this.width = 0;
+        this.height = 0;
+        this.cacheState = State.UNKNOWN;
+    }
 
     public String getName() {
         return name;

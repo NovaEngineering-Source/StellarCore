@@ -1,6 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
-import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePackReloadListener;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.DefaultResourcePack;
 import org.spongepowered.asm.mixin.Final;
@@ -19,7 +19,7 @@ public class MixinMinecraft {
 
     @Inject(method = "refreshResources", at = @At("HEAD"))
     private void injectRefreshResources(final CallbackInfo ci) {
-        if (defaultResourcePack instanceof StellarCoreResourcePackReloadListener reloadListener) {
+        if (defaultResourcePack instanceof StellarCoreResourcePack reloadListener) {
             reloadListener.stellar_core$onReload();
         }
     }

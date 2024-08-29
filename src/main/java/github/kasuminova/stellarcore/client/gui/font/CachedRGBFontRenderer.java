@@ -52,7 +52,7 @@ public class CachedRGBFontRenderer extends FontRenderer {
                 final char ch = charArray[j];
                 mapping.append(ch);
 
-                String strFirst = strList.getFirst();
+                String strFirst = strList.peekFirst();
                 if (strFirst == null || colors.getFirst() == null) {
                     sb.append(ch);
                     continue;

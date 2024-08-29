@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(TextureMap.class)
 public class MixinTextureMap {
@@ -35,7 +34,7 @@ public class MixinTextureMap {
         if (StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad) {
             return;
         }
-        this.mapRegisteredSprites = new ConcurrentHashMap<>();
+        this.mapRegisteredSprites = new Object2ObjectOpenHashMap<>();
     }
 
 }

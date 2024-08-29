@@ -599,6 +599,16 @@ public class StellarCoreConfig {
             public boolean parallelModelLoader = true;
 
             @Config.Comment({
+                    "(Client Performance) Clearing the cache after loading a model, significantly reduce memory usage.",
+                    "But it may cause some mod's models to be messed up after reloading ResourcePacks,",
+                    "Turning this option off will use more memory.",
+                    "If you installed FoamFix, FoamFix does the same thing but StellarCore is faster, you may need to turn off the `wipeModelCache` option in foamfix.cfg."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("WipeModelCache")
+            public boolean wipeModelCache = true;
+
+            @Config.Comment({
                     "Defining which ModelLoader cannot be safely asynchronized to allow StellarCore to load models",
                     "using a synchronous approach, usually requires no modification to it."
             })
@@ -664,14 +674,11 @@ public class StellarCoreConfig {
 
             @Config.Comment({
                     "(Client Performance) Caches the state of existence of each resource file in the ResourcePack,",
-                    "avoiding the use of the resourceExists method with its excessive overhead to improve game loading performance.",
-                    "Effective in large ModPacks and optimises the impact on startup time when installing with Optifine, with good compatibility.",
-                    "If you encounter some resources that don't load properly (which they usually don't), reload the resource packs, this will reset the cache.",
-                    "Incompatible with GroovyScript, and I don't know why."
+                    "improve the speed of model loading, if you encounter the game can not be loaded or display anomaly, turn off this option."
             })
             @Config.RequiresMcRestart
             @Config.Name("ResourceExistStateCache")
-            public boolean resourceExistStateCache = false;
+            public boolean resourceExistStateCache = true;
 
         }
 

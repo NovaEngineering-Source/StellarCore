@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
-import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePackReloadListener;
+import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 import net.minecraft.client.resources.FallbackResourceManager;
@@ -41,10 +42,11 @@ public class MixinSimpleReloadableResourceManager {
 
     @Inject(method = "reloadResources", at = @At("HEAD"))
     private void injectReloadResourcePack(final List<IResourcePack> resourcesPacksList, final CallbackInfo ci) {
+        ResourceExistingCache.clear();
         resourcesPacksList.stream()
-                .filter(StellarCoreResourcePackReloadListener.class::isInstance)
-                .map(StellarCoreResourcePackReloadListener.class::cast)
-                .forEach(StellarCoreResourcePackReloadListener::stellar_core$onReload);
+                .filter(StellarCoreResourcePack.class::isInstance)
+                .map(StellarCoreResourcePack.class::cast)
+                .forEach(ResourceExistingCache::addResourcePack);
     }
 
 }

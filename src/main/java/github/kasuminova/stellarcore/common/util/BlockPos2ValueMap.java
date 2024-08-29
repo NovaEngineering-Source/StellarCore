@@ -7,12 +7,12 @@ import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
 
     protected final Long2ObjectMap<V> internal = new Long2ObjectLinkedOpenHashMap<>();
     protected EntrySet entrySet = null;
+    protected KeySet keySet = null;
 
     @Override
     public int size() {
@@ -71,7 +71,7 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
     @Nonnull
     @Override
     public Set<BlockPos> keySet() {
-        return internal.keySet().stream().map(BlockPos::fromLong).collect(Collectors.toSet());
+        return keySet == null ? keySet = new KeySet() : keySet;
     }
 
     @Nonnull
@@ -115,6 +115,21 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
         public Iterator<Map.Entry<BlockPos, V>> iterator() {
             return Iterators.transform(internal.long2ObjectEntrySet().iterator(), Entry::new);
         }
+    }
+
+    public class KeySet extends AbstractSet<BlockPos> {
+
+        @Nonnull
+        @Override
+        public Iterator<BlockPos> iterator() {
+            return Iterators.transform(entrySet().iterator(), Map.Entry::getKey);
+        }
+
+        @Override
+        public int size() {
+            return internal.size();
+        }
+
     }
 
     public static class Entry<V> implements Map.Entry<BlockPos, V> {
