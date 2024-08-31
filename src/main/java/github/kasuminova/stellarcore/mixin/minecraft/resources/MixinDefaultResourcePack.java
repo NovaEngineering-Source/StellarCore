@@ -4,7 +4,10 @@ import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraft.client.resources.ResourceIndex;
 import net.minecraft.util.ResourceLocation;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -40,7 +43,7 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
         if (!stellar_core$cacheEnabled) {
             return;
         }
-        cir.setReturnValue(stellar_core$resourceExistsCache.computeIfAbsent(location, (key) -> 
+        cir.setReturnValue(stellar_core$resourceExistsCache.computeIfAbsent(location, (key) ->
                 this.getResourceStream(location) != null || this.resourceIndex.isFileExisting(location)));
     }
 

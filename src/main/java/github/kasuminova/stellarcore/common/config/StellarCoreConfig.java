@@ -617,12 +617,11 @@ public class StellarCoreConfig {
             public String[] parallelModelLoaderBlackList = {"slimeknights.tconstruct.library.client.model.ModifierModelLoader"};
 
             @Config.Comment({
-                    "(Client Performance) An experimental feature that uses parallel loading of texture files.",
-                    "It is usually not turned on due to being highly invasive and incompatible with VintageFix and Optifine."
+                    "(Client Performance) An experimental feature that uses parallel loading of texture files."
             })
             @Config.RequiresMcRestart
-            @Config.Name("ParallelTextureMapLoad")
-            public boolean parallelTextureMapLoad = false;
+            @Config.Name("ParallelTextureLoad")
+            public boolean parallelTextureLoad = true;
 
             @Config.Comment("(Client Performance) Improve the Map data structures of StateMapperBase to make them faster (~30%).")
             @Config.RequiresMcRestart

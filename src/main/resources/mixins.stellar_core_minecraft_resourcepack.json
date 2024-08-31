@@ -9,6 +9,7 @@
         "MixinDefaultResourcePack",
         "MixinMinecraft",
         "MixinModelLoader",
-        "MixinSimpleReloadableResourceManager"
+        "MixinSimpleReloadableResourceManager",
+        "MixinTextureMap"
     ]
 }

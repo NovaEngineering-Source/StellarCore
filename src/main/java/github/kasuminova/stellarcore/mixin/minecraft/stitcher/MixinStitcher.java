@@ -94,6 +94,7 @@ public abstract class MixinStitcher {
                 }
             });
         }
+        StitcherCache.setActiveMap(null);
     }
 
 }

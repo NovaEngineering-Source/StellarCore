@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@SuppressWarnings("MethodMayBeStatic")
 @Mixin(Minecraft.class)
 public class MixinMinecraft {
 
@@ -18,7 +19,7 @@ public class MixinMinecraft {
     public DefaultResourcePack defaultResourcePack;
 
     @Inject(method = "refreshResources", at = @At("HEAD"))
-    private void injectRefreshResources(final CallbackInfo ci) {
+    private void injectRefreshResourcesBefore(final CallbackInfo ci) {
         if (defaultResourcePack instanceof StellarCoreResourcePack reloadListener) {
             reloadListener.stellar_core$onReload();
         }

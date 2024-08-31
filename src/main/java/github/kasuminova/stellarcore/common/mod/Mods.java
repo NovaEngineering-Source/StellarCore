@@ -26,9 +26,7 @@ public enum Mods {
             }
         }
     },
-
     MM("modularmachinery"),
-
     MMCE("modularmachinery") {
         @Override
         public boolean loaded() {
@@ -48,8 +46,8 @@ public enum Mods {
             }
         }
     },
-
-    REPLAY("replaymod")
+    REPLAY("replaymod"),
+    VINTAGE_FIX("vintagefix"),
     ;
 
     protected final String modID;

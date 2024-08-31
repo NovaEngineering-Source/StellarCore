@@ -31,7 +31,7 @@ public class MixinTextureMap {
     @Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/renderer/texture/ITextureMapPopulator;Z)V", at = @At("RETURN"))
     private void injectInit(final String basePathIn, final ITextureMapPopulator iconCreatorIn, final boolean skipFirst, final CallbackInfo ci) {
         this.mapUploadedSprites = new Object2ObjectOpenHashMap<>();
-        if (StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad) {
+        if (StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad) {
             return;
         }
         this.mapRegisteredSprites = new Object2ObjectOpenHashMap<>();

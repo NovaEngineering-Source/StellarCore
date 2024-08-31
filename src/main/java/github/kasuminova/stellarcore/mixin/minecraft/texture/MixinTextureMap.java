@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Note: Incompatible with Optifine.
  */
+@Deprecated
 @SuppressWarnings({"QuestionableName", "AssignmentToMethodParameter", "StandardVariableNames", "StaticVariableMayNotBeInitialized", "NonConstantFieldWithUpperCaseName"})
 @Mixin(TextureMap.class)
 public abstract class MixinTextureMap {

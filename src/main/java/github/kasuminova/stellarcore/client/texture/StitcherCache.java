@@ -374,10 +374,36 @@ public class StitcherCache {
     private static boolean holderEquals(Stitcher.Holder self, Stitcher.Holder another) {
         AccessorStitcherHolder selfAccessor = (AccessorStitcherHolder) self;
         AccessorStitcherHolder anotherHolderAccessor = (AccessorStitcherHolder) another;
-        return selfAccessor.realWidth() == anotherHolderAccessor.realWidth() &&
-               selfAccessor.realHeight() == anotherHolderAccessor.realHeight() &&
-               self.isRotated() == another.isRotated() &&
-               selfAccessor.scaleFactor() == anotherHolderAccessor.scaleFactor();
+        if (selfAccessor.realWidth() == anotherHolderAccessor.realWidth()) {
+            if (selfAccessor.realHeight() == anotherHolderAccessor.realHeight()) {
+                if (self.isRotated() == another.isRotated()) {
+                    if (selfAccessor.scaleFactor() == anotherHolderAccessor.scaleFactor()) {
+                        return true;
+                    } else {
+                        StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (ScaleFactor {} ≠ {}).",
+                                self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
+                                selfAccessor.scaleFactor(), anotherHolderAccessor.scaleFactor()
+                        );
+                    }
+                } else {
+                    StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Rotated {} ≠ {}).",
+                            self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
+                            self.isRotated(), another.isRotated()
+                    );
+                }
+            } else {
+                StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Height {} ≠ {}).",
+                        self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
+                        selfAccessor.realHeight(), anotherHolderAccessor.realHeight()
+                );
+            }
+        } else {
+            StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Width {} ≠ {}).",
+                    self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
+                    selfAccessor.realWidth(), anotherHolderAccessor.realWidth()
+            );
+        }
+        return false;
     }
 
     public enum State {

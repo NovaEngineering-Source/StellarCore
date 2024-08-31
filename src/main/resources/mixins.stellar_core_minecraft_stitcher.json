@@ -4,10 +4,10 @@
     "target": "@env(DEFAULT)",
     "minVersion": "0.8",
     "compatibilityLevel": "JAVA_8",
-    "priority": 1001,
+    "priority": 999,
     "client": [
         "AccessorStitcher",
-        "MixinModelLoader",
+        "MixinModelManager",
         "MixinStitcher",
         "MixinStitcherHolder",
         "MixinStitcherSlot",
