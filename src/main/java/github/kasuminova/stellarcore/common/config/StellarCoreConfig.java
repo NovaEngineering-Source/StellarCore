@@ -617,11 +617,12 @@ public class StellarCoreConfig {
             public String[] parallelModelLoaderBlackList = {"slimeknights.tconstruct.library.client.model.ModifierModelLoader"};
 
             @Config.Comment({
-                    "(Client Performance) An experimental feature that uses parallel loading of texture files."
+                    "(Client Performance) An experimental feature that uses parallel loading of texture files, improved game loading speed.",
+                    "If you get a crash when installing with VintageFix, turn this feature off, or turn off the mixins.texturemap option for VintageFix."
             })
             @Config.RequiresMcRestart
             @Config.Name("ParallelTextureLoad")
-            public boolean parallelTextureLoad = true;
+            public boolean parallelTextureLoad = false;
 
             @Config.Comment("(Client Performance) Improve the Map data structures of StateMapperBase to make them faster (~30%).")
             @Config.RequiresMcRestart
