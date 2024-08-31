@@ -1,17 +1,17 @@
 package github.kasuminova.stellarcore.mixin.minecraft.texture_load;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
-import it.unimi.dsi.fastutil.objects.*;
-import net.minecraft.client.renderer.texture.PngSizeInfo;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.texture.TextureUtil;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.util.ResourceLocation;
-import org.apache.commons.io.IOUtils;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,11 +21,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 @SuppressWarnings("MethodMayBeStatic")
 @Mixin(TextureMap.class)
@@ -38,17 +42,30 @@ public abstract class MixinTextureMap {
     @Shadow
     protected abstract ResourceLocation getResourceLocation(final TextureAtlasSprite p_184396_1_);
 
+    @Shadow
+    private int mipmapLevels;
+
+    @Unique
+    private int stellar_core$prevMipMapLevels;
+
     @Unique
     private Set<TextureAtlasSprite> stellar_core$cachedTextures;
 
     @Unique
     private Set<ResourceLocation> stellar_core$cachedLocations;
 
-    @Inject(method = "loadTextureAtlas", at = @At("HEAD"))
-    private void injectLoadTextureAtlas(final IResourceManager resourceManager, final CallbackInfo ci) {
+    @Inject(method = "loadSprites", 
+            at = @At(
+                    value = "INVOKE", 
+                    target = "Lnet/minecraft/client/renderer/texture/ITextureMapPopulator;registerSprites(Lnet/minecraft/client/renderer/texture/TextureMap;)V", 
+                    shift = At.Shift.AFTER
+            )
+    )
+    private void injectLoadSpritesAfter(final IResourceManager resourceManager, final ITextureMapPopulator iconCreatorIn, final CallbackInfo ci) {
         SpriteBufferedImageCache.INSTANCE.clear();
         stellar_core$cachedTextures = Collections.newSetFromMap(new ConcurrentHashMap<>());
         stellar_core$cachedLocations = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        Future<Integer> detectMaxMipmapLevelTask = stellar_core$initializeOptifineTask(resourceManager);
         mapRegisteredSprites.values().parallelStream().forEach((sprite -> {
             ResourceLocation location = getResourceLocation(sprite);
             if (sprite.hasCustomLoader(resourceManager, location)) {
@@ -61,8 +78,11 @@ public abstract class MixinTextureMap {
                 resource = resourceManager.getResource(location);
                 boolean hasAnimation = resource.getMetadata("animation") != null;
                 sprite.loadSprite(pngSizeInfo, hasAnimation);
+
                 // Cache BufferedImage
-                SpriteBufferedImageCache.INSTANCE.put(sprite, TextureUtil.readBufferedImage(resource.getInputStream()));
+                BufferedImage image = TextureUtil.readBufferedImage(resource.getInputStream());
+                int[] rgb = image.getRGB(0, 0, image.getWidth(), image.getHeight(), new int[image.getWidth() * image.getHeight()], 0, image.getWidth());
+                SpriteBufferedImageCache.INSTANCE.put(sprite, image, rgb);
 
                 synchronized (stellar_core$cachedTextures) {
                     stellar_core$cachedTextures.add(sprite);
@@ -71,9 +91,26 @@ public abstract class MixinTextureMap {
             } catch (Throwable e) {
                 StellarCore.log.warn(e);
             } finally {
-                IOUtils.closeQuietly(resource);
+                if (resource != null) {
+                    SpriteBufferedImageCache.INSTANCE.put(sprite, resource);
+                }
             }
         }));
+        stellar_core$cachedTextures = new ReferenceOpenHashSet<>(stellar_core$cachedTextures);
+        stellar_core$cachedLocations = new ObjectOpenHashSet<>(stellar_core$cachedLocations);
+
+        // Optifine Compat
+        if (!FMLClientHandler.instance().hasOptifine()) {
+            return;
+        }
+        if (mipmapLevels >= 4) {
+            try {
+                stellar_core$prevMipMapLevels = detectMaxMipmapLevelTask.get();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+            mipmapLevels = 3;
+        }
     }
 
     @Inject(method = "loadTextureAtlas", at = @At("RETURN"))
@@ -81,6 +118,16 @@ public abstract class MixinTextureMap {
         stellar_core$cachedTextures.clear();
         stellar_core$cachedLocations.clear();
         SpriteBufferedImageCache.INSTANCE.clear();
+    }
+
+    @Redirect(method = "generateMipmaps", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/IResourceManager;getResource(Lnet/minecraft/util/ResourceLocation;)Lnet/minecraft/client/resources/IResource;"))
+    private IResource redirectGenerateMipmapsGetResource(final IResourceManager instance, final ResourceLocation resourceLocation,
+                                                         @Local(name = "texture") final TextureAtlasSprite texture) throws IOException {
+        IResource resource = SpriteBufferedImageCache.INSTANCE.getResourceAndRemove(texture);
+        if (resource != null) {
+            return resource;
+        }
+        return instance.getResource(resourceLocation);
     }
 
     @Redirect(
@@ -141,9 +188,41 @@ public abstract class MixinTextureMap {
     )
     private IResource redirectLoadTextureGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
+            StellarCore.log.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
             return instance.getResource(resourceLocation);
         }
         return null;
+    }
+
+    // ==================================================
+    // Optifine Compat
+    // ==================================================
+
+    @Unique
+    @SuppressWarnings({"deprecation", "DataFlowIssue", "RedundantCast"})
+    private Future<Integer> stellar_core$initializeOptifineTask(final IResourceManager resourceManager) {
+        if (!FMLClientHandler.instance().hasOptifine() || mipmapLevels < 4) {
+            return null;
+        }
+
+        Method detectMaxMipmapLevel = ReflectionHelper.findMethod(TextureMap.class, "detectMaxMipmapLevel", null, Map.class, IResourceManager.class);
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return (int) detectMaxMipmapLevel.invoke((TextureMap) (Object) this, mapRegisteredSprites, resourceManager);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Inject(method = "loadSprites", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/texture/TextureMap;initMissingImage()V"))
+    private void injectLoadSpritesBeforeInitMissingImage(final IResourceManager resourceManager, final ITextureMapPopulator iconCreatorIn, final CallbackInfo ci) {
+        if (!FMLClientHandler.instance().hasOptifine()) {
+            return;
+        }
+        if (stellar_core$prevMipMapLevels >= 4) {
+            mipmapLevels = stellar_core$prevMipMapLevels;
+        }
     }
 
     @Redirect(
@@ -155,6 +234,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
+    @SuppressWarnings({"MixinAnnotationTarget", "UnresolvedMixinReference", "InvalidInjectorMethodSignature"})
     private IMetadataSection redirectLoadTextureAtlasGetMetadata(final IResource instance, final String s) {
         if (instance != null) {
             return instance.getMetadata(s);
@@ -171,6 +251,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
+    @SuppressWarnings({"MixinAnnotationTarget", "UnresolvedMixinReference", "InvalidInjectorMethodSignature"})
     private void redirectLoadTextureAtlasLoadSprite(final TextureAtlasSprite instance, final PngSizeInfo sizeInfo, final boolean animations) throws Exception {
         if (!stellar_core$cachedTextures.contains(instance)) {
             instance.loadSprite(sizeInfo, animations);
@@ -186,6 +267,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
+    @SuppressWarnings({"MixinAnnotationTarget", "UnresolvedMixinReference", "InvalidInjectorMethodSignature"})
     private PngSizeInfo redirectLoadTextureAtlasMakeFromResource(final IResource pngsizeinfo) throws Throwable {
         if (pngsizeinfo != null) {
             return PngSizeInfo.makeFromResource(pngsizeinfo);
@@ -202,8 +284,10 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
+    @SuppressWarnings({"MixinAnnotationTarget", "UnresolvedMixinReference", "InvalidInjectorMethodSignature"})
     private IResource redirectLoadTextureAtlasGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
+            StellarCore.log.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
             return instance.getResource(resourceLocation);
         }
         return null;

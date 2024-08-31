@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.texture_load;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureUtil;
@@ -23,12 +24,31 @@ public class MixinTextureAtlasSprite {
             )
     )
     private BufferedImage redirectLoadSpriteFramesRead(final InputStream imageStream) throws IOException {
-        BufferedImage cache = SpriteBufferedImageCache.INSTANCE.get((TextureAtlasSprite) (Object) this);
+        BufferedImage cache = SpriteBufferedImageCache.INSTANCE.getImage((TextureAtlasSprite) (Object) this);
         if (cache != null) {
             IOUtils.closeQuietly(imageStream);
             return cache;
         }
         return TextureUtil.readBufferedImage(imageStream);
+    }
+
+    @Redirect(method = "loadSpriteFrames", at = @At(value = "INVOKE", target = "Ljava/awt/image/BufferedImage;getRGB(IIII[III)[I"))
+    private int[] modifyLoadSpriteFramesgetRGB(final BufferedImage instance,
+                                               final int startX, final int startY, final int width, final int height,
+                                               final int[] output, final int offset, final int size,
+                                               @Local(name = "aint") int[][] aint)
+    {
+        int[] cache = SpriteBufferedImageCache.INSTANCE.getRGBAndRemove((TextureAtlasSprite) (Object) this);
+        if (cache != null) {
+            int exceptedSize = instance.getWidth() * instance.getHeight();
+            if (cache.length != exceptedSize) {
+                return instance.getRGB(startX, startY, width, height, output, offset, size);
+            }
+
+            aint[0] = cache;
+            return cache;
+        }
+        return instance.getRGB(startX, startY, width, height, output, offset, size);
     }
 
 }
