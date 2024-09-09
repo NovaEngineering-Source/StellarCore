@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore;
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.CommonProxy;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -39,7 +40,7 @@ public class StellarCore {
                 if (hitokoto == null || hitokoto.isEmpty()) {
                     return;
                 }
-                StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + hitokoto);
+                StellarLog.LOG.info(StellarLog.LOG_PREFIX + hitokoto);
             });
             thread.setName("Stellar Core Hitokoto Initializer");
             thread.start();

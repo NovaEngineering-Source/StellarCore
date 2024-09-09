@@ -3,6 +3,8 @@ package github.kasuminova.stellarcore.client.texture;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.LargeNBTUtils;
+import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import github.kasuminova.stellarcore.mixin.minecraft.stitcher.AccessorStitcher;
 import github.kasuminova.stellarcore.mixin.util.AccessorStitcherHolder;
 import github.kasuminova.stellarcore.mixin.util.AccessorStitcherSlot;
@@ -56,8 +58,8 @@ public class StitcherCache {
         this.cacheFile = new File(CACHE_FILE_NAME.replace("{}", name));
         this.cacheFor = cacheFor;
         this.readTask = CompletableFuture.runAsync(this::readFromFile);
-        StellarCore.log.info("[StellarCore-StitcherCache] Created stitcher cache for `{}`.", cacheFor.getBasePath());
-        StellarCore.log.info("[StellarCore-StitcherCache] Stitcher file cache `{}` reader task started.", cacheFor.getBasePath());
+        StellarLog.LOG.info("[StellarCore-StitcherCache] Created stitcher cache for `{}`.", cacheFor.getBasePath());
+        StellarLog.LOG.info("[StellarCore-StitcherCache] Stitcher file cache `{}` reader task started.", cacheFor.getBasePath());
     }
 
     public static StitcherCache create(final String name, final TextureMap cacheFor) {
@@ -65,7 +67,7 @@ public class StitcherCache {
         if (cache != null) {
             cache.checkReadTaskState();
             cache.readTask = CompletableFuture.runAsync(cache::readFromFile);
-            StellarCore.log.info("[StellarCore-StitcherCache] Stitcher file cache `{}` reader task restarted.", cacheFor.getBasePath());
+            StellarLog.LOG.info("[StellarCore-StitcherCache] Stitcher file cache `{}` reader task restarted.", cacheFor.getBasePath());
             return cache;
         }
         cache = new StitcherCache(name, cacheFor);
@@ -96,16 +98,16 @@ public class StitcherCache {
             FileOutputStream fos = new FileOutputStream(cacheFile);
             CompressedStreamTools.writeCompressed(toNBT(), fos);
             fos.close();
-            StellarCore.log.info("[StellarCore-StitcherCache] Successfully write stitcher cache file to `{}`.", cacheFile.getAbsolutePath());
+            StellarLog.LOG.info("[StellarCore-StitcherCache] Successfully write stitcher cache file to `{}`.", cacheFile.getAbsolutePath());
         } catch (Throwable e) {
-            StellarCore.log.error("[StellarCore-StitcherCache] Failed to write stitcher cache file! Please report it.", e);
+            StellarLog.LOG.error("[StellarCore-StitcherCache] Failed to write stitcher cache file! Please report it.", e);
         }
     }
 
     public void readFromFile() {
         if (!cacheFile.exists()) {
             this.cacheState = State.UNAVAILABLE;
-            StellarCore.log.info("[StellarCore-StitcherCache] Stitcher cache file is unavailable (File not found).");
+            StellarLog.LOG.info("[StellarCore-StitcherCache] Stitcher cache file is unavailable (File not found).");
             return;
         }
 
@@ -115,7 +117,7 @@ public class StitcherCache {
             readTag = LargeNBTUtils.readCompressed(fis);
             fis.close();
             this.cacheState = State.TAG_READY;
-            StellarCore.log.info("[StellarCore-StitcherCache] Successfully read stitcher cache file from `{}`.", cacheFile.getAbsolutePath());
+            StellarLog.LOG.info("[StellarCore-StitcherCache] Successfully read stitcher cache file from `{}`.", cacheFile.getAbsolutePath());
         } catch (Throwable e) {
             if (fis != null) {
                 try {
@@ -124,7 +126,7 @@ public class StitcherCache {
                 }
             }
             this.cacheState = State.UNAVAILABLE;
-            StellarCore.log.warn("[StellarCore-StitcherCache] Failed to read stitcher cache file, it may be broken.", e);
+            StellarLog.LOG.warn("[StellarCore-StitcherCache] Failed to read stitcher cache file, it may be broken.", e);
         }
     }
 
@@ -138,15 +140,15 @@ public class StitcherCache {
         try {
             fromNBT(readTag, stitcher);
             this.cacheState = holdersEquals(targetHolders) ? State.AVAILABLE : State.UNAVAILABLE;
-            StellarCore.log.info("[StellarCore-StitcherCache] Stitcher cache parsed, state: {}.", this.cacheState);
+            StellarLog.LOG.info("[StellarCore-StitcherCache] Stitcher cache parsed, state: {}.", this.cacheState);
         } catch (Throwable e) {
-            StellarCore.log.warn("[StellarCore-StitcherCache] Failed to parse stitcher cache file, it may be broken.", e);
+            StellarLog.LOG.warn("[StellarCore-StitcherCache] Failed to parse stitcher cache file, it may be broken.", e);
         }
     }
 
     public boolean holdersEquals(Set<Stitcher.Holder> targetHolders) {
         if (targetHolders.size() != this.holders.size()) {
-            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holders size not equals ({} ≠ {}).", targetHolders.size(), this.holders.size());
+            StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holders size not equals ({} ≠ {}).", targetHolders.size(), this.holders.size());
             return false;
         }
         Map<String, Stitcher.Holder> holders = new Object2ObjectOpenHashMap<>(this.holders);
@@ -154,18 +156,18 @@ public class StitcherCache {
             Stitcher.Holder cachedHolder = holders.get(holder.getAtlasSprite().getIconName());
             if (cachedHolder == null || !holderEquals(cachedHolder, holder)) {
                 if (cachedHolder == null) {
-                    StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not found in cache.", holder.getAtlasSprite().getIconName());
+                    StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not found in cache.", holder.getAtlasSprite().getIconName());
                 } else {
-                    StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not equals.", holder.getAtlasSprite().getIconName());
+                    StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not equals.", holder.getAtlasSprite().getIconName());
                 }
                 return false;
             }
             holders.remove(holder.getAtlasSprite().getIconName());
         }
         if (!holders.isEmpty()) {
-            StellarCore.log.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} holders not found in runtime.", holders.size());
+            StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} holders not found in runtime.", holders.size());
             if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                holders.keySet().forEach(holderName -> StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` not found in runtime.", holderName));
+                holders.keySet().forEach(holderName -> StellarLog.LOG.warn("[StellarCore-StitcherCache] Holder `{}` not found in runtime.", holderName));
             }
             return false;
         }
@@ -283,7 +285,7 @@ public class StitcherCache {
                 try {
                     readTask.get();
                 } catch (Throwable e) {
-                    StellarCore.log.error("[StellarCore-StitcherCache] Failed to read stitcher cache file! Please report it.", e);
+                    StellarLog.LOG.error("[StellarCore-StitcherCache] Failed to read stitcher cache file! Please report it.", e);
                 }
             }
         }
@@ -297,7 +299,7 @@ public class StitcherCache {
         IntStream.range(0, holdersTagList.tagCount()).mapToObj(holdersTagList::getCompoundTagAt).forEach(holderTag -> {
             Stitcher.Holder holder = readHolderNBT(holderTag, stitcher);
             if (holder == null) {
-                StellarCore.log.warn("[StellarCore-StitcherCache] Found null holder cache: `{}`, ignored.", holderTag.getString("sprite"));
+                StellarLog.LOG.warn("[StellarCore-StitcherCache] Found null holder cache: `{}`, ignored.", holderTag.getString("sprite"));
                 return;
             }
             holders.put(holder.getAtlasSprite().getIconName(), holder);
@@ -380,25 +382,25 @@ public class StitcherCache {
                     if (selfAccessor.scaleFactor() == anotherHolderAccessor.scaleFactor()) {
                         return true;
                     } else {
-                        StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (ScaleFactor {} ≠ {}).",
+                        StellarLog.LOG.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (ScaleFactor {} ≠ {}).",
                                 self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
                                 selfAccessor.scaleFactor(), anotherHolderAccessor.scaleFactor()
                         );
                     }
                 } else {
-                    StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Rotated {} ≠ {}).",
+                    StellarLog.LOG.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Rotated {} ≠ {}).",
                             self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
                             self.isRotated(), another.isRotated()
                     );
                 }
             } else {
-                StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Height {} ≠ {}).",
+                StellarLog.LOG.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Height {} ≠ {}).",
                         self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
                         selfAccessor.realHeight(), anotherHolderAccessor.realHeight()
                 );
             }
         } else {
-            StellarCore.log.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Width {} ≠ {}).",
+            StellarLog.LOG.warn("[StellarCore-StitcherCache] Holder `{}` and `{}` are not equal (Width {} ≠ {}).",
                     self.getAtlasSprite().getIconName(), another.getAtlasSprite().getIconName(),
                     selfAccessor.realWidth(), anotherHolderAccessor.realWidth()
             );

@@ -7,6 +7,7 @@ import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.CommonProxy;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {
@@ -25,7 +26,7 @@ public class ClientProxy extends CommonProxy {
 
         if (Mods.REPLAY.loaded() && StellarCoreConfig.PERFORMANCE.vanilla.hudCaching) {
             StellarCoreConfig.PERFORMANCE.vanilla.hudCaching = false;
-            StellarCore.log.warn("Replay Mod is not compatible with Performance/HUDCaching feature, auto disabled!");
+            StellarLog.LOG.warn("Replay Mod is not compatible with Performance/HUDCaching feature, auto disabled!");
         }
 
         TitleUtils.setRandomTitle("*PreInit*");

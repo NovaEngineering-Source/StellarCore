@@ -20,7 +20,7 @@ public abstract class MixinTextureMap {
 //        Collection<ResourceLocation> textures;
 //        // VintageFix compat.
 //        if (earlyDetectedTextures instanceof Set) {
-//            StellarCore.log.info("[StellarCore-DEBUG] Generating resources cache!");
+//            StellarLog.LOG.info("[StellarCore-DEBUG] Generating resources cache!");
 //            textures = (Set<ResourceLocation>) earlyDetectedTextures;
 //            String emissiveSuffix = stellar_core$getEmissiveSuffix();
 //            textures.parallelStream().forEach(texture -> {

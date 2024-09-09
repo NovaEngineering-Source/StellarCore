@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.common.bugfix;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.ContainerTECache;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
@@ -45,7 +46,7 @@ public class TileEntityContainerFixes {
             World world = te.getWorld();
             if (te.isInvalid() || world == null || !world.isBlockLoaded(pos) || world.getTileEntity(pos) != te) {
                 player.closeScreen();
-                StellarCore.log.warn(String.format(
+                StellarLog.LOG.warn(String.format(
                         "Detected invalid TileEntity GUI, World: %s, Pos: %s, GUI Class: %s, TileEntity Class: %s",
                         world == null ? "null" : world.getWorldInfo().getWorldName(),
                         posToString(pos),

@@ -5,6 +5,7 @@ import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import github.kasuminova.stellarcore.mixin.util.ConcurrentModelLoaderRegistry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -80,7 +81,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
     private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
         Class<? extends ICustomModelLoader> loaderClass = loader.getClass();
-        StellarCoreEarlyMixinLoader.LOG.info("[StellarCore-ParallelModelLoader] Registered model loader: {}, AsyncBlackListed: {}",
+        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Registered model loader: {}, AsyncBlackListed: {}",
                 loaderClass.getName(),
                 ParallelModelLoaderAsyncBlackList.INSTANCE.isInBlackList(loaderClass)
         );
@@ -115,7 +116,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             }
 
             if (!stellar_core$concurrent) {
-                StellarCore.log.warn("[StellarCore-ParallelModelLoader] A mod trying to load model `{}` without concurrent state, it may cause some performance issues.", location);
+                StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] A mod trying to load model `{}` without concurrent state, it may cause some performance issues.", location);
             }
 
             ResourceLocation actual = getActualLocation(location);
@@ -284,7 +285,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         if (StellarCoreConfig.PERFORMANCE.vanilla.wipeModelCache) {
             long startTime = System.currentTimeMillis();
             int removed = stellar_core$wipeCache();
-            StellarCore.log.info("[StellarCore-ParallelModelLoader] Removed {} (Before: {}) model cache, took {}ms.", 
+            StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Removed {} (Before: {}) model cache, took {}ms.", 
                     removed, cache.size(), System.currentTimeMillis() - startTime
             );
             stellar_core$cache = new Object2ObjectOpenHashMap<>(stellar_core$cache);

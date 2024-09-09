@@ -41,7 +41,7 @@ public class ContainerTECache {
                     sb.append(";\n");
                 }
             }
-            StellarCore.log.info(sb.toString());
+            StellarLog.LOG.info(sb.toString());
         }
         CACHE.put(cClass, func);
         return func;
@@ -54,10 +54,10 @@ public class ContainerTECache {
             if (type.isInstance(obj)) {
                 return type.cast(obj);
             } else if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                StellarCore.log.warn("[DEBUG] Field {} {} is not assignable to {}", field.getType(), field.getName(), type.getName());
+                StellarLog.LOG.warn("[DEBUG] Field {} {} is not assignable to {}", field.getType(), field.getName(), type.getName());
             }
-        } catch (Error | Exception e) {
-            StellarCore.log.warn(e);
+        } catch (Throwable e) {
+            StellarLog.LOG.warn(e);
         }
         return null;
     }
@@ -79,13 +79,13 @@ public class ContainerTECache {
         try {
             Field[] fields = aClass.getDeclaredFields();
             if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                StellarCore.log.info("[DEBUG] Scanning fields for class {}, required: {}", aClass.getName(), target.getName());
+                StellarLog.LOG.info("[StellarCore-DEBUG] Scanning fields for class {}, required: {}", aClass.getName(), target.getName());
             }
 
             for (Field field : fields) {
                 boolean assignable = target.isAssignableFrom(field.getType());
                 if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                    StellarCore.log.info("[DEBUG] Field: {} {} (targetAssignable = {})", field.getType().getName(), field.getName(), assignable);
+                    StellarLog.LOG.info("[StellarCore-DEBUG] Field: {} {} (targetAssignable = {})", field.getType().getName(), field.getName(), assignable);
                 }
 
                 if (assignable) {
@@ -94,7 +94,7 @@ public class ContainerTECache {
                 }
             }
             // 某些模组的黑魔法会导致扫 Field 的时候出现奇怪的问题，特此点名 AE2UEL 的 ContainerCraftConfirm。
-        } catch (Error | Exception ignored) {
+        } catch (Throwable ignored) {
         }
 
         // 检查是否有父类，如果有，则递归遍历父类
@@ -104,7 +104,7 @@ public class ContainerTECache {
                 List<Field> parentFields = scanTileEntityFieldRecursive(superClass, target);
                 teFields.addAll(parentFields);
             }
-        } catch (Error | Exception ignored) {
+        } catch (Throwable ignored) {
         }
 
         cachedFieldMap.put(target, teFields);

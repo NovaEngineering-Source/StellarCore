@@ -10,6 +10,7 @@ import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import journeymap.common.feature.PlayerRadarManager;
 import mekanism.client.ClientTickHandler;
 import net.minecraft.client.Minecraft;
@@ -118,7 +119,7 @@ public class ClientEventHandler {
             triggeredBioticsRemote.setAccessible(true);
             ((Map<EntityPlayer, List<EntityLivingBase>>) triggeredBioticsRemote.get(null)).clear();
         } catch (Throwable e) {
-            StellarCore.log.warn("Failed to clear triggeredBioticsRemote in ItemBioticSensor.", e);
+            StellarLog.LOG.warn("Failed to clear triggeredBioticsRemote in ItemBioticSensor.", e);
         }
     }
 

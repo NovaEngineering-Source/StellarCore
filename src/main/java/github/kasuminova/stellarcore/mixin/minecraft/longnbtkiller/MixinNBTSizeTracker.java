@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.longnbtkiller;
 
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.nbt.NBTSizeTracker;
 import org.spongepowered.asm.mixin.Final;
@@ -37,11 +38,11 @@ public class MixinNBTSizeTracker {
             return;
         }
 
-        StellarCore.log.warn("Detected large nbt size: {}", this.read);
+        StellarLog.LOG.warn("Detected large nbt size: {}", this.read);
         try {
             throw new RuntimeException("");
         } catch (RuntimeException e) {
-            StellarCore.log.warn(ThrowableUtil.stackTraceToString(e));
+            StellarLog.LOG.warn(ThrowableUtil.stackTraceToString(e));
         }
     }
 

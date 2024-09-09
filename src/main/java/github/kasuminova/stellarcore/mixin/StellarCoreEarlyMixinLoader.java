@@ -1,9 +1,8 @@
 package github.kasuminova.stellarcore.mixin;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixins;
 
 import javax.annotation.Nullable;
@@ -13,8 +12,6 @@ import java.util.function.BooleanSupplier;
 
 @SuppressWarnings("unused")
 public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
-    public static final Logger LOG = LogManager.getLogger("STELLAR_CORE");
-    public static final String LOG_PREFIX = "[STELLAR_CORE]" + ' ';
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
@@ -77,12 +74,12 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
     public void injectData(final Map<String, Object> data) {
         MIXIN_CONFIGS.forEach((config, supplier) -> {
             if (supplier == null) {
-                LOG.warn(LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", config);
+                StellarLog.LOG.warn("[StellarCore-MixinLoader] Mixin config {} is not found in config map! It will never be loaded.", config);
                 return;
             }
             boolean shouldLoad = supplier.getAsBoolean();
             if (!shouldLoad) {
-                LOG.info(LOG_PREFIX + "Mixin config {} is disabled by config or mod is not loaded.", config);
+                StellarLog.LOG.info("[StellarCore-MixinLoader] Mixin config {} is disabled by config or mod is not loaded.", config);
                 return;
             }
             Mixins.addConfiguration(config);

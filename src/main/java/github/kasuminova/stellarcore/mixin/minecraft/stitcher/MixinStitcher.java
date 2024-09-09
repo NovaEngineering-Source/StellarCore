@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.stitcher;
 
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.texture.StitcherCache;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.client.renderer.texture.Stitcher;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,7 +42,7 @@ public abstract class MixinStitcher {
 
         StitcherCache cache = StitcherCache.getActiveCache();
         if (cache == null) {
-            StellarCore.log.info("[StellarCore-MixinStitcher] Current TextureMap has no cache found, skipping...");
+            StellarLog.LOG.info("[StellarCore-MixinStitcher] Current TextureMap has no cache found, skipping...");
             return;
         }
 
@@ -49,7 +50,7 @@ public abstract class MixinStitcher {
         StitcherCache.State cacheState = cache.getCacheState();
         if (cacheState == StitcherCache.State.AVAILABLE) {
             stellar_core$applyCache(cache);
-            StellarCore.log.info("[StellarCore-MixinStitcher] Stitched {} texture sprites, cache state: {}, took {}ms.", setStitchHolders.size(), cacheState, System.currentTimeMillis() - stellar_core$startTime);
+            StellarLog.LOG.info("[StellarCore-MixinStitcher] Stitched {} texture sprites, cache state: {}, took {}ms.", setStitchHolders.size(), cacheState, System.currentTimeMillis() - stellar_core$startTime);
             ci.cancel();
         } else {
             cache.clear();
@@ -63,7 +64,7 @@ public abstract class MixinStitcher {
             return;
         }
         stellar_core$storeCache(cache);
-        StellarCore.log.info("[StellarCore-MixinStitcher] Stitched {} texture sprites, cache state: {}, took {}ms.", setStitchHolders.size(), StitcherCache.State.UNAVAILABLE, System.currentTimeMillis() - stellar_core$startTime);
+        StellarLog.LOG.info("[StellarCore-MixinStitcher] Stitched {} texture sprites, cache state: {}, took {}ms.", setStitchHolders.size(), StitcherCache.State.UNAVAILABLE, System.currentTimeMillis() - stellar_core$startTime);
     }
 
     @Unique
@@ -80,17 +81,17 @@ public abstract class MixinStitcher {
         synchronized (cache) {
             if (cache.getCacheState() == StitcherCache.State.AVAILABLE) {
                 cache.clear();
-                StellarCore.log.info("[StellarCore-MixinStitcher] Stitching cache is already available, skipped storing...");
+                StellarLog.LOG.info("[StellarCore-MixinStitcher] Stitching cache is already available, skipped storing...");
                 return;
             }
             CompletableFuture.runAsync(() -> {
                 synchronized (cache) {
                     long startTime = System.currentTimeMillis();
-                    StellarCore.log.info("[StellarCore-MixinStitcher] Storing stitcher cache...");
+                    StellarLog.LOG.info("[StellarCore-MixinStitcher] Storing stitcher cache...");
                     cache.cache(setStitchHolders, stitchSlots, currentWidth, currentHeight);
                     cache.writeToFile();
                     cache.clear();
-                    StellarCore.log.info("[StellarCore-MixinStitcher] Stored stitcher cache, took {}ms.", System.currentTimeMillis() - startTime);
+                    StellarLog.LOG.info("[StellarCore-MixinStitcher] Stored stitcher cache, took {}ms.", System.currentTimeMillis() - startTime);
                 }
             });
         }

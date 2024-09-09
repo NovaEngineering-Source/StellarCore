@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.util.JsonUtils;
 
 import java.io.BufferedReader;
@@ -41,8 +42,8 @@ public class HitokotoAPI {
                 jsonStr = getStringFromURL(INTERNATIONAL_API_URL);
             } catch (IOException ex) {
                 if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                    StellarCore.log.warn("[DEBUG] Failed to fetch Hitokoto API.", e);
-                    StellarCore.log.warn(ex);
+                    StellarLog.LOG.warn("[DEBUG] Failed to fetch Hitokoto API.", e);
+                    StellarLog.LOG.warn(ex);
                 }
                 return "";
             }
@@ -57,7 +58,7 @@ public class HitokotoAPI {
             hitokoto = JsonUtils.fromJson(DESERIALIZER, jsonStr, HitokotoResult.class, true);
         } catch (Exception e) {
             if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                StellarCore.log.warn("[DEBUG] Failed to fetch Hitokoto API.", e);
+                StellarLog.LOG.warn("[DEBUG] Failed to fetch Hitokoto API.", e);
             }
             return "";
         }

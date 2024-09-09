@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.Loader;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
@@ -77,12 +78,12 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
     public boolean shouldMixinConfigQueue(final String mixinConfig) {
         BooleanSupplier supplier = MIXIN_CONFIGS.get(mixinConfig);
         if (supplier == null) {
-            StellarCoreEarlyMixinLoader.LOG.warn(StellarCoreEarlyMixinLoader.LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", mixinConfig);
+            StellarLog.LOG.warn(StellarLog.LOG_PREFIX + "Mixin config {} is not found in config map! It will never be loaded.", mixinConfig);
             return false;
         }
         boolean shouldLoad = supplier.getAsBoolean();
         if (!shouldLoad) {
-            StellarCoreEarlyMixinLoader.LOG.info(StellarCoreEarlyMixinLoader.LOG_PREFIX + "Mixin config {} is disabled by config or mod is not loaded.", mixinConfig);
+            StellarLog.LOG.info(StellarLog.LOG_PREFIX + "Mixin config {} is disabled by config or mod is not loaded.", mixinConfig);
         }
         return shouldLoad;
     }

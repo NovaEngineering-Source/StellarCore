@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
@@ -118,7 +119,7 @@ public abstract class MixinModelLoader extends ModelBakery {
             }
         });
 
-        StellarCore.log.info("[StellarCore-ParallelModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
+        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
         bakedModels.putAll(bakedModelsConcurrent);
         return Collections.emptySet();
     }
@@ -149,7 +150,7 @@ public abstract class MixinModelLoader extends ModelBakery {
         });
 
         stellar_core$toDefault();
-        StellarCore.log.info("[StellarCore-ParallelModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
+        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
         return Collections.emptyIterator();
     }
 
@@ -223,7 +224,7 @@ public abstract class MixinModelLoader extends ModelBakery {
 //            });
 //        });
 //
-//        StellarCore.log.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
+//        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
 //        return Collections.emptyIterator();
 //    }
 

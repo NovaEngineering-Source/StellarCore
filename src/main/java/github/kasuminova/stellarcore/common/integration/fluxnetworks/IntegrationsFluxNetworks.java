@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.common.integration.fluxnetworks;
 
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.mod.Mods;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import sonar.fluxnetworks.common.handler.TileEntityHandler;
@@ -20,7 +21,7 @@ public class IntegrationsFluxNetworks {
         //在列表头部插入适配器，保证不被其他类型覆盖结果。
         //Insert adapters in the head of the list to ensure that the results are not overwritten by other types.
         TileEntityHandler.tileEnergyHandlers.add(0, MekanismEnergyHandler.INSTANCE);
-        StellarCore.log.info("Mekanism <===> FluxNetworks is initialized!");
+        StellarLog.LOG.info("Mekanism <===> FluxNetworks is initialized!");
     }
 
 }

@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.texture_load;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.renderer.texture.*;
@@ -89,7 +90,7 @@ public abstract class MixinTextureMap {
                     stellar_core$cachedLocations.add(location);
                 }
             } catch (Throwable e) {
-                StellarCore.log.warn(e);
+                StellarLog.LOG.warn(e);
             } finally {
                 if (resource != null) {
                     SpriteBufferedImageCache.INSTANCE.put(sprite, resource);
@@ -188,7 +189,7 @@ public abstract class MixinTextureMap {
     )
     private IResource redirectLoadTextureGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
-            StellarCore.log.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
+            StellarLog.LOG.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
             return instance.getResource(resourceLocation);
         }
         return null;
@@ -287,7 +288,7 @@ public abstract class MixinTextureMap {
     @SuppressWarnings({"MixinAnnotationTarget", "UnresolvedMixinReference", "InvalidInjectorMethodSignature"})
     private IResource redirectLoadTextureAtlasGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
-            StellarCore.log.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
+            StellarLog.LOG.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
             return instance.getResource(resourceLocation);
         }
         return null;

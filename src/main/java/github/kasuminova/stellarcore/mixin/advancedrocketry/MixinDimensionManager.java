@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.advancedrocketry;
 
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,9 +20,9 @@ public class MixinDimensionManager {
             return;
         }
 
-        StellarCore.log.warn("************************************************************************************************************************");
-        StellarCore.log.warn("* StellarCore has stopped the crash caused by AR's failure to read planetDefs.xml! File generation will now be restarted.");
-        StellarCore.log.warn("************************************************************************************************************************");
+        StellarLog.LOG.warn("************************************************************************************************************************");
+        StellarLog.LOG.warn("* StellarCore has stopped the crash caused by AR's failure to read planetDefs.xml! File generation will now be restarted.");
+        StellarLog.LOG.warn("************************************************************************************************************************");
     }
 
 }

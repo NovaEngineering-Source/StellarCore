@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.client.util;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import org.lwjgl.opengl.Display;
 
@@ -126,7 +127,7 @@ public class TitleUtils {
                     glfwSetWindowTitle.invoke(null, result, currentTitle);
                 }
             } catch (Exception e) {
-                StellarCore.log.warn("Failed to set CleanroomLoader title, maybe platform is unsupported.", e);
+                StellarLog.LOG.warn("Failed to set CleanroomLoader title, maybe platform is unsupported.", e);
                 unsupportedPlatform = true;
             }
             return;
