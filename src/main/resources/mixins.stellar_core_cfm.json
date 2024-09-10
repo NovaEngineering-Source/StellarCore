@@ -12,7 +12,8 @@
         "MixinTileEntityKitchenCounter",
         "MixinTileEntityKitchenCounterDrawer",
         "MixinTileEntitySyncClient",
-        "MixinTileEntityTVStand"
+        "MixinTileEntityTVStand",
+        "MixinTileEntityWashingMachine"
     ],
     "client": [
         "MixinImageCache"

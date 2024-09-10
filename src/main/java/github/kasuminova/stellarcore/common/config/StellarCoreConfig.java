@@ -428,6 +428,10 @@ public class StellarCoreConfig {
             @Config.Name("BlockFurnitureTileFixes")
             public boolean blockFurnitureTile = true;
 
+            @Config.Comment("Stopping washing machines from repairing non-repairable items.")
+            @Config.Name("WashingMachineDamageFixes")
+            public boolean washingMachine = true;
+
         }
 
         public static class RPSIdeas {
