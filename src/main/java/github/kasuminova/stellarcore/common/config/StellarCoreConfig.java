@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.common.config;
 
 import com.cleanroommc.configanytime.ConfigAnytime;
 import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.client.bakedquad.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
@@ -579,7 +580,7 @@ public class StellarCoreConfig {
         public static class Vanilla {
 
             @Config.Comment({
-                    "(Client Performance) An experimental feature from Patcher mod, using protocol CC-BY-NC-SA 4.0, if there are any copyright issues, please contact me to remove it." ,
+                    "(Client Performance | Experimental) A feature from Patcher mod, using protocol CC-BY-NC-SA 4.0, if there are any copyright issues, please contact me to remove it." ,
                     "Dramatically improves performance by limiting the HUD to a specified FPS, may not be compatible with older devices." ,
                     "May perform strangely with some HUD Mods."
             })
@@ -593,7 +594,7 @@ public class StellarCoreConfig {
             public int hudCachingFPSLimit = 20;
 
             @Config.Comment({
-                    "(Client Performance) An experimental feature that helps speed up game loading by modifying the model loader's code to enable parallel loading capabilities (5s ~ 40s faster).",
+                    "(Client Performance | Experimental) A feature that helps speed up game loading by modifying the model loader's code to enable parallel loading capabilities (5s ~ 40s faster).",
                     "Incompatible with some mod's models because they use their own model loader, if you encounter a missing model, please report it to the StellarCore author for manual compatibility.",
                     "Compatible model loader: CTM，LibNine，TConstruct",
                     "Contrary to VintageFix's DynamicResource functionality and therefore incompatible, you can only choose one."
@@ -621,7 +622,7 @@ public class StellarCoreConfig {
             public String[] parallelModelLoaderBlackList = {"slimeknights.tconstruct.library.client.model.ModifierModelLoader"};
 
             @Config.Comment({
-                    "(Client Performance) An experimental feature that uses parallel loading of texture files, improved game loading speed.",
+                    "(Client Performance | Experimental) An feature that uses parallel loading of texture files, improved game loading speed.",
                     "If you get a crash when installing with VintageFix, turn this feature off, or turn off the mixins.texturemap option for VintageFix."
             })
             @Config.RequiresMcRestart
@@ -638,7 +639,10 @@ public class StellarCoreConfig {
             @Config.Name("CapturedBlockSnapshotsImprovements")
             public boolean capturedBlockSnapshots = false;
 
-            @Config.Comment("(Client/Server Performance) Modified Chunk's TileEntityMap to a special data structure to improve performance (experimental, may not work).")
+            @Config.Comment({
+                    "(Client/Server Performance) Use long instead of BlockPos to store TileEntities, optimising memory usage and potentially improving performance.",
+                    "Conflicts with UniversalTweaks - 'Tile Entity Map' options and StellarCore maybe overrides them."
+            })
             @Config.RequiresMcRestart
             @Config.Name("ChunkTileEntityMapImprovements")
             public boolean blockPos2ValueMap = false;
@@ -648,7 +652,7 @@ public class StellarCoreConfig {
             @Config.Name("ClassInheritanceMultiMapImprovements")
             public boolean classMultiMap = true;
 
-            @Config.Comment("(Client/Server Performance) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (experimental, may not work).")
+            @Config.Comment("(Client/Server Performance | Experimental) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (may not work).")
             @Config.RequiresMcRestart
             @Config.Name("NonNullListImprovements")
             public boolean nonNullList = true;
@@ -684,6 +688,16 @@ public class StellarCoreConfig {
             @Config.Name("ResourceExistStateCache")
             public boolean resourceExistStateCache = true;
 
+            @Config.Comment("(Client/Server Performance | Experimental) Caching Chunk's IBlockState data, which may significantly improve the performance of some mods, but uses more memory.")
+            @Config.RequiresMcRestart
+            @Config.Name("ChunkBlockStateCache")
+            public boolean chunkBlockStateCache = false;
+
+            @Config.Comment("(Client/Server Performance) Improved `World#isValid` / `World#isOutsideBuildHeight` judgement performance, minor performance improvements.")
+            @Config.RequiresMcRestart
+            @Config.Name("WorldBlockPosJudgement")
+            public boolean worldBlockPosJudgement = true;
+
         }
 
         public static class Forge {
@@ -695,6 +709,34 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("ASMDataTableCPUUsageImprovements")
             public boolean asmDataTable = false;
+
+            @Config.Comment({
+                    "(Client Performance | Experimental) Deduplicate unpackedData array to optimise memory usage, with significant optimisation for some mods.",
+                    "Works in most cases, but may cause rendering issues with models in some mods."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("UnpackedBakedQuadDataCanonicalization")
+            public boolean unpackedBakedQuadDataCanonicalization = false;
+
+            @Config.Comment({
+                    "Adjust the optimisation level of the `UnpackedBakedQuadDataCanonicalization` option, the higher the level",
+                    "the better the results but the higher the probability of encountering problems, normally a setting of 2 is sufficient...",
+                    "Higher levels consume more CPU performance.",
+                    "This option can be adjusted while the game is running, but restarting the game is highly recommended."
+            })
+            @Config.SlidingOption
+            @Config.RequiresMcRestart
+            @Config.RangeInt(min = 1, max = 3)
+            @Config.Name("UnpackedBakedQuadDataCanonicalizationLevel")
+            public int unpackedBakedQuadDataCanonicalizationLevel = 2;
+
+            @Config.Comment({
+                    "(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage.",
+                    "Works in most cases, but may cause rendering issues with models in some mods."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("UnpackedBakedQuadVertexDataCanonicalization")
+            public boolean unpackedBakedQuadVertexDataCanonicalization = false;
 
         }
 
@@ -787,7 +829,7 @@ public class StellarCoreConfig {
         public static class CTM {
 
             @Config.Comment({
-                    "(Client Performance) An experimental feature that loads CTM's Metadata data faster (~60%) using parallelStream,",
+                    "(Client Performance | Experimental) A feature that loads CTM's Metadata data faster (~60%) using parallelStream,",
                     "usually with few conflict issues. If enabling this feature causes a problem, please report it immediately."
             })
             @Config.RequiresMcRestart
@@ -1199,6 +1241,9 @@ public class StellarCoreConfig {
 
             if (FMLLaunchHandler.side().isClient()) {
                 ParallelModelLoaderAsyncBlackList.INSTANCE.reload();
+                if (StellarUnpackedDataPool.update()) {
+                    StellarUnpackedDataPool.reset();
+                }
             }
         }
     }

@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.3.5"
+version = "1.4.0"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -226,8 +226,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:artisan-worktables-284351:3205284"))
     compileOnly(rfg.deobf("curse.maven:artisan-automation-373329:2994098"))
     compileOnly(rfg.deobf("curse.maven:touhou-little-maid-355044:3576415"))
-    implementation(rfg.deobf("curse.maven:ingame-info-xml-225604:2489566"))
-    implementation(rfg.deobf("curse.maven:lunatriuscore-225605:2489549"))
+    compileOnly(rfg.deobf("curse.maven:ingame-info-xml-225604:2489566"))
+    compileOnly(rfg.deobf("curse.maven:lunatriuscore-225605:2489549"))
     compileOnly(rfg.deobf("curse.maven:rgb-chat-702720:4092100"))
     compileOnly(rfg.deobf("curse.maven:endercore-231868:4671384"))
     compileOnly(rfg.deobf("curse.maven:ender-io-64578:4674244"))

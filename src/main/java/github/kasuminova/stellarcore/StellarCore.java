@@ -13,7 +13,8 @@ import org.apache.logging.log4j.Logger;
 @Mod(modid = StellarCore.MOD_ID, name = StellarCore.MOD_NAME, version = StellarCore.VERSION,
         dependencies = "required-after:forge@[14.23.5.2847,);" +
                 "required-after:configanytime@[2.0,);" +
-                "required-after:mixinbooter@[8.0,);",
+                "required-after:mixinbooter@[8.0,);" + 
+                "after:jei@[*,);",
         acceptedMinecraftVersions = "[1.12, 1.13)",
         acceptableRemoteVersions = "*"
 )

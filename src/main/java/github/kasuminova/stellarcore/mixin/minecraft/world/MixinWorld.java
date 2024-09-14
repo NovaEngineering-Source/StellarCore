@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 
@@ -17,12 +18,12 @@ public class MixinWorld {
 
     @Shadow(remap = false) public ArrayList<BlockSnapshot> capturedBlockSnapshots;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void injectInit(final CallbackInfo ci) {
+    @Inject(method = "init", at = @At("HEAD"))
+    private void injectInit(final CallbackInfoReturnable<World> cir) {
         if (!StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots) {
             return;
         }
-        this.capturedBlockSnapshots = new LinkedFakeArrayList<>();
+        this.capturedBlockSnapshots = new LinkedFakeArrayList<>(this.capturedBlockSnapshots);
     }
 
 }

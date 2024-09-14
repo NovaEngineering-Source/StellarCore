@@ -48,6 +48,7 @@ public enum Mods {
     },
     REPLAY("replaymod"),
     VINTAGE_FIX("vintagefix"),
+    RGB_CHAT("jianghun"), // ?
     ;
 
     protected final String modID;

@@ -6,10 +6,11 @@ import com.cleanroommc.neverenoughanimations.animations.HotbarAnimation;
 import com.kamefrede.rpsideas.items.components.ItemBioticSensor;
 import com.llamalad7.betterchat.gui.GuiBetterChat;
 import com.windanesz.ancientspellcraft.client.entity.ASFakePlayer;
-import github.kasuminova.stellarcore.StellarCore;
+import github.kasuminova.stellarcore.client.bakedquad.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import journeymap.common.feature.PlayerRadarManager;
 import mekanism.client.ClientTickHandler;
@@ -17,7 +18,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -46,6 +49,8 @@ public class ClientEventHandler {
         }
         clientTick++;
 
+        StellarUnpackedDataPool.update();
+
         if (clientTick % 5 == 0) {
             TitleUtils.checkTitleState();
         }
@@ -62,6 +67,54 @@ public class ClientEventHandler {
         }
         if (Loader.isModLoaded("neverenoughanimations")) {
             handleNEAAnim();
+        }
+    }
+
+    @SubscribeEvent
+    public void onDebugText(RenderGameOverlayEvent.Text event) {
+        if (!Minecraft.getMinecraft().gameSettings.showDebugInfo) {
+            return;
+        }
+
+        List<String> left = event.getLeft();
+
+        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization) {
+            long unpackedProcessedCount = StellarUnpackedDataPool.getProcessedUnpackedCount();
+            int unpackedUniqueCount = StellarUnpackedDataPool.getUnpackedUniqueCount();
+            int canonicalizationLevel = StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalizationLevel;
+
+            left.add("");
+            left.add(String.format("%s<Stellar%sCore>%s: UnpackedData canonicalization level: %s%d",
+                    Mods.RGB_CHAT.loaded() ? "#66CCFF-FF99CC" : TextFormatting.AQUA,
+                    Mods.RGB_CHAT.loaded() ? ""               : TextFormatting.LIGHT_PURPLE,
+                    TextFormatting.RESET,
+                    canonicalizationLevel == 1 ? TextFormatting.GREEN
+                            : canonicalizationLevel == 2 ? TextFormatting.GOLD
+                            : TextFormatting.RED, // 3 = RED, 2 = GOLD, 1 = GREEN
+                    canonicalizationLevel
+            ));
+            left.add(String.format("%s<Stellar%sCore>%s: %s%d%s UnpackedData processed. %s%d%s Unique, %s%d%s Deduplicated.",
+                    Mods.RGB_CHAT.loaded() ? "#66CCFF-FF99CC" : TextFormatting.AQUA,
+                    Mods.RGB_CHAT.loaded() ? ""               : TextFormatting.LIGHT_PURPLE,
+                    TextFormatting.RESET,
+                    TextFormatting.YELLOW, unpackedProcessedCount,                       TextFormatting.RESET,
+                    TextFormatting.AQUA,   unpackedUniqueCount,                          TextFormatting.RESET,
+                    TextFormatting.GREEN,  unpackedProcessedCount - unpackedUniqueCount, TextFormatting.RESET
+            ));
+        }
+
+        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization) {
+            long vertexDataProcessedCount = StellarUnpackedDataPool.getProcessedVertexDataCount();
+            int vertexDataUniqueCount = StellarUnpackedDataPool.getVertexDataUniqueCount();
+
+            left.add(String.format("%s<Stellar%sCore>%s: %s%d%s UnpackedVertexData processed. %s%d%s Unique, %s%d%s Deduplicated.",
+                    Mods.RGB_CHAT.loaded() ? "#66CCFF-FF99CC" : TextFormatting.AQUA,
+                    Mods.RGB_CHAT.loaded() ? ""               : TextFormatting.LIGHT_PURPLE,
+                    TextFormatting.RESET,
+                    TextFormatting.YELLOW, vertexDataProcessedCount,                         TextFormatting.RESET,
+                    TextFormatting.AQUA,   vertexDataUniqueCount,                            TextFormatting.RESET,
+                    TextFormatting.GREEN,  vertexDataProcessedCount - vertexDataUniqueCount, TextFormatting.RESET
+            ));
         }
     }
 
