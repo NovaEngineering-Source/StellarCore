@@ -61,7 +61,6 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
             if (packed) {
                 return;
             }
-            packed = true;
             // Lazy init array
             ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(new int[format.getSize()]);
             for (int v = 0; v < 4; v++) {
@@ -70,6 +69,7 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
                 }
             }
             ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(StellarUnpackedDataPool.canonicalize(vertexData));
+            packed = true;
         }
     }
 

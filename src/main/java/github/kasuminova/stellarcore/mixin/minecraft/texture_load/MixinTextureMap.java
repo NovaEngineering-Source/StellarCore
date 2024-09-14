@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.texture_load;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -189,7 +190,9 @@ public abstract class MixinTextureMap {
     )
     private IResource redirectLoadTextureGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
-            StellarLog.LOG.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
+            if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                StellarLog.LOG.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
+            }
             return instance.getResource(resourceLocation);
         }
         return null;
@@ -288,7 +291,9 @@ public abstract class MixinTextureMap {
     @SuppressWarnings({"MixinAnnotationTarget", "UnresolvedMixinReference", "InvalidInjectorMethodSignature"})
     private IResource redirectLoadTextureAtlasGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
-            StellarLog.LOG.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
+            if (StellarCoreConfig.DEBUG.enableDebugLog) {
+                StellarLog.LOG.info("[StellarCore-DEBUG] Loading uncached texture resource: {}", resourceLocation);
+            }
             return instance.getResource(resourceLocation);
         }
         return null;
