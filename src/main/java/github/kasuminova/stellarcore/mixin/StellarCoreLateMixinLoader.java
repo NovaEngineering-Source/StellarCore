@@ -66,6 +66,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_theoneprobe.json",          "theoneprobe");
         addModdedMixinCFG("mixins.stellar_core_thermaldynamics.json",      "thermaldynamics");
         addModdedMixinCFG("mixins.stellar_core_thermalexpansion.json",     "thermalexpansion", () -> StellarCoreConfig.BUG_FIXES.thermalExpansion.containerSatchelFilter);
+        addModdedMixinCFG("mixins.stellar_core_touhou_little_maid.json",   "touhou_little_maid", () -> StellarCoreConfig.PERFORMANCE.tlm.modelDataCanonicalization);
         addModdedMixinCFG("mixins.stellar_core_vintagefix.json",           "vintagefix");
     }
 

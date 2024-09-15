@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.client.bakedquad;
+package github.kasuminova.stellarcore.client.pool;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
@@ -32,8 +32,8 @@ public class StellarUnpackedDataPool {
         }
         if (level == 2) {
             synchronized (POOL_LEVEL2) {
+                processedUnpackedCount += data.length;
                 for (int i = 0; i < data.length; i++) {
-                    processedUnpackedCount++;
                     data[i] = POOL_LEVEL2.addOrGet(data[i]);
                 }
                 return data;
@@ -42,8 +42,8 @@ public class StellarUnpackedDataPool {
         if (level == 3) {
             synchronized (POOL_LEVEL3) {
                 for (int i = 0; i < data.length; i++) {
+                    processedUnpackedCount += data[i].length;
                     for (int j = 0; j < data[i].length; j++) {
-                        processedUnpackedCount++;
                         data[i][j] = POOL_LEVEL3.addOrGet(data[i][j]);
                     }
                 }
@@ -109,8 +109,8 @@ public class StellarUnpackedDataPool {
                     processedUnpackedCount, currentPool.size(), processedUnpackedCount - currentPool.size()
             );
         }
-        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization) {
-            StellarLog.LOG.info("[StellarCore-UnpackedDataPool] {} UnpackedVertexData processed. {} Unique, {} Deduplicated.",
+        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization || StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization) {
+            StellarLog.LOG.info("[StellarCore-UnpackedDataPool] {} VertexData processed. {} Unique, {} Deduplicated.",
                     processedVertexDataCount, VERTEX_DATA_POOL.size(), processedVertexDataCount - VERTEX_DATA_POOL.size()
             );
         }

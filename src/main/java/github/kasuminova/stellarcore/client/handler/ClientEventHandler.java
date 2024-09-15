@@ -6,7 +6,8 @@ import com.cleanroommc.neverenoughanimations.animations.HotbarAnimation;
 import com.kamefrede.rpsideas.items.components.ItemBioticSensor;
 import com.llamalad7.betterchat.gui.GuiBetterChat;
 import com.windanesz.ancientspellcraft.client.entity.ASFakePlayer;
-import github.kasuminova.stellarcore.client.bakedquad.StellarUnpackedDataPool;
+import github.kasuminova.stellarcore.client.pool.BlockFaceUVsPool;
+import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
@@ -71,6 +72,7 @@ public class ClientEventHandler {
     }
 
     @SubscribeEvent
+    @SuppressWarnings("SpellCheckingInspection")
     public void onDebugText(RenderGameOverlayEvent.Text event) {
         if (!Minecraft.getMinecraft().gameSettings.showDebugInfo) {
             return;
@@ -103,11 +105,11 @@ public class ClientEventHandler {
             ));
         }
 
-        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization) {
+        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization || StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization) {
             long vertexDataProcessedCount = StellarUnpackedDataPool.getProcessedVertexDataCount();
             int vertexDataUniqueCount = StellarUnpackedDataPool.getVertexDataUniqueCount();
 
-            left.add(String.format("%s<Stellar%sCore>%s: %s%d%s UnpackedVertexData processed. %s%d%s Unique, %s%d%s Deduplicated.",
+            left.add(String.format("%s<Stellar%sCore>%s: %s%d%s VertexData processed. %s%d%s Unique, %s%d%s Deduplicated.",
                     Mods.RGB_CHAT.loaded() ? "#66CCFF-FF99CC" : TextFormatting.AQUA,
                     Mods.RGB_CHAT.loaded() ? ""               : TextFormatting.LIGHT_PURPLE,
                     TextFormatting.RESET,

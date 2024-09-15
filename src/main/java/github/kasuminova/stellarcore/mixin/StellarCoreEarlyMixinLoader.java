@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.mixin.Mixins;
@@ -16,10 +17,14 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     static {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",        () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
+        addMixinCFG("mixins.stellar_core_minecraft_bakedquad.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization);
+        addMixinCFG("mixins.stellar_core_minecraft_blockfaceuv.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization);
+        addMixinCFG("mixins.stellar_core_minecraft_blockpart.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPartDataStructure);
         addMixinCFG("mixins.stellar_core_minecraft_chunk.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
         addMixinCFG("mixins.stellar_core_minecraft_chunk_cache.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.chunkBlockStateCache);
         addMixinCFG("mixins.stellar_core_minecraft_classmultimap.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.classMultiMap);
         addMixinCFG("mixins.stellar_core_minecraft_longnbtkiller.json",       () -> StellarCoreConfig.BUG_FIXES.vanilla.longNBTKiller);
+        addMixinCFG("mixins.stellar_core_minecraft_modelblock.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.modelBlockStringCanonicalization && Mods.CENSORED_ASM.loaded());
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_renderglobal.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.alwaysDeferChunkUpdates);

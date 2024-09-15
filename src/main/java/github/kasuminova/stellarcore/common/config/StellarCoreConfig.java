@@ -2,7 +2,7 @@ package github.kasuminova.stellarcore.common.config;
 
 import com.cleanroommc.configanytime.ConfigAnytime;
 import github.kasuminova.stellarcore.StellarCore;
-import github.kasuminova.stellarcore.client.bakedquad.StellarUnpackedDataPool;
+import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
@@ -577,6 +577,9 @@ public class StellarCoreConfig {
         @Config.Name("TConstruct")
         public final TConstruct tConstruct = new TConstruct();
 
+        @Config.Name("TouhouLittleMaid")
+        public final TouhouLittleMaid tlm = new TouhouLittleMaid();
+
         public static class Vanilla {
 
             @Config.Comment({
@@ -697,6 +700,32 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("WorldBlockPosJudgement")
             public boolean worldBlockPosJudgement = true;
+
+            @Config.RequiresMcRestart
+            @Config.Comment("(Client Performance) Improved BlockPart data structure, improve memory usage with a more efficient map.")
+            @Config.Name("BlockPartDataStructureImprovements")
+            public boolean blockPartDataStructure = true;
+
+            @Config.RequiresMcRestart
+            @Config.Comment({
+                    "(Client Performance) Modify the data structure of ModelBlock's textures map to improve performance and reduce memory usage.",
+                    "This feature requires CensoredASM mod."
+            })
+            @Config.Name("ModelBlockStringCanonicalization")
+            public boolean modelBlockStringCanonicalization = true;
+
+            @Config.Comment({
+                    "(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage.",
+                    "Works in most cases, but may cause rendering issues with models in some mods."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("BakedQuadVertexDataCanonicalization")
+            public boolean bakedQuadVertexDataCanonicalization = false;
+
+            @Config.Comment("(Client Performance) Deduplicate BlockFaceUV `uvs` array to optimise memory usage.")
+            @Config.RequiresMcRestart
+            @Config.Name("BlockFaceUVsCanonicalization")
+            public boolean blockFaceUVsCanonicalization = true;
 
         }
 
@@ -1011,6 +1040,18 @@ public class StellarCoreConfig {
             @Config.RangeInt(min = 1, max = 100)
             @Config.Name("TileSmelteryMaxAlloyRecipePerTick")
             public int tileSmelteryMaxAlloyRecipePerTick = 5;
+
+        }
+
+        public static class TouhouLittleMaid {
+
+            @Config.Comment("(Client Performance) Enable model data Canonicalization to improve TLM model memory usage.")
+            @Config.RequiresMcRestart
+            public boolean modelDataCanonicalization = true;
+
+            @Config.Comment("(Client Performance) Enable TexturedQuadFloat data Canonicalization to improve TLM model memory usage.")
+            @Config.RequiresMcRestart
+            public boolean texturedQuadFloatCanonicalization = true;
 
         }
 

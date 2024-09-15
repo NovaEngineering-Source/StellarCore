@@ -49,6 +49,23 @@ public enum Mods {
     REPLAY("replaymod"),
     VINTAGE_FIX("vintagefix"),
     RGB_CHAT("jianghun"), // ?
+    TLM("touhou_little_maid"),
+    CENSORED_ASM("loliasm") {
+        @Override
+        public boolean loaded() {
+            if (initialized) {
+                return loaded;
+            }
+
+            try {
+                Class.forName("zone.rong.loliasm.core.LoliLoadingPlugin");
+                initialized = true;
+                return loaded = true;
+            } catch (Throwable e) {
+                return loaded = false;
+            }
+        }
+    },
     ;
 
     protected final String modID;

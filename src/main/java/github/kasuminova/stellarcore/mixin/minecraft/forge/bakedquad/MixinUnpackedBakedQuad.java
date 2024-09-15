@@ -1,6 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.bakedquad;
 
-import github.kasuminova.stellarcore.client.bakedquad.StellarUnpackedDataPool;
+import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
