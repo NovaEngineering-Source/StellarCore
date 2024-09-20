@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.common;
 
+import github.kasuminova.stellarcore.client.pool.ResourceLocationPool;
 import github.kasuminova.stellarcore.common.bugfix.TileEntityContainerFixes;
 import github.kasuminova.stellarcore.common.handler.StellarCoreTickHandler;
 import github.kasuminova.stellarcore.common.integration.fluxnetworks.IntegrationsFluxNetworks;
@@ -33,6 +34,7 @@ public class CommonProxy {
     }
 
     public void loadComplete() {
-
+        ResourceLocationPool.INSTANCE.clear();
     }
+
 }

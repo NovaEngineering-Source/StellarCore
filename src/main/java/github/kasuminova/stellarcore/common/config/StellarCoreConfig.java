@@ -309,6 +309,10 @@ public class StellarCoreConfig {
             @Config.Name("TheOneProbeIntegration")
             public boolean fixTop = true;
 
+            @Config.Comment("Possible fix for duplicate users or even crashes on player networks in some cases.")
+            @Config.Name("SynchronizeFixes")
+            public boolean synchronize = true;
+
         }
 
         public static class IndustrialCraft2 {
@@ -526,6 +530,9 @@ public class StellarCoreConfig {
         @Config.Name("BiomesOPlenty")
         public final BiomesOPlenty biomesOPlenty = new BiomesOPlenty();
 
+        @Config.Name("EnderUtilities")
+        public final EnderUtilities enderUtilities = new EnderUtilities();
+
         @Config.Name("ExtraBotany")
         public final ExtraBotany extraBotany = new ExtraBotany();
 
@@ -655,6 +662,21 @@ public class StellarCoreConfig {
             @Config.Name("ClassInheritanceMultiMapImprovements")
             public boolean classMultiMap = true;
 
+            @Config.Comment("(Server Performance) Improving EntityTracker Performance with Improved Data Structures.")
+            @Config.RequiresMcRestart
+            @Config.Name("EntityTrackerImprovements")
+            public boolean entitytracker = true;
+
+            @Config.Comment("(Server Performance) Improving WorldServer#getPendingBlockUpdates Performance with Improved Data Structures.")
+            @Config.RequiresMcRestart
+            @Config.Name("WorldServerGetPendingBlockUpdatesImprovements")
+            public boolean worldServerGetPendingBlockUpdates = true;
+
+            @Config.Comment("(Client Performance) Improving PropertyEnum#hashCode Performance with hashCode cache.")
+            @Config.RequiresMcRestart
+            @Config.Name("PropertyEnumHashCodeCache")
+            public boolean propertyEnumHashCodeCache = true;
+
             @Config.Comment("(Client/Server Performance | Experimental) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (may not work).")
             @Config.RequiresMcRestart
             @Config.Name("NonNullListImprovements")
@@ -691,7 +713,10 @@ public class StellarCoreConfig {
             @Config.Name("ResourceExistStateCache")
             public boolean resourceExistStateCache = true;
 
-            @Config.Comment("(Client/Server Performance | Experimental) Caching Chunk's IBlockState data, which may significantly improve the performance of some mods, but uses more memory.")
+            @Config.Comment({
+                    "(Client/Server Performance | Experimental) Caching Chunk's IBlockState data, which may significantly improve the performance of some mods, but uses more memory.",
+                    "Highly experimental, use at your own risk."
+            })
             @Config.RequiresMcRestart
             @Config.Name("ChunkBlockStateCache")
             public boolean chunkBlockStateCache = false;
@@ -720,12 +745,21 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("BakedQuadVertexDataCanonicalization")
-            public boolean bakedQuadVertexDataCanonicalization = false;
+            public boolean bakedQuadVertexDataCanonicalization = true;
 
             @Config.Comment("(Client Performance) Deduplicate BlockFaceUV `uvs` array to optimise memory usage.")
             @Config.RequiresMcRestart
             @Config.Name("BlockFaceUVsCanonicalization")
             public boolean blockFaceUVsCanonicalization = true;
+
+            @Config.Comment({
+                    "(Client Performance) Deduplicate internal strings of ResourceLocation to reduce memory usage.",
+                    "When installed with CensoredASM, turn off the `resourceLocationCanonicalization` feature of CensoredASM.",
+                    "StellarCore already has backend integration for it."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ResourceLocationCanonicalization")
+            public boolean resourceLocationCanonicalization = true;
 
         }
 
@@ -757,7 +791,7 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.RangeInt(min = 1, max = 3)
             @Config.Name("UnpackedBakedQuadDataCanonicalizationLevel")
-            public int unpackedBakedQuadDataCanonicalizationLevel = 2;
+            public int unpackedBakedQuadDataCanonicalizationLevel = 1;
 
             @Config.Comment({
                     "(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage.",
@@ -801,6 +835,14 @@ public class StellarCoreConfig {
             })
             @Config.Name("TileEntityUpdateRange")
             public float tileEntityUpdateRange = 16F;
+
+        }
+
+        public static class EnderUtilities {
+
+            @Config.Comment("(Server Performance) Improvements to the way UtilItemModular loads items to slightly improve performance.")
+            @Config.Name("UtilItemModularImprovements")
+            public boolean utilItemModular = true;
 
         }
 
@@ -920,6 +962,10 @@ public class StellarCoreConfig {
             @Config.Name("TileEntityBaseImprovements")
             public boolean tileEntityBase = true;
 
+            @Config.Comment("(Server Performance) Improve recipe search speed with caching.")
+            @Config.Name("RecipeImprovements")
+            public boolean recipe = true;
+
             @Config.Comment("(Server Performance) Improve the performance of item determination in FarmerStation using caching (mainly related to the canPlant() method).")
             @Config.Name("FarmerImprovements")
             public boolean commune = true;
@@ -935,6 +981,14 @@ public class StellarCoreConfig {
             @Config.Comment("(Server Performance) Removing some unnecessary parts to improve performance, may affect the use of the Profiler.")
             @Config.Name("TileConduitBundleImprovements")
             public boolean tileConduitBundle = true;
+
+            @Config.Comment("(Server Performance) Improved the hashCode() method of NetworkTankKey, which can improve the performance of the EnderIO Conduit Network.")
+            @Config.Name("NetworkTankKeyHashCodeCache")
+            public boolean networkTankKeyHashCodeCache = true;
+
+            @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
+            @Config.Name("EnderLiquidConduitNetworkTankMap")
+            public boolean enderLiquidConduitNetworkTankMap = true;
 
         }
 
@@ -957,8 +1011,12 @@ public class StellarCoreConfig {
         public static class IndustrialCraft2 {
 
             @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
-            @Config.Name("EnergyCalculatorLegImprovements")
-            public boolean energyCalculatorLeg = true;
+            @Config.Name("GridDataImprovements")
+            public boolean energyCalculatorLegGridData = true;
+
+            @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
+            @Config.Name("EnergyNetLocalImprovements")
+            public boolean energyNetLocal = true;
 
             @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
             @Config.Name("GridImprovements")
@@ -1282,6 +1340,7 @@ public class StellarCoreConfig {
 
             if (FMLLaunchHandler.side().isClient()) {
                 ParallelModelLoaderAsyncBlackList.INSTANCE.reload();
+                // Pool does not reference minecraft class, so is safety.
                 if (StellarUnpackedDataPool.update()) {
                     StellarUnpackedDataPool.reset();
                 }

@@ -25,7 +25,7 @@ public class MixinUnpackedBakedQuad {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final float[][][] unpackedData, final int tint, final EnumFacing orientation, final TextureAtlasSprite texture, final boolean applyDiffuseLighting, final VertexFormat format, final CallbackInfo ci) {
         if ((Object) (this).getClass() == UnpackedBakedQuad.class) {
-            this.unpackedData = StellarUnpackedDataPool.canonicalize(unpackedData);
+            StellarUnpackedDataPool.canonicalizeAsync(unpackedData, (canonicalizedData) -> this.unpackedData = canonicalizedData);
         }
     }
 

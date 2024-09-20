@@ -12,9 +12,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinCustomResourcesLoader {
 
     @Inject(method = "reloadResources", at = @At("RETURN"))
-    private static void injectReloadSources(final CallbackInfo ci) {
-        TLMCubesItemPool.clear();
-        TLMPositionTextureVertexPool.clear();
+    private static void injectReloadSourcesPost(final CallbackInfo ci) {
+        TLMCubesItemPool.INSTANCE.clear();
+        TLMPositionTextureVertexPool.INSTANCE.clear();
+    }
+
+    @Inject(method = "reloadResources", at = @At("HEAD"))
+    private static void injectReloadSourcesPre(final CallbackInfo ci) {
+        TLMCubesItemPool.INSTANCE.getWorker().start();
+        TLMPositionTextureVertexPool.INSTANCE.getWorker().start();
     }
 
 }

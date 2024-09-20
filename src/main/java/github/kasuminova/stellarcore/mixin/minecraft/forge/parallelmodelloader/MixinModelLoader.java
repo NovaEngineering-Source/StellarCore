@@ -3,8 +3,6 @@ package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
-import github.kasuminova.stellarcore.StellarCore;
-import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
@@ -21,7 +19,6 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.FMLLog;
@@ -31,8 +28,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -238,9 +236,9 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Unique
     private static Class<?> stellar_core$ModelLoaderRegistry = null;
     @Unique
-    private static Method stellar_core$addAlias = null;
+    private static MethodHandle stellar_core$addAlias = null;
     @Unique
-    private static Method stellar_core$getMissingModel = null;
+    private static MethodHandle stellar_core$getMissingModel = null;
 
     @Unique
     private static Exception stellar_core$createItemLoadingException(final String message, final Exception normalException, final Exception blockstateException) {
@@ -275,11 +273,13 @@ public abstract class MixinModelLoader extends ModelBakery {
             stellar_core$ItemLoadingException = Class.forName("net.minecraftforge.client.model.ModelLoader$ItemLoadingException");
             stellar_core$ItemLoadingExceptionConstructor = stellar_core$ItemLoadingException.getConstructor(String.class, Exception.class, Exception.class);
             stellar_core$ModelLoaderRegistry = Class.forName("net.minecraftforge.client.model.ModelLoaderRegistry");
-            stellar_core$addAlias = stellar_core$ModelLoaderRegistry.getDeclaredMethod("addAlias", ResourceLocation.class, ResourceLocation.class);
-            stellar_core$addAlias.setAccessible(true);
+            Method addAlias = stellar_core$ModelLoaderRegistry.getDeclaredMethod("addAlias", ResourceLocation.class, ResourceLocation.class);
+            addAlias.setAccessible(true);
+            stellar_core$addAlias = MethodHandles.lookup().unreflect(addAlias);
             stellar_core$ModelLoaderRegistry = Class.forName("net.minecraftforge.client.model.ModelLoaderRegistry");
-            stellar_core$getMissingModel = stellar_core$ModelLoaderRegistry.getDeclaredMethod("getMissingModel", ResourceLocation.class, Throwable.class);
-            stellar_core$getMissingModel.setAccessible(true);
+            Method getMissingModel = stellar_core$ModelLoaderRegistry.getDeclaredMethod("getMissingModel", ResourceLocation.class, Throwable.class);
+            getMissingModel.setAccessible(true);
+            stellar_core$getMissingModel = MethodHandles.lookup().unreflect(getMissingModel);
         } catch (Throwable e) {
             // Always throws exception because it cannot be failure.
             throw new RuntimeException("[StellarCore-ParallelModelLoader] Caught a fatal exception, please report to mod author!", e);

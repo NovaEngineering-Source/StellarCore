@@ -10,7 +10,8 @@
     "mixins": [
         "MixinBaseElectricItem",
         "MixinElectricItemManager",
-        "MixinEnergyCalculatorLeg",
+        "MixinEnergyCalculatorLegGridData",
+        "MixinEnergyNetLocal",
         "MixinGradualRecipe",
         "MixinGrid",
         "MixinItemArmorElectric",

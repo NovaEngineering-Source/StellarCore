@@ -5,53 +5,61 @@ import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 import java.util.List;
 
 @SuppressWarnings("FieldAccessedSynchronizedAndUnsynchronized")
-public class TLMCubesItemPool {
+public class TLMCubesItemPool extends AsyncCanonicalizePool<List<Float>> {
 
-    private static final ObjectOpenHashSet<List<Float>> POOL = new ObjectOpenHashSet<>();
-    private static long processedCount = 0;
+    public static final TLMCubesItemPool INSTANCE = new TLMCubesItemPool();
 
-    public static List<Float> canonicalize(final List<Float> list) {
-        if (list == null) {
-            return null;
-        }
-        FloatList floatList;
-        if (list instanceof FloatList) {
-            floatList = (FloatList) list;
-        } else {
-            floatList = new FloatArrayList(list);
-        }
-        synchronized (POOL) {
-            processedCount++;
-            return POOL.addOrGet(floatList);
-        }
+    private final ObjectOpenHashSet<List<Float>> pool = new ObjectOpenHashSet<>();
+
+    private TLMCubesItemPool() {
     }
 
-    public static long getProcessedCount() {
-        return processedCount;
+    @Override
+    protected List<Float> preProcess(final List<Float> list) {
+        return list instanceof FloatList ? list : new FloatArrayList(list);
     }
 
-    public static long getUniqueCount() {
-        return POOL.size();
+    @Override
+    protected List<Float> canonicalizeInternal(final List<Float> target) {
+        return pool.addOrGet(target);
     }
 
-    public static void clear() {
-        if (StellarCoreConfig.PERFORMANCE.tlm.modelDataCanonicalization) {
-            StellarLog.LOG.info("[StellarCore-TLMCubesItemPool] {} FloatList processed. {} Unique, {} Deduplicated.",
-                    processedCount, POOL.size(), processedCount - POOL.size()
+    @Override
+    public void onClearPre() {
+        if (StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
+            StellarLog.LOG.info("[StellarCore-TLMPositionTextureVertexPool] {} PositionTextureVertex processed. {} Unique, {} Deduplicated.",
+                    getProcessedCount(), pool.size(), getProcessedCount() - pool.size()
             );
         }
+    }
 
-        processedCount = 0;
-        POOL.clear();
-        POOL.trim();
-
-        if (StellarCoreConfig.PERFORMANCE.tlm.modelDataCanonicalization) {
-            StellarLog.LOG.info("[StellarCore-TLMCubesItemPool] Pool cleared.");
+    @Override
+    public void onClearPost() {
+        if (StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
+            StellarLog.LOG.info("[StellarCore-TLMPositionTextureVertexPool] Pool cleared.");
         }
+    }
+
+    @Override
+    protected String getName() {
+        return "TLMPositionTextureVertexPool";
+    }
+
+    @Override
+    protected ObjectSet<List<Float>> getPoolKeySet() {
+        return pool;
+    }
+
+    @Override
+    protected void clearPool() {
+        pool.clear();
+        pool.trim();
+        worker.stop();
     }
 
 }

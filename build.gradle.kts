@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.4.1"
+version = "1.4.5"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -280,6 +280,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:abyssalcraft-53686:5330323"))
     compileOnly(rfg.deobf("curse.maven:vintagefix-871198:5536276"))
     implementation(rfg.deobf("curse.maven:lolasm-460609:5257348"))
+    runtimeOnly(rfg.deobf("curse.maven:spark-361579:3245793"))
 }
 
 // IDE Settings

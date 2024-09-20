@@ -9,8 +9,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.concurrent.CompletableFuture;
-
 @SuppressWarnings("MethodMayBeStatic")
 @Mixin(TexturedQuadFloat.class)
 public class MixinTexturedQuadFloat {
@@ -24,12 +22,10 @@ public class MixinTexturedQuadFloat {
         if (!StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
             return;
         }
-        // Canonicalize async
-        CompletableFuture.runAsync(() -> {
-            for (int i = 0; i < vertices.length; i++) {
-                vertices[i] = TLMPositionTextureVertexPool.canonicalize(vertices[i]);
-            }
-        });
+        for (int i = 0; i < vertices.length; i++) {
+            final int idx = i;
+            TLMPositionTextureVertexPool.INSTANCE.canonicalizeAsync(vertices[idx], canonicalizedVertice -> vertices[idx] = canonicalizedVertice);
+        }
     }
 
 }

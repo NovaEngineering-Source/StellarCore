@@ -22,19 +22,20 @@ public abstract class MixinDispenserCastingData {
         if (!StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData) {
             return;
         }
+        if (event.phase == TickEvent.Phase.START || event.world.loadedTileEntityList.size() <= 5_000) {
+            return;
+        }
         ci.cancel();
 
-        if (event.phase == TickEvent.Phase.END) {
-            // Use parallel stream to find Capability to improve performance.
-            new ArrayList<>(event.world.loadedTileEntityList)
-                    .parallelStream()
-                    .filter(TileEntityDispenser.class::isInstance)
-                    .map(TileEntityDispenser.class::cast)
-                    .map(DispenserCastingData::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList())
-                    .forEach(DispenserCastingData::update);
-        }
+        // Use parallel stream to find Capability to improve performance.
+        new ArrayList<>(event.world.loadedTileEntityList)
+                .parallelStream()
+                .filter(TileEntityDispenser.class::isInstance)
+                .map(TileEntityDispenser.class::cast)
+                .map(DispenserCastingData::get)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList())
+                .forEach(DispenserCastingData::update);
     }
 
 }

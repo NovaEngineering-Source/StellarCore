@@ -33,7 +33,7 @@ public class MixinBloodAltar {
                     continue;
                 }
                 double distance = player.getPosition().getDistance(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-                if (distance <= 32) {
+                if (distance <= 16) {
                     player.connection.sendPacket(altar.getUpdatePacket());
                 }
             }

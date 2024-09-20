@@ -4,44 +4,52 @@ import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.floats.FloatArrays;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 
-public class BlockFaceUVsPool {
+public class BlockFaceUVsPool extends AsyncCanonicalizePool<float[]> {
 
-    private static final ObjectOpenCustomHashSet<float[]> POOL = new ObjectOpenCustomHashSet<>(FloatArrays.HASH_STRATEGY);
-    private static long processedCount = 0;
+    public static final BlockFaceUVsPool INSTANCE = new BlockFaceUVsPool();
 
-    public static float[] canonicalize(final float[] uvs) {
-        if (uvs == null) {
-            return null;
-        }
-        synchronized (POOL) {
-            processedCount++;
-            return POOL.addOrGet(uvs);
-        }
+    private final ObjectOpenCustomHashSet<float[]> pool = new ObjectOpenCustomHashSet<>(FloatArrays.HASH_STRATEGY);
+
+    private BlockFaceUVsPool() {
     }
 
-    public static long getProcessedCount() {
-        return processedCount;
+    @Override
+    protected float[] canonicalizeInternal(final float[] target) {
+        return pool.addOrGet(target);
     }
 
-    public static int getUniqueCount() {
-        return POOL.size();
-    }
-
-    public static void clear() {
+    @Override
+    public void onClearPre() {
         if (StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization) {
             StellarLog.LOG.info("[StellarCore-BlockFaceUVsPool] {} UVs processed. {} Unique, {} Deduplicated.",
-                    processedCount, POOL.size(), processedCount - POOL.size()
+                    getProcessedCount(), pool.size(), getProcessedCount() - pool.size()
             );
         }
+    }
 
-        processedCount = 0;
-        POOL.clear();
-        POOL.trim();
-
+    @Override
+    public void onClearPost() {
         if (StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization) {
             StellarLog.LOG.info("[StellarCore-BlockFaceUVsPool] Pool cleared.");
         }
+    }
+
+    @Override
+    protected String getName() {
+        return "BlockFaceUVsPool";
+    }
+
+    @Override
+    protected ObjectSet<float[]> getPoolKeySet() {
+        return pool;
+    }
+
+    @Override
+    protected void clearPool() {
+        pool.clear();
+        pool.trim();
     }
 
 }

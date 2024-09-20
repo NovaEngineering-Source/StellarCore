@@ -27,8 +27,8 @@ public class MixinBakedQuad {
             at = @At("RETURN")
     )
     private void injectInit(final int[] vertexDataIn, final int tintIndexIn, final EnumFacing faceIn, final TextureAtlasSprite spriteIn, final boolean applyDiffuseLighting, final VertexFormat format, final CallbackInfo ci) {
-        if ((Object) (this).getClass() == BakedQuad.class) {
-            this.vertexData = StellarUnpackedDataPool.canonicalize(vertexData);
+        if ((Object) (this).getClass() == BakedQuad.class && vertexData != null && vertexData.length > 0) {
+            StellarUnpackedDataPool.canonicalizeAsync(vertexData, (canonicalizedData) -> vertexData = canonicalizedData);
         }
     }
 

@@ -25,7 +25,7 @@ public class LinkedFakeArrayList<E> extends ArrayList<E> {
     }
 
     public LinkedFakeArrayList(final Collection<? extends E> c) {
-        super(c);
+        super(0);
         this.internal = new LinkedList<>(c);
     }
 

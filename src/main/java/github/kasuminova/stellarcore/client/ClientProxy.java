@@ -1,6 +1,6 @@
 package github.kasuminova.stellarcore.client;
 
-
+import github.kasuminova.stellarcore.client.pool.BakedQuadPool;
 import github.kasuminova.stellarcore.client.pool.BlockFaceUVsPool;
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.handler.ClientEventHandler;
@@ -53,7 +53,8 @@ public class ClientProxy extends CommonProxy {
 
         TitleUtils.setRandomTitle();
         StellarUnpackedDataPool.reset();
-        BlockFaceUVsPool.clear();
+        BakedQuadPool.INSTANCE.clear();
+        BlockFaceUVsPool.INSTANCE.clear();
     }
 
 }

@@ -17,14 +17,14 @@ public class MixinBlockFaceUV {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final float[] uvsIn, final int rotationIn, final CallbackInfo ci) {
         if (this.uvs != null) {
-            this.uvs = BlockFaceUVsPool.canonicalize(uvsIn);
+            BlockFaceUVsPool.INSTANCE.canonicalizeAsync(uvsIn, (canonicalizeUVs) -> this.uvs = canonicalizeUVs);
         }
     }
 
     @Inject(method = "setUvs", at = @At("HEAD"))
     private void injectSetUV(final float[] uvsIn, final CallbackInfo ci) {
         if (this.uvs == null) {
-            this.uvs = BlockFaceUVsPool.canonicalize(uvsIn);
+            BlockFaceUVsPool.INSTANCE.canonicalizeAsync(uvsIn, (canonicalizeUVs) -> this.uvs = canonicalizeUVs);
         }
     }
 

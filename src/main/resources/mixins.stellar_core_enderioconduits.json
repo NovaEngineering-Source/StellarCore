@@ -9,6 +9,7 @@
         "InvokerNetworkedInventory",
         "MixinAbstractConduit",
         "MixinEnderLiquidConduitNetwork",
+        "MixinEnderLiquidConduitNetworkNetworkTankKey",
         "MixinItemConduit",
         "MixinNetworkedInventory",
         "MixinTileConduitBundle"

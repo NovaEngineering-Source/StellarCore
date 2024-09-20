@@ -17,9 +17,7 @@ public class AutoCanonizingStringMap<V> extends Object2ObjectOpenHashMap<String,
 
     @Override
     public V put(String key, V value) {
-        if (key instanceof String) {
-            key = LoliStringPool.canonicalize(key);
-        }
+        key = LoliStringPool.canonicalize(key);
         if (value instanceof String) {
             value = (V) LoliStringPool.canonicalize((String) value);
         }

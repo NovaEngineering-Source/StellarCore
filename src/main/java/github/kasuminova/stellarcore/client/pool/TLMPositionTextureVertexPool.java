@@ -4,79 +4,57 @@ import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.client.model.PositionTextureVertex;
 
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressWarnings("FieldAccessedSynchronizedAndUnsynchronized")
-public class TLMPositionTextureVertexPool {
+public class TLMPositionTextureVertexPool extends AsyncCanonicalizePool<PositionTextureVertex> {
 
-    private static final ObjectOpenCustomHashSet<PositionTextureVertex> POOL = new ObjectOpenCustomHashSet<>(PTVStrategy.INSTANCE);
-    private static final AtomicLong LOCKED = new AtomicLong(0);
+    public static final TLMPositionTextureVertexPool INSTANCE = new TLMPositionTextureVertexPool();
 
-    private static Future<Void> clearTask = null;
-    private static long processedCount = 0;
+    private final ObjectOpenCustomHashSet<PositionTextureVertex> pool = new ObjectOpenCustomHashSet<>(PTVStrategy.INSTANCE);
 
-    public static PositionTextureVertex canonicalize(final PositionTextureVertex ptv) {
-        if (ptv == null) {
-            return null;
-        }
-        LOCKED.incrementAndGet();
-        synchronized (POOL) {
-            processedCount++;
-            PositionTextureVertex ret = POOL.addOrGet(ptv);
-            LOCKED.decrementAndGet();
-            return ret;
+    private TLMPositionTextureVertexPool() {
+    }
+
+    @Override
+    protected PositionTextureVertex canonicalizeInternal(final PositionTextureVertex target) {
+        return pool.addOrGet(target);
+    }
+
+    @Override
+    public void onClearPre() {
+        if (StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
+            StellarLog.LOG.info("[StellarCore-TLMPositionTextureVertexPool] {} PositionTextureVertex processed. {} Unique, {} Deduplicated.",
+                    getProcessedCount(), pool.size(), getProcessedCount() - pool.size()
+            );
         }
     }
 
-    public static long getProcessedCount() {
-        return processedCount;
-    }
-
-    public static long getUniqueCount() {
-        return POOL.size();
-    }
-
-    public static void clear() {
-        if (clearTask != null) {
-            if (!clearTask.isDone()) {
-                return;
-            }
-            clearTask = null;
+    @Override
+    public void onClearPost() {
+        if (StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
+            StellarLog.LOG.info("[StellarCore-TLMPositionTextureVertexPool] Pool cleared.");
         }
+    }
 
-        clearTask = CompletableFuture.runAsync(() -> {
-            while (LOCKED.get() != 0) {
-                try {
-                    Thread.sleep(0); // waiting
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
+    @Override
+    protected String getName() {
+        return "TLMPositionTextureVertexPool";
+    }
 
-            if (StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
-                StellarLog.LOG.info("[StellarCore-TLMPositionTextureVertexPool] {} PositionTextureVertex processed. {} Unique, {} Deduplicated.",
-                        processedCount, POOL.size(), processedCount - POOL.size()
-                );
-            }
+    @Override
+    protected ObjectSet<PositionTextureVertex> getPoolKeySet() {
+        return pool;
+    }
 
-            processedCount = 0;
-            synchronized (POOL) {
-                LOCKED.set(0);
-                POOL.clear();
-                POOL.trim();
-            }
-
-            if (StellarCoreConfig.PERFORMANCE.tlm.texturedQuadFloatCanonicalization) {
-                StellarLog.LOG.info("[StellarCore-TLMPositionTextureVertexPool] Pool cleared.");
-            }
-
-            clearTask = null;
-        });
+    @Override
+    protected void clearPool() {
+        pool.clear();
+        pool.trim();
+        worker.stop();
     }
 
     private static class PTVStrategy implements Hash.Strategy<PositionTextureVertex> {

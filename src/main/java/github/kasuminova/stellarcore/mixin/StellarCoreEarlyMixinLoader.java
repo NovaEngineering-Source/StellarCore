@@ -17,21 +17,27 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     static {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",        () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
+        addMixinCFG("mixins.stellar_core_minecraft_bakedmodel.json");
         addMixinCFG("mixins.stellar_core_minecraft_bakedquad.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockfaceuv.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockpart.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPartDataStructure);
         addMixinCFG("mixins.stellar_core_minecraft_chunk.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
         addMixinCFG("mixins.stellar_core_minecraft_chunk_cache.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.chunkBlockStateCache);
         addMixinCFG("mixins.stellar_core_minecraft_classmultimap.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.classMultiMap);
+        addMixinCFG("mixins.stellar_core_minecraft_entitytracker.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.entitytracker);
         addMixinCFG("mixins.stellar_core_minecraft_longnbtkiller.json",       () -> StellarCoreConfig.BUG_FIXES.vanilla.longNBTKiller);
         addMixinCFG("mixins.stellar_core_minecraft_modelblock.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.modelBlockStringCanonicalization && Mods.CENSORED_ASM.loaded());
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
+        addMixinCFG("mixins.stellar_core_minecraft_property.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.propertyEnumHashCodeCache);
+        addMixinCFG("mixins.stellar_core_minecraft_randomtick.json");
         addMixinCFG("mixins.stellar_core_minecraft_renderglobal.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.alwaysDeferChunkUpdates);
+        addMixinCFG("mixins.stellar_core_minecraft_resourcelocation.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_resourcepack.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache);
         addMixinCFG("mixins.stellar_core_minecraft_world.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots);
         addMixinCFG("mixins.stellar_core_minecraft_world_load.json",          () -> StellarCoreConfig.FEATURES.vanilla.handleClientWorldLoad);
         addMixinCFG("mixins.stellar_core_minecraft_world_pos_judgement.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.worldBlockPosJudgement);
+        addMixinCFG("mixins.stellar_core_minecraft_worldserver.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.worldServerGetPendingBlockUpdates);
         addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json",     () -> StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);
         addMixinCFG("mixins.stellar_core_minecraft_stitcher.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
 //        addMixinCFG("mixins.stellar_core_minecraft_texturemap.json",      () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad);

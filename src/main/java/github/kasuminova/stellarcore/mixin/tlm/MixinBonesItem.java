@@ -50,8 +50,8 @@ public class MixinBonesItem {
             return;
         }
         if (!stellar_core$canonicalized) {
-            pivot = TLMCubesItemPool.canonicalize(pivot);
-            rotation = TLMCubesItemPool.canonicalize(rotation);
+            TLMCubesItemPool.INSTANCE.canonicalizeAsync(pivot, canonicalizedPivot -> pivot = canonicalizedPivot);
+            TLMCubesItemPool.INSTANCE.canonicalizeAsync(rotation, canonicalizedRotation -> rotation = canonicalizedRotation);
             if (cubes != null) { // 我草，真有 null
                 for (final CubesItem cube : cubes) {
                     ((CanonicalizationCubesItem) cube).stellar_core$canonicalize();
