@@ -721,6 +721,14 @@ public class StellarCoreConfig {
             @Config.Name("ChunkBlockStateCache")
             public boolean chunkBlockStateCache = false;
 
+            @Config.Comment({
+                    "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments,",
+                    "possibly affecting the random logic of the original game."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ParallelRandomBlockTicker")
+            public boolean parallelRandomBlockTicker = false;
+
             @Config.Comment("(Client/Server Performance) Improved `World#isValid` / `World#isOutsideBuildHeight` judgement performance, minor performance improvements.")
             @Config.RequiresMcRestart
             @Config.Name("WorldBlockPosJudgement")
@@ -745,7 +753,15 @@ public class StellarCoreConfig {
             })
             @Config.RequiresMcRestart
             @Config.Name("BakedQuadVertexDataCanonicalization")
-            public boolean bakedQuadVertexDataCanonicalization = true;
+            public boolean bakedQuadVertexDataCanonicalization = false;
+
+            @Config.Comment({
+                    "(Client Performance | Experimental) BakedQuad deduplication of SimpleBakedModel to optimise memory usage.",
+                    "Works in most cases, but may cause rendering issues with models in some mods."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("SimpleBakedModelCanonicalization")
+            public boolean simpleBakedModelCanonicalization = false;
 
             @Config.Comment("(Client Performance) Deduplicate BlockFaceUV `uvs` array to optimise memory usage.")
             @Config.RequiresMcRestart

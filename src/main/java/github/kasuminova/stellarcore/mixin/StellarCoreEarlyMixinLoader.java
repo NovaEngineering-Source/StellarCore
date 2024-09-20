@@ -17,7 +17,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     static {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",        () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
-        addMixinCFG("mixins.stellar_core_minecraft_bakedmodel.json");
+        addMixinCFG("mixins.stellar_core_minecraft_bakedmodel.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.simpleBakedModelCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_bakedquad.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockfaceuv.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockpart.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPartDataStructure);
@@ -30,7 +30,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_property.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.propertyEnumHashCodeCache);
-        addMixinCFG("mixins.stellar_core_minecraft_randomtick.json");
+        addMixinCFG("mixins.stellar_core_minecraft_randomtick.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelRandomBlockTicker);
         addMixinCFG("mixins.stellar_core_minecraft_renderglobal.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.alwaysDeferChunkUpdates);
         addMixinCFG("mixins.stellar_core_minecraft_resourcelocation.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_resourcepack.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache);
