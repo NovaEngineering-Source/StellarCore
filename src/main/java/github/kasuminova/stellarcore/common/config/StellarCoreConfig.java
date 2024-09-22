@@ -488,6 +488,10 @@ public class StellarCoreConfig {
             @Config.Name("InvalidRecipeFixes")
             public boolean fixAmmoSumRecipeFactory = true;
 
+            @Config.Comment("Fixes an issue that would cause crashes in server environments.")
+            @Config.Name("ServerSideEntityCrashFixes")
+            public boolean serverSideEntityCrashFixes = true;
+
         }
 
         public static class TheOneProbe {

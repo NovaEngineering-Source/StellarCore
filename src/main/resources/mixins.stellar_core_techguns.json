@@ -6,6 +6,8 @@
     "compatibilityLevel": "JAVA_8",
     "mixins": [
         "MixinAmmoSumRecipe",
+        "MixinBioGunProjectile",
+        "MixinFlamethrowerProjectile",
         "MixinTGDamageSource",
         "MixinTGExtendedPlayer",
         "MixinTGPermissions"
