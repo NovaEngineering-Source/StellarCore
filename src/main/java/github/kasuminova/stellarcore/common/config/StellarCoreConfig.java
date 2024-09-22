@@ -726,14 +726,6 @@ public class StellarCoreConfig {
             public boolean resourceExistStateCache = true;
 
             @Config.Comment({
-                    "(Client/Server Performance | Experimental) Caching Chunk's IBlockState data, which may significantly improve the performance of some mods, but uses more memory.",
-                    "Highly experimental, use at your own risk."
-            })
-            @Config.RequiresMcRestart
-            @Config.Name("ChunkBlockStateCache")
-            public boolean chunkBlockStateCache = false;
-
-            @Config.Comment({
                     "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments,",
                     "possibly affecting the random logic of the original game."
             })
