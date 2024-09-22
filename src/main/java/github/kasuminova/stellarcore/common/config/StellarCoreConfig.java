@@ -1092,8 +1092,8 @@ public class StellarCoreConfig {
         public static class ImmersiveEngineering {
 
             @Config.Comment({
-                    "(Server Performance) Blocking the IE Mechanical Block from triggering a full cube update when transferring energy may improve performance.",
-                    "But if strange cube states appear try turning off this option."
+                    "(Server Performance) Blocking the IE Mechanical Block from triggering a full block update when transferring energy may improve performance.",
+                    "But if strange block states appear try turning off this option."
             })
             @Config.Name("EnergyTransferNoUpdate")
             public boolean energyTransferNoUpdate = true;
