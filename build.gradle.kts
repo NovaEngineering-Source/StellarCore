@@ -234,8 +234,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:rgb-chat-702720:4092100"))
     compileOnly(rfg.deobf("curse.maven:endercore-231868:4671384"))
     compileOnly(rfg.deobf("curse.maven:ender-io-64578:4674244"))
-    compileOnly("info.loenwind.autosave:AutoSave:1.12.2:1.0.11") // EnderIO Dependency
-    compileOnly("info.loenwind.autoconfig:AutoConfig:1.12.2:1.0.2") // EnderIO Dependency
+//    compileOnly("info.loenwind.autosave:AutoSave:1.12.2:1.0.11") // EnderIO Dependency
+//    compileOnly("info.loenwind.autoconfig:AutoConfig:1.12.2:1.0.2") // EnderIO Dependency
     compileOnly(rfg.deobf("curse.maven:tinkers-evolution-384589:4941753"))
     compileOnly(rfg.deobf("curse.maven:ore-excavation-250898:2897369"))
     compileOnly(rfg.deobf("curse.maven:techguns-244201:2958103"))
