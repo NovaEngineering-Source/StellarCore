@@ -21,6 +21,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_bakedquad.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockfaceuv.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockpart.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPartDataStructure);
+        addMixinCFG("mixins.stellar_core_minecraft_blockstateimpl.json",      () -> StellarCoreConfig.PERFORMANCE.vanilla.blockStateImplementationHashCodeCache);
         addMixinCFG("mixins.stellar_core_minecraft_chunk.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
         addMixinCFG("mixins.stellar_core_minecraft_chunk_cache.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.chunkBlockStateCache);
         addMixinCFG("mixins.stellar_core_minecraft_classmultimap.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.classMultiMap);
@@ -38,7 +39,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_world_load.json",          () -> StellarCoreConfig.FEATURES.vanilla.handleClientWorldLoad);
         addMixinCFG("mixins.stellar_core_minecraft_world_pos_judgement.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.worldBlockPosJudgement);
         addMixinCFG("mixins.stellar_core_minecraft_worldserver.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.worldServerGetPendingBlockUpdates);
-        addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json",     () -> StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);
+        addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json",     () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);
         addMixinCFG("mixins.stellar_core_minecraft_stitcher.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
 //        addMixinCFG("mixins.stellar_core_minecraft_texturemap.json",      () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad);
         addMixinCFG("mixins.stellar_core_minecraft_texture_load.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad);
@@ -97,6 +98,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
                 StellarLog.LOG.info("[StellarCore-MixinLoader] Mixin config {} is disabled by config or mod is not loaded.", config);
                 return;
             }
+            StellarLog.LOG.info("[StellarCore-MixinLoader] Adding {} to mixin configuration.", config);
             Mixins.addConfiguration(config);
         });
     }

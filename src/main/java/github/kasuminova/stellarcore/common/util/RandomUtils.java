@@ -8,6 +8,10 @@ public class RandomUtils {
         return ThreadLocalRandom.current().nextInt(bound);
     }
 
+    public static int nextInt() {
+        return ThreadLocalRandom.current().nextInt();
+    }
+
     public static float nextFloat() {
         return ThreadLocalRandom.current().nextFloat();
     }

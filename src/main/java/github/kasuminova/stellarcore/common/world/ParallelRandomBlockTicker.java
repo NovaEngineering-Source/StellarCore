@@ -45,7 +45,7 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        if (this.enqueuedChunks.size() * randomTickSpeed >= 500) {
+        if (this.enqueuedChunks.size() * randomTickSpeed >= 1000) {
             this.enqueuedChunks.entrySet().parallelStream().forEach(entry -> {
                 Chunk chunk = entry.getKey();
                 for (final TickData tickData : entry.getValue()) {

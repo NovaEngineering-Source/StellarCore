@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.common.world.ParallelRandomBlockTicker;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @Mixin(WorldServer.class)
@@ -38,8 +38,9 @@ public abstract class MixinWorldServer extends World {
     )
     private ExtendedBlockStorage[] redirectUpdateBlocksGetBlockStorageArray(final Chunk chunk, final @Local(name = "i") int tickSpeed) {
         int updateLCG = this.updateLCG;
-        List<ParallelRandomBlockTicker.TickData> tickDataList = new LinkedList<>();
-        for (ExtendedBlockStorage storage : chunk.getBlockStorageArray()) {
+        ExtendedBlockStorage[] storageArray = chunk.getBlockStorageArray();
+        List<ParallelRandomBlockTicker.TickData> tickDataList = new ObjectArrayList<>(storageArray.length + 1);
+        for (ExtendedBlockStorage storage : storageArray) {
             if (storage == Chunk.NULL_BLOCK_STORAGE || !storage.needsRandomTick()) {
                 continue;
             }

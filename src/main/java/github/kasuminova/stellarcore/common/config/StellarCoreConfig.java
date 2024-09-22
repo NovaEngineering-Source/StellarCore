@@ -578,6 +578,9 @@ public class StellarCoreConfig {
         @Config.Name("InGameInfoXML")
         public final InGameInfoXML inGameInfoXML = new InGameInfoXML();
 
+        @Config.Name("ImmersiveEngineering")
+        public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
+
         @Config.Name("Mekanism")
         public final Mekanism mekanism = new Mekanism();
 
@@ -677,6 +680,11 @@ public class StellarCoreConfig {
             @Config.Name("PropertyEnumHashCodeCache")
             public boolean propertyEnumHashCodeCache = true;
 
+            @Config.Comment("(Server Performance) Improving BlockStateContainer$BlockStateImplementation#hashCode Performance with hashCode cache.")
+            @Config.RequiresMcRestart
+            @Config.Name("BlockStateImplementationHashCodeCache")
+            public boolean blockStateImplementationHashCodeCache = true;
+
             @Config.Comment("(Client/Server Performance | Experimental) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (may not work).")
             @Config.RequiresMcRestart
             @Config.Name("NonNullListImprovements")
@@ -742,10 +750,11 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Comment({
                     "(Client Performance) Modify the data structure of ModelBlock's textures map to improve performance and reduce memory usage.",
-                    "This feature requires CensoredASM mod."
+                    "This feature requires CensoredASM mod.",
+                    "Known to be incompatible with DynamicTrees."
             })
             @Config.Name("ModelBlockStringCanonicalization")
-            public boolean modelBlockStringCanonicalization = true;
+            public boolean modelBlockStringCanonicalization = false;
 
             @Config.Comment({
                     "(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage.",
@@ -1006,6 +1015,10 @@ public class StellarCoreConfig {
             @Config.Name("EnderLiquidConduitNetworkTankMap")
             public boolean enderLiquidConduitNetworkTankMap = true;
 
+            @Config.Comment("(Server Performance | Experimental) Rewriting the eio conduit energy network computation logic to improve performance using multithreading.")
+            @Config.Name("NetworkPowerManagerImprovements")
+            public boolean networkPowerManager = true;
+
         }
 
         public static class FTBLib {
@@ -1026,6 +1039,11 @@ public class StellarCoreConfig {
 
         public static class IndustrialCraft2 {
 
+            @Config.RequiresMcRestart
+            @Config.Comment("(Server Performance | Experimental) Rewriting the ic2 energy network computation logic to improve performance using multithreading.")
+            @Config.Name("EnergyCalculatorLegImprovements")
+            public boolean energyCalculatorLeg = true;
+
             @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
             @Config.Name("GridDataImprovements")
             public boolean energyCalculatorLegGridData = true;
@@ -1033,6 +1051,10 @@ public class StellarCoreConfig {
             @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
             @Config.Name("EnergyNetLocalImprovements")
             public boolean energyNetLocal = true;
+
+            @Config.Comment("(Server Performance) Improve EnergyNetLocal#getIoTile and EnergyNetLocal#getSubTile fetching speed to optimise performance to some extent.")
+            @Config.Name("GetIoAndSubTileEnergyNetLocalImprovements")
+            public boolean getIoAndSubTile = true;
 
             @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
             @Config.Name("GridImprovements")
@@ -1064,6 +1086,17 @@ public class StellarCoreConfig {
             @Config.Comment("Select a restricted HUD FPS that is only valid when HUDFramebuffer is enabled.")
             @Config.RangeInt(min = 5, max = 60)
             public int hudFrameRate = 10;
+
+        }
+
+        public static class ImmersiveEngineering {
+
+            @Config.Comment({
+                    "(Server Performance) 阻止 IE 机械方块传输能量时触发完整的方块更新，这可能会改进性能。",
+                    "但如果出现奇怪的方块状态请尝试关闭此选项."
+            })
+            @Config.Name("EnergyTransferNoUpdate")
+            public boolean energyTransferNoUpdate = true;
 
         }
 
@@ -1166,6 +1199,9 @@ public class StellarCoreConfig {
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
+        @Config.Name("FluxNetworks")
+        public final FluxNetworks fluxNetworks = new FluxNetworks();
+
         @Config.Name("IC2")
         public final IC2 ic2 = new IC2();
 
@@ -1255,6 +1291,14 @@ public class StellarCoreConfig {
             @Config.Comment("If you're really tired of all this useless logging, set it to true (filter only the no side effects section).")
             @Config.Name("PrevEnderLiquidConduitNetworkLogSpam")
             public boolean prevEnderLiquidConduitLogSpam = true;
+
+        }
+        
+        public static class FluxNetworks {
+
+            @Config.Comment("(Server) Make FluxNetworks to generate a random int uid for each network, instead of using the self-incrementing ID.")
+            @Config.Name("RandomNetworkUniqueID")
+            public boolean randomNetworkUniqueID = false;
 
         }
 

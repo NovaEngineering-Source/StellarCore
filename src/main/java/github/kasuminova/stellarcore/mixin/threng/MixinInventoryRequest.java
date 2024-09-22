@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.lazyae2;
+package github.kasuminova.stellarcore.mixin.threng;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import io.github.phantamanta44.threng.tile.TileLevelMaintainer;

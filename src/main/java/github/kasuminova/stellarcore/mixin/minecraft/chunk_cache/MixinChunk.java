@@ -4,8 +4,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.CachedChunk;
-import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
-import it.unimi.dsi.fastutil.shorts.Short2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.shorts.Short2ReferenceMap;
+import it.unimi.dsi.fastutil.shorts.Short2ReferenceOpenHashMap;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -40,7 +40,7 @@ public class MixinChunk implements CachedChunk {
     public static ExtendedBlockStorage NULL_BLOCK_STORAGE;
 
     @Unique
-    private final Short2ObjectMap<IBlockState> stellar_core$blockStateCache = new Short2ObjectOpenHashMap<>();
+    private final Short2ReferenceMap<IBlockState> stellar_core$blockStateCache = new Short2ReferenceOpenHashMap<>();
 
     @Unique
     private boolean stellar_core$enableCache = false;
@@ -155,7 +155,7 @@ public class MixinChunk implements CachedChunk {
 
     @Unique
     @Override
-    public Short2ObjectMap<IBlockState> stellar_core$getBlockStateCache() {
+    public Short2ReferenceMap<IBlockState> stellar_core$getBlockStateCache() {
         return stellar_core$blockStateCache;
     }
 

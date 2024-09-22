@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.4.5"
+version = "1.4.9"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -149,6 +149,9 @@ repositories {
         url = uri("https://maven.blamejared.com/")
     }
     maven {
+        url = uri("https://maven.tterrag.com") // AutoSave, AutoConfig
+    }
+    maven {
         url = uri("https://repo.spongepowered.org/maven")
     }
     maven {
@@ -206,7 +209,7 @@ dependencies {
     implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
     compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
-    compileOnly(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
+    implementation(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
     compileOnly(rfg.deobf("curse.maven:mekanism-ce-unofficial-840735:5130458"))
 //    compileOnly(rfg.deobf("curse.maven:mekanism-unofficial-edition-v10-edition-840735:4464199"))
     compileOnly(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
@@ -231,6 +234,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:rgb-chat-702720:4092100"))
     compileOnly(rfg.deobf("curse.maven:endercore-231868:4671384"))
     compileOnly(rfg.deobf("curse.maven:ender-io-64578:4674244"))
+    compileOnly("info.loenwind.autosave:AutoSave:1.12.2:1.0.11") // EnderIO Dependency
+    compileOnly("info.loenwind.autoconfig:AutoConfig:1.12.2:1.0.2") // EnderIO Dependency
     compileOnly(rfg.deobf("curse.maven:tinkers-evolution-384589:4941753"))
     compileOnly(rfg.deobf("curse.maven:ore-excavation-250898:2897369"))
     compileOnly(rfg.deobf("curse.maven:techguns-244201:2958103"))

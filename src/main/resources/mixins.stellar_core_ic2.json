@@ -8,6 +8,7 @@
         "MixinItemBattery"
     ],
     "mixins": [
+        "AccessorGridChange",
         "MixinBaseElectricItem",
         "MixinElectricItemManager",
         "MixinEnergyCalculatorLegGridData",

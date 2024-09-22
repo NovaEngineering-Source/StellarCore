@@ -7,9 +7,10 @@
     "mixins": [
         "MixinBlockIEMultiblock",
         "MixinBlockIETileProvider",
-        "MixinThreadContributorSpecialsDownloader",
         "MixinRecipeJerrycan",
+        "MixinThreadContributorSpecialsDownloader",
         "MixinTileEntityArcFurnace",
-        "MixinTileEntityExcavator"
+        "MixinTileEntityExcavator",
+        "MixinTileEntityMultiblockMetal"
     ]
 }

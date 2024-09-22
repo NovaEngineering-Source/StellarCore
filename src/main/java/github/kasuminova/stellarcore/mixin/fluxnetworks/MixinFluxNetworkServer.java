@@ -1,16 +1,27 @@
 package github.kasuminova.stellarcore.mixin.fluxnetworks;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.mixin.util.IStellarFluxNetwork;
 import net.minecraft.entity.player.EntityPlayer;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import sonar.fluxnetworks.api.network.AccessLevel;
+import sonar.fluxnetworks.api.network.FluxLogicType;
+import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.api.network.NetworkMember;
+import sonar.fluxnetworks.api.tiles.IFluxConnector;
+import sonar.fluxnetworks.api.tiles.IFluxPlug;
+import sonar.fluxnetworks.api.tiles.IFluxPoint;
 import sonar.fluxnetworks.common.connection.FluxNetworkBase;
 import sonar.fluxnetworks.common.connection.FluxNetworkServer;
+import sonar.fluxnetworks.common.connection.PriorityGroup;
+import sonar.fluxnetworks.common.connection.TransferIterator;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +29,84 @@ import java.util.UUID;
 
 @SuppressWarnings("SynchronizeOnNonFinalField")
 @Mixin(value = FluxNetworkServer.class, remap = false)
-public class MixinFluxNetworkServer extends FluxNetworkBase {
+public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements IFluxNetwork, IStellarFluxNetwork {
+
+    @Shadow
+    protected abstract void handleConnectionQueue();
+
+    @Shadow
+    public long bufferLimiter;
+
+    @Shadow
+    @Final
+    private List<PriorityGroup<IFluxPoint>> sortedPoints;
+
+    @Shadow
+    @Final
+    private List<PriorityGroup<IFluxPlug>> sortedPlugs;
+
+    @Shadow
+    @Final
+    private TransferIterator<IFluxPlug> plugTransferIterator;
+
+    @Shadow
+    @Final
+    private TransferIterator<IFluxPoint> pointTransferIterator;
+
+    @Override
+    @SuppressWarnings("AddedMixinMembersNamePattern")
+    public Runnable getCycleStartRunnable() {
+        handleConnectionQueue();
+        return () -> {
+            List<IFluxConnector> devices = getConnections(FluxLogicType.ANY);
+            devices.parallelStream().forEach(device -> device.getTransferHandler().onCycleStart());
+        };
+    }
+
+    /**
+     * @author Kasumi_Nova
+     * @reason Parallel Execution
+     */
+    @Overwrite
+    public void onEndServerTick() {
+        network_stats.getValue().startProfiling();
+
+        bufferLimiter = 0;
+
+        List<IFluxConnector> devices = getConnections(FluxLogicType.ANY);
+
+        if (!sortedPoints.isEmpty() && !sortedPlugs.isEmpty()) {
+            plugTransferIterator.reset(sortedPlugs);
+            pointTransferIterator.reset(sortedPoints);
+            CYCLE:
+            while (pointTransferIterator.hasNext()) {
+                while (plugTransferIterator.hasNext()) {
+                    IFluxPlug plug = plugTransferIterator.next();
+                    IFluxPoint point = pointTransferIterator.next();
+                    if (plug.getConnectionType() == point.getConnectionType()) {
+                        break CYCLE; // Storage always have the lowest priority, the cycle can be broken here.
+                    }
+                    // we don't need to simulate this action
+                    long operate = plug.getTransferHandler().removeFromBuffer(point.getTransferHandler().getRequest());
+                    if (operate > 0) {
+                        point.getTransferHandler().addToBuffer(operate);
+                        continue CYCLE;
+                    } else {
+                        // although the plug still need transfer (buffer > 0)
+                        // but it reached max transfer limit, so we use next plug
+                        plugTransferIterator.incrementFlux();
+                    }
+                }
+                break; // all plugs have been used
+            }
+        }
+        for (IFluxConnector f : devices) {
+            f.getTransferHandler().onCycleEnd();
+            bufferLimiter += f.getTransferHandler().getRequest();
+        }
+
+        network_stats.getValue().stopProfiling();
+    }
 
     @Inject(
             method = "getMemberPermission",
@@ -35,7 +123,7 @@ public class MixinFluxNetworkServer extends FluxNetworkBase {
         }
 
         UUID uuid = EntityPlayer.getUUID(player.getGameProfile());
-        
+
         synchronized (network_players) {
             for (final NetworkMember member : network_players.getValue()) {
                 if (member.getPlayerUUID().equals(uuid)) {

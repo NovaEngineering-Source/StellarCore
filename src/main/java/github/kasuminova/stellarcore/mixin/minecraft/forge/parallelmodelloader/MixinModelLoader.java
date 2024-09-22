@@ -10,10 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BlockModelShapes;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ModelBakery;
-import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -127,6 +124,10 @@ public abstract class MixinModelLoader extends ModelBakery {
             List<Block> blocks,
             @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
             @Local(name = "mapper") BlockStateMapper mapper) {
+        // It Loaded? Don't remove this local var.
+        //noinspection unused
+        Class<ModelRotation> ModelRotation = ModelRotation.class;
+
         long startTime = System.currentTimeMillis();
         stellar_core$toConcurrent();
 
@@ -252,7 +253,7 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Unique
     private static void stellar_core$addAlias(ResourceLocation from, ResourceLocation to) {
         try {
-            stellar_core$addAlias.invoke(null, from, to);
+            stellar_core$addAlias.invoke(from, to);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -261,7 +262,7 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Unique
     private static IModel stellar_core$getMissingModel(ResourceLocation location, Throwable cause) {
         try {
-            return (IModel) stellar_core$getMissingModel.invoke(null, location, cause);
+            return (IModel) stellar_core$getMissingModel.invoke(location, cause);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
