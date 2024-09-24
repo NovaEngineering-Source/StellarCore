@@ -585,6 +585,9 @@ public class StellarCoreConfig {
         @Config.Name("ImmersiveEngineering")
         public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
 
+        @Config.Name("LibNine")
+        public final LibNine libNine = new LibNine();
+
         @Config.Name("Mekanism")
         public final Mekanism mekanism = new Mekanism();
 
@@ -1093,6 +1096,17 @@ public class StellarCoreConfig {
             })
             @Config.Name("EnergyTransferNoUpdate")
             public boolean energyTransferNoUpdate = true;
+
+        }
+        
+        public static class LibNine {
+
+            @Config.Comment({
+                    "(Client Performance) Cache the result of L9Models#isOfType to improve game loading speed.",
+                    "This feature requires Vanilla#ResourceExistStateCache option."
+            })
+            @Config.Name("L9ModelsIsOfTypeCache")
+            public boolean l9ModelsIsOfTypeCache = true;
 
         }
 

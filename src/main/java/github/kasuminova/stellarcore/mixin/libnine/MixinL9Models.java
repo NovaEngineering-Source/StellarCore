@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.libnine;
 
 import com.google.gson.JsonObject;
 import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import io.github.phantamanta44.libnine.client.model.L9Models;
 import io.github.phantamanta44.libnine.util.helper.ResourceUtils;
@@ -29,11 +30,20 @@ public class MixinL9Models implements StellarCoreResourcePack {
     @SuppressWarnings("RedundantCast")
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final CallbackInfo ci) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache) {
+            return;
+        }
         ResourceExistingCache.addResourcePack((StellarCoreResourcePack) (Object) this);
     }
 
     @Inject(method = "isOfType", at = @At("HEAD"), cancellable = true)
     private static void injectIsOfType(final ResourceLocation resource, final String type, final CallbackInfoReturnable<Boolean> cir) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache) {
+            return;
+        }
+        if (!StellarCoreConfig.PERFORMANCE.libNine.l9ModelsIsOfTypeCache) {
+            return;
+        }
         cir.setReturnValue(stellar_core$getValidTypeCache().computeIfAbsent(type, (key) -> new ConcurrentHashMap<>())
                 .computeIfAbsent(resource, (key) -> {
                     try {
