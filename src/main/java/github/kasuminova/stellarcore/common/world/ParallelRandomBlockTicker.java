@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.common.world;
 
 import com.github.bsideup.jabel.Desugar;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -37,6 +38,7 @@ public class ParallelRandomBlockTicker {
     }
 
     public void execute(final World world, final Random rand, final Profiler profiler, final int randomTickSpeed) {
+        Map<Chunk, List<TickData>> enqueuedChunks = this.enqueuedChunks;
         if (enqueuedChunks.isEmpty()) {
             return;
         }
@@ -45,59 +47,59 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        if (this.enqueuedChunks.size() * randomTickSpeed >= 1000) {
-            this.enqueuedChunks.entrySet().parallelStream().forEach(entry -> {
+        Map<Chunk, List<RandomTickTask>> randomTickData = this.randomTickData;
+        if (enqueuedChunks.size() * randomTickSpeed >= 1000) {
+            enqueuedChunks.entrySet().parallelStream().forEach(entry -> {
                 Chunk chunk = entry.getKey();
                 for (final TickData tickData : entry.getValue()) {
                     List<RandomTickTask> data = getRandomTickData(chunk, tickData);
                     if (data.isEmpty()) {
                         continue;
                     }
-                    this.randomTickData.computeIfAbsent(chunk, (k) -> new ObjectArrayList<>()).addAll(data);
+                    randomTickData.computeIfAbsent(chunk, (k) -> new ObjectArrayList<>()).addAll(data);
                 }
             });
         } else {
-            this.enqueuedChunks.forEach((chunk, value) -> {
+            enqueuedChunks.forEach((chunk, value) -> {
                 for (final TickData tickData : value) {
                     List<RandomTickTask> data = getRandomTickData(chunk, tickData);
                     if (data.isEmpty()) {
                         continue;
                     }
-                    this.randomTickData.computeIfAbsent(chunk, (k) -> new ObjectArrayList<>()).addAll(data);
+                    randomTickData.computeIfAbsent(chunk, (k) -> new ObjectArrayList<>()).addAll(data);
                 }
             });
         }
 
-        for (Chunk chunk : this.enqueuedChunks.keySet()) {
-            List<RandomTickTask> data = this.randomTickData.get(chunk);
+        for (Chunk chunk : enqueuedChunks.keySet()) {
+            List<RandomTickTask> data = randomTickData.get(chunk);
             if (data != null && !data.isEmpty()) {
                 executeTask(data);
             }
         }
 
-        this.enqueuedChunks.clear();
-        this.randomTickData.clear();
+        enqueuedChunks.clear();
+        randomTickData.clear();
     }
 
     private static List<RandomTickTask> getRandomTickData(Chunk chunk, TickData tickData) {
-        ExtendedBlockStorage blockStorage = tickData.blockStorage;
-
-        IntList lcgList = tickData.lcgList;
+        ExtendedBlockStorage storage = tickData.blockStorage();
+        IntList lcgList = tickData.lcgList();
+        int chunkXPos = chunk.x * 16;
+        int chunkZPos = chunk.z * 16;
         List<RandomTickTask> enqueuedData = new ObjectArrayList<>(lcgList.size());
         IntListIterator it = lcgList.iterator();
         while (it.hasNext()) {
             int lcg = it.nextInt();
             int x = lcg & 15;
-            int y = lcg >> 8 & 15;
-            int z = lcg >> 16 & 15;
-            IBlockState blockState = blockStorage.get(x, z, y);
+            int y = lcg >> 16 & 15;
+            int z = lcg >> 8 & 15;
+            IBlockState blockState = storage.get(x, y, z);
             Block block = blockState.getBlock();
 
             if (block.getTickRandomly()) {
-                int chunkXPos = chunk.x * 16;
-                int chunkZPos = chunk.z * 16;
-                BlockPos pos = new BlockPos(x + chunkXPos, y + blockStorage.getYLocation(), z + chunkZPos);
-                enqueuedData.add(new RandomTickTask(blockStorage, pos, x, y, z));
+                BlockPos pos = new BlockPos(x + chunkXPos, y + storage.getYLocation(), z + chunkZPos);
+                enqueuedData.add(new RandomTickTask(storage, pos, x, y, z));
             }
         }
 

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import techguns.client.ClientProxy;
 import techguns.entities.projectiles.FlamethrowerProjectile;
 
-@Mixin(FlamethrowerProjectile.class)
+@Mixin(value = FlamethrowerProjectile.class, remap = false)
 @SuppressWarnings("MethodMayBeStatic")
 public abstract class MixinFlamethrowerProjectile extends Entity {
 

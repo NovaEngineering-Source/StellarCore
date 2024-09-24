@@ -3,8 +3,10 @@ package github.kasuminova.stellarcore.client.resource;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
+import java.util.List;
 import java.util.Set;
 
 public class ResourceExistingCache {
@@ -17,8 +19,15 @@ public class ResourceExistingCache {
     }
 
     public static void clear() {
-        RESOURCE_PACKS.forEach(StellarCoreResourcePack::stellar_core$disableCache);
+        List<StellarCoreResourcePack> persistentResourcePacks = new ObjectArrayList<>();
+        RESOURCE_PACKS.forEach(resourcePack -> {
+            resourcePack.stellar_core$disableCache();
+            if (resourcePack.stellar_core$isPersistent()) {
+                persistentResourcePacks.add(resourcePack);
+            }
+        });
         RESOURCE_PACKS.clear();
+        RESOURCE_PACKS.addAll(persistentResourcePacks);
         StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache cleared.");
     }
 

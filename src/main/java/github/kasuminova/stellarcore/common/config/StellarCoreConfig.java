@@ -895,7 +895,7 @@ public class StellarCoreConfig {
             })
             @Config.RangeInt(min = 2, max = 60)
             @Config.Name("SparkMaxWorkDelay")
-            public int sparkMaxWorkDelay = 10;
+            public int sparkMaxWorkDelay = 20;
 
         }
 
@@ -1192,6 +1192,9 @@ public class StellarCoreConfig {
         @Config.Name("Botania")
         public final Botania botania = new Botania();
 
+        @Config.Name("EBWizardry")
+        public final EBWizardry ebwizardry = new EBWizardry();
+
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
@@ -1279,6 +1282,14 @@ public class StellarCoreConfig {
             @Config.Comment("As the name suggests, use at your own risk.")
             @Config.Name("DisableCosmeticRecipe")
             public boolean disableCosmeticRecipe = false;
+
+        }
+        
+        public static class EBWizardry {
+
+            @Config.Comment("Prevents the WizardSpell loot from logging to the server console when it's casted.")
+            @Config.Name("PreventWizardSpellLogSpam")
+            public boolean preventWizardSpellLogSpam = false;
 
         }
 

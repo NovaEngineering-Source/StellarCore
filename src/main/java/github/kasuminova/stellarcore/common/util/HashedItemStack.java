@@ -24,11 +24,9 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, int damage, bo
         int hash;
         int damage = stack.isItemStackDamageable() ? stack.getItemDamage() : stack.getHasSubtypes() ? stack.getMetadata() : 0;
         if (hasTag) {
-            hash = Objects.hash(stack.getItem(),
-                    damage, tag);
+            hash = Objects.hash(stack.getItem(), damage, tag);
         } else {
-            hash = Objects.hash(stack.getItem(),
-                    damage);
+            hash = Objects.hash(stack.getItem(), damage);
         }
         return new HashedItemStack(stack, hash, damage, hasTag);
     }

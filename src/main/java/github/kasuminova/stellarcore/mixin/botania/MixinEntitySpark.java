@@ -14,8 +14,11 @@ import vazkii.botania.common.entity.EntitySpark;
 @Mixin(EntitySpark.class)
 public abstract class MixinEntitySpark {
 
-    @Unique private boolean stellarcore$receiveLeastOne = false;
-    @Unique private int stellarcore$failureCounter = 1;
+    @Unique
+    private boolean stellarcore$receiveLeastOne = false;
+
+    @Unique
+    private int stellarcore$failureCounter = 1;
 
     @Inject(
             method = "onUpdate",
@@ -56,7 +59,7 @@ public abstract class MixinEntitySpark {
                 stellarcore$failureCounter--;
             }
         } else if (stellarcore$failureCounter < StellarCoreConfig.PERFORMANCE.botania.sparkMaxWorkDelay) {
-            stellarcore$failureCounter++;
+            stellarcore$failureCounter = Math.min(stellarcore$failureCounter + 2, StellarCoreConfig.PERFORMANCE.botania.sparkMaxWorkDelay);
         }
     }
 

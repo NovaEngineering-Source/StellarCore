@@ -8,6 +8,7 @@
         "AccessorReceptorEntry",
         "MixinCapBankSupply",
         "MixinNetworkPowerManager",
-        "MixinPowerConduitNetwork"
+        "MixinPowerConduitNetwork",
+        "MixinReceptorEntry"
     ]
 }
