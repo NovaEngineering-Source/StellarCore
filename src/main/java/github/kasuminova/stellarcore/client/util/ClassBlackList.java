@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.client.util;
 
-import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 import java.util.Optional;

@@ -4,7 +4,6 @@ import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import ic2.core.item.BaseElectricItem;
 import ic2.core.item.ItemIC2;
 import ic2.core.ref.ItemName;
-import ic2.core.util.StackUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import org.spongepowered.asm.mixin.Mixin;

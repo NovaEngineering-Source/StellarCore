@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.common.world;
 
 import com.github.bsideup.jabel.Desugar;
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -90,7 +89,7 @@ public class ParallelRandomBlockTicker {
         List<RandomTickTask> enqueuedData = new ObjectArrayList<>(lcgList.size());
         IntListIterator it = lcgList.iterator();
         while (it.hasNext()) {
-            int lcg = it.nextInt();
+            int lcg = it.nextInt() >> 2;
             int x = lcg & 15;
             int y = lcg >> 16 & 15;
             int z = lcg >> 8 & 15;

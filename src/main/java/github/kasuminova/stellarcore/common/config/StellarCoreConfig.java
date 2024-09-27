@@ -2,8 +2,8 @@ package github.kasuminova.stellarcore.common.config;
 
 import com.cleanroommc.configanytime.ConfigAnytime;
 import github.kasuminova.stellarcore.StellarCore;
-import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
+import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;

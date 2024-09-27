@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.mixin.advancedrocketry;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;

@@ -1,9 +1,9 @@
 package github.kasuminova.stellarcore.client;
 
+import github.kasuminova.stellarcore.client.handler.ClientEventHandler;
 import github.kasuminova.stellarcore.client.pool.BakedQuadPool;
 import github.kasuminova.stellarcore.client.pool.BlockFaceUVsPool;
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
-import github.kasuminova.stellarcore.client.handler.ClientEventHandler;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.CommonProxy;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;

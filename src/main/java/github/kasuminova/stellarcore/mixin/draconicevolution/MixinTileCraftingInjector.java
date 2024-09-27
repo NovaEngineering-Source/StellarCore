@@ -2,8 +2,8 @@ package github.kasuminova.stellarcore.mixin.draconicevolution;
 
 import com.brandon3055.draconicevolution.blocks.tileentity.TileCraftingInjector;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import github.kasuminova.stellarcore.mixin.util.ITileCraftingInjector;
 import github.kasuminova.stellarcore.mixin.util.IFusionCraftingCore;
+import github.kasuminova.stellarcore.mixin.util.ITileCraftingInjector;
 import net.minecraft.tileentity.TileEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.client.util;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;

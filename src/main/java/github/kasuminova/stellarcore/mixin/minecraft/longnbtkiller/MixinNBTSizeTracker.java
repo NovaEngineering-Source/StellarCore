@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.mixin.minecraft.longnbtkiller;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import io.netty.util.internal.ThrowableUtil;

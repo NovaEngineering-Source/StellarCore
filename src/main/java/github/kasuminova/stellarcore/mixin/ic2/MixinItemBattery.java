@@ -5,7 +5,6 @@ import ic2.core.item.BaseElectricItem;
 import ic2.core.item.ItemBattery;
 import ic2.core.item.ItemIC2;
 import ic2.core.ref.ItemName;
-import ic2.core.util.StackUtil;
 import ic2.core.util.Util;
 import net.minecraft.client.renderer.ItemMeshDefinition;
 import net.minecraft.item.Item;

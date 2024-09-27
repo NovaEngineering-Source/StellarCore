@@ -7,6 +7,7 @@ import ic2.core.energy.grid.EnergyNetGlobal;
 import ic2.core.energy.grid.EnergyNetLocal;
 import ic2.core.energy.grid.Grid;
 import ic2.core.energy.grid.IEnergyCalculator;
+import io.netty.util.internal.shaded.org.jctools.queues.MpmcArrayQueue;
 import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import org.spongepowered.asm.mixin.*;
 
@@ -16,9 +17,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
 
+@SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "unchecked"})
 @Mixin(targets = "ic2.core.energy.grid.GridUpdater", remap = false)
 public class MixinGridUpdater {
 
@@ -51,7 +54,7 @@ public class MixinGridUpdater {
     private static volatile MethodHandle stellar_core$EnergyNetLocal$shuffleGrids = null;
 
     @Unique
-    private final Queue<IC2EnergySyncCalcTask> stellar_core$syncTaskQueue = stellar_core$createConcurrentQueue();
+    private final Queue<IC2EnergySyncCalcTask> stellar_core$syncTaskQueue = stellar_core$createMpscQueue();
 
     /**
      * @author Kasumi_Nova
@@ -71,26 +74,20 @@ public class MixinGridUpdater {
 
         IStellarEnergyCalculatorLeg stellarCalculator = (IStellarEnergyCalculatorLeg) energyCalculator;
 
-        int completedTask = 0;
+        Queue<Grid> calculateQueue = stellar_core$createMpmcQueue(grids.size());
+        calculateQueue.addAll(grids);
         int tasks = grids.size();
-        CompletableFuture.runAsync(() -> {
-            for (final Grid grid : grids) {
-                CompletableFuture.runAsync(() -> stellar_core$syncTaskQueue.offer(stellarCalculator.doParallelCalc(grid)));
-            }
+        ForkJoinPool.commonPool().submit(() -> {
+            int concurrency = Math.min(tasks, Math.max(Runtime.getRuntime().availableProcessors(), 2));
+            IntStream.range(0, concurrency).forEach(i -> ForkJoinPool.commonPool().submit(() -> {
+                Grid grid;
+                while ((grid = calculateQueue.poll()) != null) {
+                    stellar_core$syncTaskQueue.offer(stellarCalculator.doParallelCalc(grid));
+                }
+            }));
         });
 
-        while (completedTask < tasks) {
-            IC2EnergySyncCalcTask task = stellar_core$syncTaskQueue.poll();
-            if (task == null) {
-                try {
-                    Thread.sleep(0); // yield
-                } catch (InterruptedException ignored) {
-                }
-                continue;
-            }
-            stellarCalculator.doSyncCalc(task);
-            completedTask++;
-        }
+        stellar_core$executeSyncTasks(tasks, stellarCalculator, calculateQueue);
 
         if (!stellar_core$syncTaskQueue.isEmpty()) {
             StellarLog.LOG.warn("[StellarCore-IC2GridUpdater] Unable to complete all tasks, {} tasks left.", stellar_core$syncTaskQueue.size());
@@ -106,7 +103,49 @@ public class MixinGridUpdater {
     }
 
     @Unique
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+    private void stellar_core$executeSyncTasks(final int totalTasks, final IStellarEnergyCalculatorLeg stellarCalculator, final Queue<Grid> calculateQueue) {
+        int completedTask = 0;
+        IC2EnergySyncCalcTask task;
+        boolean syncBusy;
+        while (completedTask < totalTasks) {
+            syncBusy = true;
+
+            while ((task = stellar_core$syncTaskQueue.poll()) != null) {
+                stellarCalculator.doSyncCalc(task);
+                completedTask++;
+                syncBusy = false;
+            }
+
+            if (stellar_core$helpComplete(stellarCalculator, calculateQueue)) {
+                completedTask++;
+                syncBusy = false;
+            }
+
+            if (syncBusy) {
+                stellar_core$awaitCompletion();
+            }
+        }
+    }
+
+    @Unique
+    private static boolean stellar_core$helpComplete(final IStellarEnergyCalculatorLeg stellarCalculator, final Queue<Grid> calculateQueue) {
+        final Grid grid = calculateQueue.poll();
+        if (grid != null) {
+            stellarCalculator.doSyncCalc(stellarCalculator.doParallelCalc(grid));
+            return true;
+        }
+        return false;
+    }
+
+    @Unique
+    private static void stellar_core$awaitCompletion() {
+        try {
+            Thread.sleep(0);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    @Unique
     private static Object stellar_core$newGridCalcTask(final Object gridUpdater) {
         if (stellar_core$gridCalcTaskConstructor == null) {
             synchronized (gridUpdater) {
@@ -129,7 +168,6 @@ public class MixinGridUpdater {
     }
 
     @Unique
-    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     private static void stellar_core$setGridCalcTaskGrid(final Object gridCalcTask, final Grid grid) {
         if (stellar_core$gridCalcTaskGridSetter == null) {
             synchronized (gridCalcTask) {
@@ -192,7 +230,6 @@ public class MixinGridUpdater {
     }
 
     @Unique
-    @SuppressWarnings("unchecked")
     private static Collection<Grid> stellar_core$EnergyNetLocal$getGrids(final EnergyNetLocal enet) {
         if (stellar_core$EnergyNetLocal$getGrids == null) {
             synchronized (EnergyNetLocal.class) {
@@ -233,10 +270,20 @@ public class MixinGridUpdater {
     }
 
     @Unique
-    private static <E> Queue<E> stellar_core$createConcurrentQueue() {
+    private static <E> Queue<E> stellar_core$createMpscQueue() {
         try {
             // May be incompatible with cleanroom.
             return new MpscLinkedAtomicQueue<>();
+        } catch (Throwable e) {
+            return new ConcurrentLinkedQueue<>();
+        }
+    }
+
+    @Unique
+    private static <E> Queue<E> stellar_core$createMpmcQueue(final int capacity) {
+        try {
+            // May be incompatible with cleanroom.
+            return new MpmcArrayQueue<>(capacity);
         } catch (Throwable e) {
             return new ConcurrentLinkedQueue<>();
         }

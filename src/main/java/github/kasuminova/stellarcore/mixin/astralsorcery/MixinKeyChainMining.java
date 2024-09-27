@@ -2,11 +2,7 @@ package github.kasuminova.stellarcore.mixin.astralsorcery;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import hellfirepvp.astralsorcery.common.constellation.perk.tree.nodes.key.KeyChainMining;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;

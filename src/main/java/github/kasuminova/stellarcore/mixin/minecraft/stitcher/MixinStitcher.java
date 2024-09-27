@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.mixin.minecraft.stitcher;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.texture.StitcherCache;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.client.renderer.texture.Stitcher;

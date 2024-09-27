@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.mixin.astralsorcery;
 
-import com.google.common.collect.Lists;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import hellfirepvp.astralsorcery.common.constellation.perk.AbstractPerk;
 import hellfirepvp.astralsorcery.common.constellation.perk.PerkConverter;

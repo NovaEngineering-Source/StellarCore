@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.mixin.mets;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import ic2.core.util.StackUtil;
 import net.lrsoft.mets.item.UniformElectricItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

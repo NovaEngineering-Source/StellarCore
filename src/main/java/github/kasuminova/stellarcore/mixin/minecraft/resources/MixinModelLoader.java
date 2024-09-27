@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBakery;

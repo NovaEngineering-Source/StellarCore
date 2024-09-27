@@ -1,9 +1,7 @@
 package github.kasuminova.stellarcore.common.integration.fluxnetworks;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import sonar.fluxnetworks.common.handler.TileEntityHandler;
 

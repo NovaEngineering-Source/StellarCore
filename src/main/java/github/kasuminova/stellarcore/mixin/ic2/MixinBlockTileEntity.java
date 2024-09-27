@@ -1,23 +1,7 @@
 package github.kasuminova.stellarcore.mixin.ic2;
 
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import ic2.core.block.BlockTileEntity;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Collections;
-import java.util.List;
 
 @SuppressWarnings("MethodMayBeStatic")
 @Mixin(BlockTileEntity.class)

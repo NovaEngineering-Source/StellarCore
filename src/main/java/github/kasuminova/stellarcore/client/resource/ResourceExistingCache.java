@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.client.resource;
 
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;

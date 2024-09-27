@@ -4,7 +4,6 @@ import cofh.core.gui.container.ContainerCore;
 import cofh.core.gui.slot.SlotLocked;
 import cofh.thermalexpansion.gui.container.storage.ContainerSatchelFilter;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import hellfirepvp.astralsorcery.common.container.ContainerSlotUnclickable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.item.ItemStack;

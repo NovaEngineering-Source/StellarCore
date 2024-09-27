@@ -1,12 +1,10 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import github.kasuminova.stellarcore.mixin.util.ConcurrentModelLoaderRegistry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;

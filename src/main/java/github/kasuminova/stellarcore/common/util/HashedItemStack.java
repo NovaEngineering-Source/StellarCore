@@ -19,14 +19,16 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, int damage, bo
     }
 
     public static HashedItemStack ofTagUnsafe(final ItemStack stack) {
-        NBTTagCompound tag = stack.getTagCompound();
-        boolean hasTag = tag != null && !tag.isEmpty();
-        int hash;
-        int damage = stack.isItemStackDamageable() ? stack.getItemDamage() : stack.getHasSubtypes() ? stack.getMetadata() : 0;
+        final NBTTagCompound tag = stack.getTagCompound();
+        final boolean hasTag = tag != null && !tag.isEmpty();
+        final int hash;
+        final int damage = stack.isItemStackDamageable() ? stack.getItemDamage() : stack.getHasSubtypes() ? stack.getMetadata() : 0;
         if (hasTag) {
-            hash = Objects.hash(stack.getItem(), damage, tag);
+            final int combinedHashCode = Long.hashCode(System.identityHashCode(stack.getItem()) & 0xFFFFFFFFL | (damage & 0xFFFFFFFFL) << 32);
+            final int tagHashCode = tag.hashCode();
+            hash = tagHashCode != 0 ? combinedHashCode ^ tagHashCode : combinedHashCode;
         } else {
-            hash = Objects.hash(stack.getItem(), damage);
+            hash = Long.hashCode(System.identityHashCode(stack.getItem()) & 0xFFFFFFFFL | (damage & 0xFFFFFFFFL) << 32);
         }
         return new HashedItemStack(stack, hash, damage, hasTag);
     }
@@ -37,8 +39,9 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, int damage, bo
     }
 
     public static HashedItemStack ofMetaUnsafe(final ItemStack stack) {
-        int metadata = stack.getMetadata();
-        return new HashedItemStack(stack, Objects.hash(stack.getItem(), metadata), metadata, false);
+        final int damage = stack.isItemStackDamageable() ? stack.getItemDamage() : stack.getHasSubtypes() ? stack.getMetadata() : 0;
+        final int hash = Long.hashCode(System.identityHashCode(stack.getItem()) & 0xFFFFFFFFL | (damage & 0xFFFFFFFFL) << 32);
+        return new HashedItemStack(stack, hash, damage, false);
     }
 
     public static String stackToString(final ItemStack stack) {

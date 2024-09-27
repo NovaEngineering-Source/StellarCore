@@ -1,11 +1,12 @@
 package github.kasuminova.stellarcore.mixin.ic2;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import github.kasuminova.stellarcore.common.util.BlockPos2IntMap;
 import github.kasuminova.stellarcore.common.util.BlockPos2ValueMap;
+import ic2.api.energy.EnergyNet;
 import ic2.api.energy.tile.IEnergyTile;
 import ic2.core.energy.grid.EnergyNetLocal;
 import ic2.core.energy.grid.Tile;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,6 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -27,7 +30,7 @@ public abstract class MixinEnergyNetLocal {
     Map<BlockPos, Tile> registeredTiles;
 
     @Unique
-    private final BlockPos2IntMap stellar_core$gridChangeCounter = new BlockPos2IntMap();
+    private final BlockPos2ValueMap<List<AccessorGridChange>> stellar_core$gridChangesMap = new BlockPos2ValueMap<>();
 
     @Unique
     private static final Object STELLAR_CORE$QUEUE_DELAY_CHANGE = stellar_core$getQueueDelayChange();
@@ -45,9 +48,17 @@ public abstract class MixinEnergyNetLocal {
         if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.getIoAndSubTile) {
             return;
         }
-        if (stellar_core$gridChangeCounter.getInt(pos) <= 0) {
+
+        List<AccessorGridChange> gridChanges = stellar_core$gridChangesMap.get(pos);
+        if (gridChanges == null) {
             cir.setReturnValue(null);
+            return;
         }
+
+        gridChanges.stream()
+                .filter(gridChange -> gridChange.getPos().equals(pos))
+                .findFirst()
+                .ifPresent(gridChange -> cir.setReturnValue(gridChange.getIoTile()));
     }
 
     @Inject(method = "getSubTile", at = @At(value = "INVOKE", target = "Ljava/util/Queue;iterator()Ljava/util/Iterator;"), cancellable = true)
@@ -55,32 +66,66 @@ public abstract class MixinEnergyNetLocal {
         if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.getIoAndSubTile) {
             return;
         }
-        if (stellar_core$gridChangeCounter.getInt(pos) <= 0) {
+
+        List<AccessorGridChange> gridChanges = stellar_core$gridChangesMap.get(pos);
+        if (gridChanges == null) {
             cir.setReturnValue(null);
+            return;
+        }
+
+        for (AccessorGridChange gridChange : gridChanges) {
+            if (!gridChange.getPos().equals(pos)) {
+                continue;
+            }
+
+            List<IEnergyTile> subTiles = gridChange.getSubTiles();
+            if (subTiles == null) {
+                subTiles = Collections.singletonList(gridChange.getIoTile());
+            }
+
+            for (final IEnergyTile subTile : subTiles) {
+                if (EnergyNet.instance.getPos(subTile).equals(pos)) {
+                    cir.setReturnValue(subTile);
+                    return;
+                }
+            }
         }
     }
 
     @Redirect(method = {"addTile", "removeTile"}, at = @At(value = "INVOKE", target = "Ljava/util/Queue;add(Ljava/lang/Object;)Z"))
     private boolean redirectQueueAdd(final Queue<Object> instance, final Object e) {
         if (e != STELLAR_CORE$QUEUE_DELAY_CHANGE && e instanceof AccessorGridChange gridChange) {
-            stellar_core$gridChangeCounter.addTo(gridChange.getPos(), 1);
+            stellar_core$gridChangesMap.computeIfAbsent(gridChange.getPos(), (key) -> new ObjectArrayList<>()).add(gridChange);
         }
         return instance.add(e);
     }
 
     @Redirect(method = "removeTile", at = @At(value = "INVOKE", target = "Ljava/util/Queue;remove(Ljava/lang/Object;)Z"))
     private boolean redirectQueueRemove(final Queue<Object> instance, final Object e) {
-        if (e != STELLAR_CORE$QUEUE_DELAY_CHANGE && e instanceof AccessorGridChange gridChange) {
-            stellar_core$gridChangeCounter.addTo(gridChange.getPos(), -1);
+        boolean removed = instance.remove(e);
+        if (removed && e != STELLAR_CORE$QUEUE_DELAY_CHANGE && e instanceof AccessorGridChange gridChange) {
+            List<AccessorGridChange> gridChanges = stellar_core$gridChangesMap.get(gridChange.getPos());
+            if (gridChanges != null) {
+                gridChanges.remove(gridChange);
+                if (gridChanges.isEmpty()) {
+                    stellar_core$gridChangesMap.remove(gridChange.getPos());
+                }
+            }
         }
-        return instance.remove(e);
+        return removed;
     }
 
     @Redirect(method = "onTickEnd", at = @At(value = "INVOKE", target = "Ljava/util/Queue;poll()Ljava/lang/Object;"))
     private Object redirectQueuePoll(final Queue<Object> instance) {
         Object polled = instance.poll();
         if (polled != STELLAR_CORE$QUEUE_DELAY_CHANGE && polled instanceof AccessorGridChange gridChange) {
-            stellar_core$gridChangeCounter.addTo(gridChange.getPos(), -1);
+            List<AccessorGridChange> gridChanges = stellar_core$gridChangesMap.get(gridChange.getPos());
+            if (gridChanges != null) {
+                gridChanges.remove(gridChange);
+                if (gridChanges.isEmpty()) {
+                    stellar_core$gridChangesMap.remove(gridChange.getPos());
+                }
+            }
         }
         return polled;
     }

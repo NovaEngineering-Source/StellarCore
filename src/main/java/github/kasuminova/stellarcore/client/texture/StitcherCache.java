@@ -1,10 +1,8 @@
 package github.kasuminova.stellarcore.client.texture;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.LargeNBTUtils;
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.mixin.StellarCoreEarlyMixinLoader;
 import github.kasuminova.stellarcore.mixin.minecraft.stitcher.AccessorStitcher;
 import github.kasuminova.stellarcore.mixin.util.AccessorStitcherHolder;
 import github.kasuminova.stellarcore.mixin.util.AccessorStitcherSlot;

@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.texture_load;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;

@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.mixin.ancientspellcraft;
 
 import com.windanesz.ancientspellcraft.client.entity.ASFakePlayer;
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.client.Minecraft;

@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.mixin.advancedrocketry;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.FMLCommonHandler;

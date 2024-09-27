@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.common.util;
 
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;

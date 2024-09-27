@@ -2,7 +2,6 @@ package github.kasuminova.stellarcore.client.hitokoto;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.util.JsonUtils;

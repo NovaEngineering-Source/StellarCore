@@ -48,8 +48,7 @@ public abstract class MixinWorldServer extends World {
             IntList lcgList = new IntArrayList(tickSpeed + 1);
             for (int i = 0; i < tickSpeed; ++i) {
                 updateLCG = (updateLCG * 3) + 0x3c6ef35f;
-                int lcg = updateLCG >> 2;
-                lcgList.add(lcg);
+                lcgList.add(updateLCG);
             }
             tickDataList.add(new ParallelRandomBlockTicker.TickData(storage, lcgList));
         }
