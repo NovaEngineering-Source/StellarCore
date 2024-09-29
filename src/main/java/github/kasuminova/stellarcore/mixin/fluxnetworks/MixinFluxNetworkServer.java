@@ -11,10 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import sonar.fluxnetworks.api.network.AccessLevel;
-import sonar.fluxnetworks.api.network.FluxLogicType;
-import sonar.fluxnetworks.api.network.IFluxNetwork;
-import sonar.fluxnetworks.api.network.NetworkMember;
+import sonar.fluxnetworks.api.network.*;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.tiles.IFluxPlug;
 import sonar.fluxnetworks.api.tiles.IFluxPoint;
@@ -22,6 +19,7 @@ import sonar.fluxnetworks.common.connection.FluxNetworkBase;
 import sonar.fluxnetworks.common.connection.FluxNetworkServer;
 import sonar.fluxnetworks.common.connection.PriorityGroup;
 import sonar.fluxnetworks.common.connection.TransferIterator;
+import sonar.fluxnetworks.common.connection.transfer.FluxControllerHandler;
 
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +57,16 @@ public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements 
         handleConnectionQueue();
         return () -> {
             List<IFluxConnector> devices = getConnections(FluxLogicType.ANY);
-            devices.parallelStream().forEach(device -> device.getTransferHandler().onCycleStart());
+            devices.parallelStream().forEach(device -> {
+                ITransferHandler handler = device.getTransferHandler();
+                if (handler instanceof FluxControllerHandler) {
+                    synchronized (FluxControllerHandler.class) {
+                        handler.onCycleStart();
+                    }
+                } else {
+                    handler.onCycleStart();
+                }
+            });
         };
     }
 
@@ -67,8 +74,13 @@ public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements 
      * @author Kasumi_Nova
      * @reason Parallel Execution
      */
-    @Overwrite
-    public void onEndServerTick() {
+    @Inject(method = "onEndServerTick", at = @At("HEAD"))
+    public void onEndServerTick(final CallbackInfo ci) {
+        if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.parallelNetworkCalculation) {
+            return;
+        }
+        ci.cancel();
+
         network_stats.getValue().startProfiling();
 
         bufferLimiter = 0;

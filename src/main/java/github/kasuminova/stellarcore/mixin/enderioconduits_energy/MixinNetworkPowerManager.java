@@ -6,7 +6,6 @@ import crazypants.enderio.conduits.conduit.power.NetworkPowerManager;
 import crazypants.enderio.conduits.conduit.power.PowerConduitNetwork;
 import crazypants.enderio.conduits.conduit.power.PowerTracker;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.ICapBankSupply;
 import github.kasuminova.stellarcore.mixin.util.IStellarNetworkPowerManager;
 import github.kasuminova.stellarcore.mixin.util.ReceptorPowerInterface;
@@ -24,8 +23,8 @@ import javax.annotation.Nonnull;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 @Mixin(value = NetworkPowerManager.class, remap = false)
 public abstract class MixinNetworkPowerManager implements IStellarNetworkPowerManager {
@@ -74,7 +73,7 @@ public abstract class MixinNetworkPowerManager implements IStellarNetworkPowerMa
     private final List<ReceptorPowerInterface> stellar_core$collectedPowerInterface = new ObjectArrayList<>();
 
     @Unique
-    private Future<Void> stellar_core$parallelTask = null;
+    private ForkJoinTask<?> stellar_core$parallelTask = null;
 
     @Unique
     private volatile boolean stellar_core$shouldFinalApply = false;
@@ -98,7 +97,7 @@ public abstract class MixinNetworkPowerManager implements IStellarNetworkPowerMa
         trackerStartTick();
         checkReceptors();
 
-        stellar_core$parallelTask = CompletableFuture.runAsync(() -> {
+        stellar_core$parallelTask = ForkJoinPool.commonPool().submit(() -> {
             // Update our energy stored based on what's in our conduits
             updateNetworkStorage();
             networkPowerTracker.tickStart(energyStored);
@@ -136,11 +135,7 @@ public abstract class MixinNetworkPowerManager implements IStellarNetworkPowerMa
         }
 
         if (stellar_core$parallelTask != null && !stellar_core$parallelTask.isDone()) {
-            try {
-                stellar_core$parallelTask.get();
-            } catch (Throwable e) {
-                StellarLog.LOG.warn("[StellarCore-MixinNetworkPowerManager] Error while waiting for parallel task to finish!", e);
-            }
+            stellar_core$parallelTask.join();
         }
         stellar_core$parallelTask = null;
         if (!stellar_core$shouldFinalApply) {

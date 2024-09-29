@@ -570,6 +570,9 @@ public class StellarCoreConfig {
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
+        @Config.Name("FluxNetworks")
+        public final FluxNetworks fluxNetworks = new FluxNetworks();
+
         @Config.Name("FTBLib")
         public final FTBLib ftbLib = new FTBLib();
 
@@ -1017,6 +1020,18 @@ public class StellarCoreConfig {
             @Config.Comment("(Server Performance | Experimental) Rewriting the eio conduit energy network computation logic to improve performance using multithreading.")
             @Config.Name("NetworkPowerManagerImprovements")
             public boolean networkPowerManager = true;
+
+        }
+
+        public static class FluxNetworks {
+
+            @Config.Comment("(Server Performance | Experimental) Rewriting the flux network calculation logic to improve performance using multithreading.")
+            @Config.Name("ParallelNetworkCalculation")
+            public boolean parallelNetworkCalculation = false;
+
+            @Config.Comment("(Server Performance) Removing the secondary judgement of energy transfer may help improve performance.")
+            @Config.Name("ConnectionTransferImprovements")
+            public boolean connectionTransfer = true;
 
         }
 
