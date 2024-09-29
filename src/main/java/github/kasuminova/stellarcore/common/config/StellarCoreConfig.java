@@ -695,6 +695,22 @@ public class StellarCoreConfig {
             @Config.Name("BlockStateImplementationHashCodeCache")
             public boolean blockStateImplementationHashCodeCache = true;
 
+            @Config.Comment({
+                    "(Client/Server Performance) Improving NBTTagCompound Performance with Improved Data Structures.",
+                    "Conflict with CensoredASM's `optimizeNBTTagCompoundBackingMap` and `nbtBackingMapStringCanonicalization` option."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("NBTTagCompoundMapImprovements")
+            public boolean nbtTagCompoundMap = true;
+
+            @Config.Comment({
+                    "(Client/Server Performance) Asynchronous loading of ItemStack's Capability to improve performance.",
+                    "Conflict with CensoredASM's `delayItemStackCapabilityInit` option."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("AsyncItemStackCapabilityInit")
+            public boolean asyncItemStackCapabilityInit = true;
+
             @Config.Comment("(Client/Server Performance | Experimental) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (may not work).")
             @Config.RequiresMcRestart
             @Config.Name("NonNullListImprovements")

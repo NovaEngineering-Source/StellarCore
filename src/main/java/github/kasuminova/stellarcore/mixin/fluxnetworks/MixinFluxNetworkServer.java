@@ -74,7 +74,7 @@ public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements 
      * @author Kasumi_Nova
      * @reason Parallel Execution
      */
-    @Inject(method = "onEndServerTick", at = @At("HEAD"))
+    @Inject(method = "onEndServerTick", at = @At("HEAD"), cancellable = true)
     public void onEndServerTick(final CallbackInfo ci) {
         if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.parallelNetworkCalculation) {
             return;

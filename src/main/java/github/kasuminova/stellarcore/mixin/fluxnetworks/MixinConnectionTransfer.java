@@ -38,7 +38,7 @@ public class MixinConnectionTransfer {
      * @author Kasumi_Nova
      * @reason Selective judgement
      */
-    @Inject(method = "sendToTile", at = @At("HEAD"))
+    @Inject(method = "sendToTile", at = @At("HEAD"), cancellable = true)
     public void sendToTile(final long amount, final boolean simulate, final CallbackInfoReturnable<Long> cir) {
         if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.connectionTransfer) {
             return;
