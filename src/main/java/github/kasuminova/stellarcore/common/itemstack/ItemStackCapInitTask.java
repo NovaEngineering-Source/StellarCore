@@ -8,11 +8,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings("DataFlowIssue")
 public class ItemStackCapInitTask implements Runnable {
 
-    private final ItemStack target;
+    private final StellarItemStackCapLoader target;
     private final AtomicBoolean done = new AtomicBoolean(false);
 
     public ItemStackCapInitTask(final ItemStack target) {
-        this.target = target;
+        this.target = (StellarItemStackCapLoader) (Object) target;
     }
 
     @Override
@@ -20,7 +20,7 @@ public class ItemStackCapInitTask implements Runnable {
         if (done.get()) {
             return;
         }
-        ((StellarItemStackCapLoader) (Object) target).stellar_core$initCap();
+        target.stellar_core$initCap();
         done.set(true);
     }
 
@@ -32,6 +32,7 @@ public class ItemStackCapInitTask implements Runnable {
         if (!isDone()) {
             run();
         }
+        target.stellar_core$joinCapInit();
     }
 
 }

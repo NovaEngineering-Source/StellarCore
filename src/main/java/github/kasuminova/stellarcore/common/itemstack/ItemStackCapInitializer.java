@@ -51,15 +51,18 @@ public class ItemStackCapInitializer implements Runnable {
     }
 
     private void park() {
-        if (parkedMicros > 100_000) {
-            LockSupport.parkNanos(500_000L); // 500μs
+        if (parkedMicros > 100_000) { // 100ms
+            LockSupport.parkNanos(500_000L); // 0.5ms
             parkedMicros += 500;
-        } else if (parkedMicros > 10_000) {
-            LockSupport.parkNanos(100_000L); // 100μs
+        } else if (parkedMicros > 50_000) { // 50ms
+            LockSupport.parkNanos(100_000L); // 0.1ms
             parkedMicros += 100;
-        } else {
+        } else if (parkedMicros > 10_000) { // 10ms
             LockSupport.parkNanos(10_000L); // 10μs
             parkedMicros += 10;
+        } else {
+            LockSupport.parkNanos(5_000L); // 5μs
+            parkedMicros += 5;
         }
     }
 

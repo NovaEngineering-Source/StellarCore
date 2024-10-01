@@ -3,12 +3,15 @@ package github.kasuminova.stellarcore.mixin.minecraft.itemstack;
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitTask;
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
 import github.kasuminova.stellarcore.mixin.util.StellarItemStackCapLoader;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.registries.IRegistryDelegate;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,11 +40,26 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     @Shadow
     private Item item;
 
+    @Shadow
+    private int stackSize;
+
+    @Shadow
+    int itemDamage;
+
+    @Shadow
+    private NBTTagCompound stackTagCompound;
+
+    @Shadow
+    public abstract int getAnimationsToGo();
+
     @Unique
     private ItemStackCapInitTask stellar_core$capInitTask = null;
 
     @Unique
     private boolean stellar_core$capabilityLoading = false;
+
+    @Unique
+    private volatile CapabilityDispatcher stellar_core$capabilities = null;
 
     // ===========================================================================
     // Capability Init Injection
@@ -56,8 +74,10 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
         Item item = getItemRaw();
         if (item != null) {
             this.delegate = item.delegate;
-            this.stellar_core$capInitTask = new ItemStackCapInitTask((ItemStack) (Object) this);
-            ItemStackCapInitializer.INSTANCE.addTask(this.stellar_core$capInitTask);
+            if (item != Items.AIR) {
+                this.stellar_core$capInitTask = new ItemStackCapInitTask((ItemStack) (Object) this);
+                ItemStackCapInitializer.INSTANCE.addTask(this.stellar_core$capInitTask);
+            }
         }
     }
 
@@ -68,9 +88,15 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     @Override
     @SuppressWarnings("DataFlowIssue")
     public void stellar_core$initCap() {
-        net.minecraftforge.common.capabilities.ICapabilityProvider provider = item.initCapabilities((ItemStack) (Object) this, this.capNBT);
-        this.capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities((ItemStack) (Object) this, provider);
-        if (this.capNBT != null && capabilities != null) {
+        ICapabilityProvider provider = item.initCapabilities((ItemStack) (Object) this, this.capNBT);
+        this.stellar_core$capabilities = ForgeEventFactory.gatherCapabilities((ItemStack) (Object) this, provider);
+    }
+
+    @Override
+    public void stellar_core$joinCapInit() {
+        this.capabilities = this.stellar_core$capabilities;
+        this.stellar_core$capabilities = null;
+        if (this.capNBT != null && this.capabilities != null) {
             this.capabilities.deserializeNBT(this.capNBT);
         }
     }
@@ -81,35 +107,48 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
 
     @Inject(method = "writeToNBT", at = @At("HEAD"))
     private void injectWriteToNBT(final NBTTagCompound nbt, final CallbackInfoReturnable<NBTTagCompound> cir) {
-        stellar_core$validateCapInitialized();
+        stellar_core$ensureCapInitialized();
     }
 
-    @Inject(method = "copy", at = @At("HEAD"))
-    private void injectCopy(final CallbackInfoReturnable<ItemStack> cir) {
-        stellar_core$validateCapInitialized();
+    /**
+     * @author Kasumi_Nova
+     * @reason Async cap init.
+     */
+    @Overwrite
+    public ItemStack copy() {
+//        stellar_core$ensureCapInitialized();
+        ItemStack stack = new ItemStack(this.item, this.stackSize, this.itemDamage, this.capabilities != null ? this.capabilities.serializeNBT() : capNBT);
+        stack.setAnimationsToGo(this.getAnimationsToGo());
+
+        if (this.stackTagCompound != null) {
+            stack.setTagCompound(this.stackTagCompound.copy());
+        }
+
+        return stack;
     }
 
     @Inject(method = "hasCapability", at = @At("HEAD"), remap = false)
     private void injectHasCapability(final Capability<?> capability, final EnumFacing facing, final CallbackInfoReturnable<Boolean> cir) {
-        stellar_core$validateCapInitialized();
+        stellar_core$ensureCapInitialized();
     }
 
     @Inject(method = "getCapability", at = @At("HEAD"), remap = false)
     private void injectGetCapability(final Capability<?> capability, final EnumFacing facing, final CallbackInfoReturnable<Object> cir) {
-        stellar_core$validateCapInitialized();
+        stellar_core$ensureCapInitialized();
     }
 
     @Inject(method = "areCapsCompatible", at = @At("HEAD"), remap = false)
     private void injectAreCapsCompatible(final ItemStack other, final CallbackInfoReturnable<Boolean> cir) {
-        stellar_core$validateCapInitialized();
+        stellar_core$ensureCapInitialized();
+        ((StellarItemStackCapLoader) (Object) other).stellar_core$ensureCapInitialized();
     }
 
     @Unique
-    private void stellar_core$validateCapInitialized() {
+    public void stellar_core$ensureCapInitialized() {
         if (this.stellar_core$capabilityLoading) {
             return;
         }
-        if (this.capabilities == null && this.stellar_core$capInitTask != null) {
+        if (this.stellar_core$capInitTask != null) {
             this.stellar_core$capabilityLoading = true;
             this.stellar_core$capInitTask.join();
             this.stellar_core$capInitTask = null;

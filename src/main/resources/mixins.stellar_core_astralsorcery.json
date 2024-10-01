@@ -8,6 +8,7 @@
         "MixinContainerJournal",
         "MixinKeyChainMining",
         "MixinParticleEffectWatcher",
-        "MixinPlayerAttributeMap"
+        "MixinPlayerAttributeMap",
+        "MixinTileNetworkSkybound"
     ]
 }

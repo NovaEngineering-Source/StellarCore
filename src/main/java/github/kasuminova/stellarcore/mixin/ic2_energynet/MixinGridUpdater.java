@@ -95,9 +95,10 @@ public class MixinGridUpdater {
             stellar_core$syncTaskQueue.clear();
         }
 
-        if (grids.size() > 1) {
-            stellar_core$EnergyNetLocal$shuffleGrids(enet);
-        }
+        // TODO why shuffle?
+//        if (grids.size() > 1) {
+//            stellar_core$EnergyNetLocal$shuffleGrids(enet);
+//        }
 
         this.busy = false;
     }

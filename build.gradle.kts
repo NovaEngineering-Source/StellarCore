@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.4.14"
+version = "1.4.15"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -220,7 +220,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:thermal-expansion-69163:2926431"))
     compileOnly(rfg.deobf("curse.maven:botania-225643:3330934"))
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
-    compileOnly(rfg.deobf("curse.maven:baubles-227083:2518667"))
+    implementation(rfg.deobf("curse.maven:baubles-227083:2518667"))
     compileOnly(rfg.deobf("curse.maven:zenutil-401178:4394263"))
     compileOnly(rfg.deobf("curse.maven:immersive-engineering-231951:2974106"))
     compileOnly(rfg.deobf("curse.maven:immersive-petroleum-268250:3382321"))
@@ -286,6 +286,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:vintagefix-871198:5536276"))
     implementation(rfg.deobf("curse.maven:lolasm-460609:5257348"))
     runtimeOnly(rfg.deobf("curse.maven:spark-361579:3245793"))
+    compileOnly(rfg.deobf("curse.maven:dme-737252:5043404"))
 }
 
 // IDE Settings

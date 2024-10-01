@@ -4,26 +4,25 @@ import com.github.bsideup.jabel.Desugar;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.profiler.Profiler;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ParallelRandomBlockTicker {
 
     public static final ParallelRandomBlockTicker INSTANCE = new ParallelRandomBlockTicker();
 
-    private final Map<Chunk, List<TickData>> enqueuedChunks = new Reference2ObjectOpenHashMap<>();
-    private final Map<Chunk, List<RandomTickTask>> randomTickData = new ConcurrentHashMap<>();
+    private final List<Tuple<Chunk, List<TickData>>> enqueuedChunks = new ObjectArrayList<>();
 
     private World currentWorld = null;
     private Random currentRand = null;
@@ -33,11 +32,11 @@ public class ParallelRandomBlockTicker {
     }
 
     public void enqueueChunk(final Chunk chunk, final List<TickData> data) {
-        enqueuedChunks.put(chunk, data);
+        enqueuedChunks.add(new Tuple<>(chunk, data));
     }
 
     public void execute(final World world, final Random rand, final Profiler profiler, final int randomTickSpeed) {
-        Map<Chunk, List<TickData>> enqueuedChunks = this.enqueuedChunks;
+        List<Tuple<Chunk, List<TickData>>> enqueuedChunks = this.enqueuedChunks;
         if (enqueuedChunks.isEmpty()) {
             return;
         }
@@ -46,39 +45,29 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        Map<Chunk, List<RandomTickTask>> randomTickData = this.randomTickData;
-        if (enqueuedChunks.size() * randomTickSpeed >= 1000) {
-            enqueuedChunks.entrySet().parallelStream().forEach(entry -> {
-                Chunk chunk = entry.getKey();
-                for (final TickData tickData : entry.getValue()) {
-                    List<RandomTickTask> data = getRandomTickData(chunk, tickData);
-                    if (data.isEmpty()) {
-                        continue;
-                    }
-                    randomTickData.computeIfAbsent(chunk, (k) -> new ObjectArrayList<>()).addAll(data);
-                }
-            });
-        } else {
-            enqueuedChunks.forEach((chunk, value) -> {
-                for (final TickData tickData : value) {
-                    List<RandomTickTask> data = getRandomTickData(chunk, tickData);
-                    if (data.isEmpty()) {
-                        continue;
-                    }
-                    randomTickData.computeIfAbsent(chunk, (k) -> new ObjectArrayList<>()).addAll(data);
-                }
-            });
-        }
+        boolean parallel = enqueuedChunks.size() * randomTickSpeed >= 300;
+        List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
 
-        for (Chunk chunk : enqueuedChunks.keySet()) {
-            List<RandomTickTask> data = randomTickData.get(chunk);
-            if (data != null && !data.isEmpty()) {
-                executeTask(data);
+        (parallel ? enqueuedChunks.parallelStream() : enqueuedChunks.stream()).forEach(entry -> {
+            Chunk chunk = entry.getFirst();
+            List<RandomTickTask> collectedData = new ObjectArrayList<>();
+            for (final TickData tickData : entry.getSecond()) {
+                List<RandomTickTask> data = getRandomTickData(chunk, tickData);
+                if (data.isEmpty()) {
+                    continue;
+                }
+                collectedData.addAll(data);
             }
+            if (!collectedData.isEmpty()) {
+                randomTickData.add(collectedData);
+            }
+        });
+
+        for (final List<RandomTickTask> randomTickDatum : randomTickData) {
+            executeTask(randomTickDatum);
         }
 
         enqueuedChunks.clear();
-        randomTickData.clear();
     }
 
     private static List<RandomTickTask> getRandomTickData(Chunk chunk, TickData tickData) {
@@ -129,7 +118,8 @@ public class ParallelRandomBlockTicker {
     }
 
     @Desugar
-    public record RandomTickTask(ExtendedBlockStorage storage, BlockPos worldPos, int storageX, int storageY, int storageZ) {
+    public record RandomTickTask(ExtendedBlockStorage storage, BlockPos worldPos, int storageX, int storageY,
+                                 int storageZ) {
     }
 
 }

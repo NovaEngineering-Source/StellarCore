@@ -528,6 +528,9 @@ public class StellarCoreConfig {
         @Config.Name("Forge")
         public final Forge forge = new Forge();
 
+        @Config.Name("AstralSorcery")
+        public final AstralSorcery astralSorcery = new AstralSorcery();
+
         @Config.Name("Avaritia")
         public final Avaritia avaritia = new Avaritia();
 
@@ -843,6 +846,14 @@ public class StellarCoreConfig {
             @Config.RequiresMcRestart
             @Config.Name("UnpackedBakedQuadVertexDataCanonicalization")
             public boolean unpackedBakedQuadVertexDataCanonicalization = false;
+
+        }
+
+        public static class AstralSorcery {
+
+            @Config.Comment("(Server Performance) Add optional updates to the block to improve network bandwidth usage.")
+            @Config.Name("TileNetworkSkyboundImprovements")
+            public boolean tileNetworkSkybound = true;
 
         }
 
