@@ -25,10 +25,10 @@ public class ClientProxy extends CommonProxy {
         super.preInit();
         MinecraftForge.EVENT_BUS.register(ClientEventHandler.INSTANCE);
 
-        if (Mods.REPLAY.loaded() && StellarCoreConfig.PERFORMANCE.vanilla.hudCaching) {
-            StellarCoreConfig.PERFORMANCE.vanilla.hudCaching = false;
-            StellarLog.LOG.warn("Replay Mod is not compatible with Performance/HUDCaching feature, auto disabled!");
-        }
+//        if (Mods.REPLAY.loaded() && StellarCoreConfig.PERFORMANCE.vanilla.hudCaching) {
+//            StellarCoreConfig.PERFORMANCE.vanilla.hudCaching = false;
+//            StellarLog.LOG.warn("Replay Mod is not compatible with Performance/HUDCaching feature, auto disabled!");
+//        }
 
         TitleUtils.setRandomTitle("*PreInit*");
     }

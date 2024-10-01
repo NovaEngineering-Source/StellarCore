@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.client.pool;
+package github.kasuminova.stellarcore.common.pool;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;

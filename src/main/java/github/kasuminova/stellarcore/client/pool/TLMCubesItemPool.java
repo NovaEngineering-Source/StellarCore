@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.client.pool;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.pool.AsyncCanonicalizePool;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;

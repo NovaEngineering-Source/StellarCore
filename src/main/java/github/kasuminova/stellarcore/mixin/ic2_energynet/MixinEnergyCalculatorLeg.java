@@ -15,17 +15,23 @@ import ic2.core.util.Util;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@SuppressWarnings("MethodMayBeStatic")
 @Mixin(value = EnergyCalculatorLeg.class, remap = false)
 public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculatorLeg {
+
+    @Unique
+    private static final boolean stellar_core$SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
     @Unique
     private static volatile MethodHandle stellar_core$distribute = null;
@@ -42,8 +48,12 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
      * @author Kasumi_Nova
      * @reason Parallel calculation
      */
-    @Overwrite
-    public boolean runSyncStep(EnergyNetLocal enet) {
+    @Inject(method = "runSyncStep(Lic2/core/energy/grid/EnergyNetLocal;)Z", at = @At("HEAD"), cancellable = true)
+    public void runSyncStep(final EnergyNetLocal enet, final CallbackInfoReturnable<Boolean> cir) {
+        if (!stellar_core$SHOULD_PARALLEL) {
+            return;
+        }
+
         final AtomicBoolean foundAny = new AtomicBoolean(false);
         enet.getSources().parallelStream().forEach(tile -> {
             IEnergySource source = (IEnergySource) tile.getMainTile();
@@ -68,7 +78,8 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
             amount = Math.min(amount, power * packets);
             tile.setSourceData(amount, packets);
         });
-        return foundAny.get();
+
+        cir.setReturnValue(foundAny.get());
     }
 
     @Unique

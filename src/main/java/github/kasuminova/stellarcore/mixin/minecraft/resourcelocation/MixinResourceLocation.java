@@ -1,6 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resourcelocation;
 
-import github.kasuminova.stellarcore.client.pool.ResourceLocationPool;
+import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

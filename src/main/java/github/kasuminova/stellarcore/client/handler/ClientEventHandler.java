@@ -7,7 +7,7 @@ import com.kamefrede.rpsideas.items.components.ItemBioticSensor;
 import com.llamalad7.betterchat.gui.GuiBetterChat;
 import com.windanesz.ancientspellcraft.client.entity.ASFakePlayer;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
-import github.kasuminova.stellarcore.client.pool.ResourceLocationPool;
+import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;

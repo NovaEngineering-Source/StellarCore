@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -21,6 +22,8 @@ import java.util.Random;
 public class ParallelRandomBlockTicker {
 
     public static final ParallelRandomBlockTicker INSTANCE = new ParallelRandomBlockTicker();
+
+    private static final boolean SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
     private final List<Tuple<Chunk, List<TickData>>> enqueuedChunks = new ObjectArrayList<>();
 
@@ -45,7 +48,7 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        boolean parallel = enqueuedChunks.size() * randomTickSpeed >= 300;
+        boolean parallel = SHOULD_PARALLEL && enqueuedChunks.size() * randomTickSpeed >= 300;
         List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
 
         (parallel ? enqueuedChunks.parallelStream() : enqueuedChunks.stream()).forEach(entry -> {

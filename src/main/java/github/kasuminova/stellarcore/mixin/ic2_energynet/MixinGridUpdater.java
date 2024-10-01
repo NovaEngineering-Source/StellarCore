@@ -10,6 +10,9 @@ import ic2.core.energy.grid.IEnergyCalculator;
 import io.netty.util.internal.shaded.org.jctools.queues.MpmcArrayQueue;
 import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -24,6 +27,9 @@ import java.util.stream.IntStream;
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "unchecked"})
 @Mixin(targets = "ic2.core.energy.grid.GridUpdater", remap = false)
 public class MixinGridUpdater {
+
+    @Unique
+    private static final boolean stellar_core$SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
     @Shadow
     private boolean busy;
@@ -60,8 +66,13 @@ public class MixinGridUpdater {
      * @author Kasumi_Nova
      * @reason Parallel Calculation
      */
-    @Overwrite
-    void startTransferCalc() {
+    @Inject(method = "startTransferCalc", at = @At("HEAD"), cancellable = true)
+    void startTransferCalc(final CallbackInfo ci) {
+        if (!stellar_core$SHOULD_PARALLEL) {
+            return;
+        }
+        ci.cancel();
+
         assert !this.busy;
         this.isChangeStep = false;
         IEnergyCalculator energyCalculator = stellar_core$EnergyNetGlobal$getCalculator();
