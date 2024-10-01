@@ -287,6 +287,7 @@ dependencies {
     implementation(rfg.deobf("curse.maven:lolasm-460609:5257348"))
     runtimeOnly(rfg.deobf("curse.maven:spark-361579:3245793"))
     compileOnly(rfg.deobf("curse.maven:dme-737252:5043404"))
+    implementation(rfg.deobf("curse.maven:bountifulbaubles-313536:3568240"))
 }
 
 // IDE Settings

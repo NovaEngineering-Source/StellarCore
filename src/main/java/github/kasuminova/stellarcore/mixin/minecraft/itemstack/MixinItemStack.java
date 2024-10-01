@@ -52,6 +52,9 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     @Shadow
     public abstract int getAnimationsToGo();
 
+    @Shadow
+    public abstract Item getItem();
+
     @Unique
     private ItemStackCapInitTask stellar_core$capInitTask = null;
 
@@ -88,7 +91,7 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     @Override
     @SuppressWarnings("DataFlowIssue")
     public void stellar_core$initCap() {
-        ICapabilityProvider provider = item.initCapabilities((ItemStack) (Object) this, this.capNBT);
+        ICapabilityProvider provider = getItem().initCapabilities((ItemStack) (Object) this, this.capNBT);
         this.stellar_core$capabilities = ForgeEventFactory.gatherCapabilities((ItemStack) (Object) this, provider);
     }
 

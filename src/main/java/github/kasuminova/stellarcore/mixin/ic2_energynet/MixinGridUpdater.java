@@ -90,12 +90,12 @@ public class MixinGridUpdater {
         int tasks = grids.size();
         ForkJoinPool.commonPool().submit(() -> {
             int concurrency = Math.min(tasks, Math.max(Runtime.getRuntime().availableProcessors(), 2));
-            IntStream.range(0, concurrency).forEach(i -> ForkJoinPool.commonPool().submit(() -> {
+            IntStream.range(0, concurrency).parallel().forEach(i -> {
                 Grid grid;
                 while ((grid = calculateQueue.poll()) != null) {
                     stellar_core$syncTaskQueue.offer(stellarCalculator.doParallelCalc(grid));
                 }
-            }));
+            });
         });
 
         stellar_core$executeSyncTasks(tasks, stellarCalculator, calculateQueue);
