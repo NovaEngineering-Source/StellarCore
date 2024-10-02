@@ -66,6 +66,22 @@ public enum Mods {
             }
         }
     },
+    FERMIUM_OR_BLAHAJ_ASM("normalasm") {
+        @Override
+        public boolean loaded() {
+            if (initialized) {
+                return loaded;
+            }
+
+            try {
+                Class.forName("mirror.normalasm.core.NormalLoadingPlugin");
+                initialized = true;
+                return loaded = true;
+            } catch (Throwable e) {
+                return loaded = false;
+            }
+        }
+    },
     ;
 
     protected final String modID;

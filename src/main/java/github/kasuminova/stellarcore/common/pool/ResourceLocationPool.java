@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.mod.Mods;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import mirror.normalasm.api.NormalStringPool;
 import net.minecraftforge.fml.common.Optional;
 import zone.rong.loliasm.api.LoliStringPool;
 
@@ -30,6 +31,8 @@ public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
                 String value = key.toLowerCase(Locale.ROOT);
                 if (Mods.CENSORED_ASM.loaded()) {
                     canonicalizeFromLoliStringPool(key, value);
+                } else if (Mods.FERMIUM_OR_BLAHAJ_ASM.loaded()) {
+                    canonicalizeFromNormalStringPool(key, value);
                 }
                 return value;
             });
@@ -77,9 +80,27 @@ public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
         }, null));
     }
 
+    @Optional.Method(modid = "normalasm")
+    protected void canonicalizeFromNormalStringPool(final String t, final String ret) {
+        worker.offer(new CanonicalizeTask<>(() -> {
+            String key = canonicalizeFromNormalStringPool(t);
+            String value = canonicalizeFromNormalStringPool(ret);
+            synchronized (lowerCasePool) {
+                lowerCasePool.put(key, value);
+            }
+            // just a async task.
+            return null;
+        }, null));
+    }
+
     @Optional.Method(modid = "loliasm")
     private static String canonicalizeFromLoliStringPool(final String target) {
         return LoliStringPool.canonicalize(target);
+    }
+
+    @Optional.Method(modid = "normalasm")
+    private static String canonicalizeFromNormalStringPool(final String target) {
+        return NormalStringPool.canonicalize(target);
     }
 
 }

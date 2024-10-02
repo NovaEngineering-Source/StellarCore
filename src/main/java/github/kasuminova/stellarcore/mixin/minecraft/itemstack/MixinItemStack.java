@@ -50,6 +50,9 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     private NBTTagCompound stackTagCompound;
 
     @Shadow
+    private boolean isEmpty;
+
+    @Shadow
     public abstract int getAnimationsToGo();
 
     @Shadow
@@ -59,7 +62,7 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     private ItemStackCapInitTask stellar_core$capInitTask = null;
 
     @Unique
-    private boolean stellar_core$capabilityLoading = false;
+    private volatile boolean stellar_core$capabilityLoading = false;
 
     @Unique
     private volatile CapabilityDispatcher stellar_core$capabilities = null;
@@ -130,13 +133,19 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
         return stack;
     }
 
-    @Inject(method = "hasCapability", at = @At("HEAD"), remap = false)
+    @Inject(method = "hasCapability", at = @At("HEAD"), remap = false, cancellable = true)
     private void injectHasCapability(final Capability<?> capability, final EnumFacing facing, final CallbackInfoReturnable<Boolean> cir) {
+        if (isEmpty) {
+            cir.setReturnValue(false);
+        }
         stellar_core$ensureCapInitialized();
     }
 
-    @Inject(method = "getCapability", at = @At("HEAD"), remap = false)
+    @Inject(method = "getCapability", at = @At("HEAD"), remap = false, cancellable = true)
     private void injectGetCapability(final Capability<?> capability, final EnumFacing facing, final CallbackInfoReturnable<Object> cir) {
+        if (isEmpty) {
+            cir.setReturnValue(false);
+        }
         stellar_core$ensureCapInitialized();
     }
 

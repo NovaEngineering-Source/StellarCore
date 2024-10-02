@@ -26,10 +26,10 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_chunk.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
         addMixinCFG("mixins.stellar_core_minecraft_classmultimap.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.classMultiMap);
         addMixinCFG("mixins.stellar_core_minecraft_entitytracker.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.entitytracker);
-        addMixinCFG("mixins.stellar_core_minecraft_itemstack_cap.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.asyncItemStackCapabilityInit && !(Mods.CENSORED_ASM.loaded() && CensoredASMCompat.checkDelayItemStackCapInitEnabled()));
+        addMixinCFG("mixins.stellar_core_minecraft_itemstack_cap.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.asyncItemStackCapabilityInit && !(CensoredASMCompat.isPresent() && CensoredASMCompat.checkDelayItemStackCapInitEnabled()));
         addMixinCFG("mixins.stellar_core_minecraft_longnbtkiller.json",       () -> StellarCoreConfig.BUG_FIXES.vanilla.longNBTKiller);
-        addMixinCFG("mixins.stellar_core_minecraft_modelblock.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.modelBlockStringCanonicalization && Mods.CENSORED_ASM.loaded());
-        addMixinCFG("mixins.stellar_core_minecraft_nbtmap.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.nbtTagCompoundMap && !(Mods.CENSORED_ASM.loaded() && CensoredASMCompat.checkNBTMapModified()));
+        addMixinCFG("mixins.stellar_core_minecraft_modelblock.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.modelBlockStringCanonicalization && CensoredASMCompat.isPresent());
+        addMixinCFG("mixins.stellar_core_minecraft_nbtmap.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.nbtTagCompoundMap && !(CensoredASMCompat.isPresent() && CensoredASMCompat.checkNBTMapModified()));
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_property.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.propertyEnumHashCodeCache);

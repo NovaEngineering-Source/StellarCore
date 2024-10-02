@@ -284,7 +284,9 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:journeymap-32274:5172461"))
     compileOnly(rfg.deobf("curse.maven:abyssalcraft-53686:5330323"))
     compileOnly(rfg.deobf("curse.maven:vintagefix-871198:5536276"))
-    implementation(rfg.deobf("curse.maven:lolasm-460609:5257348"))
+    implementation(rfg.deobf("curse.maven:lolasm-460609:5257348")) // ASM Compat
+    compileOnly(rfg.deobf("curse.maven:fermiumasm-971247:5346789")) // or ASM Compat
+    compileOnly(rfg.deobf("curse.maven:blahajasm-1081696:5623595")) // or ASM Compat?
     runtimeOnly(rfg.deobf("curse.maven:spark-361579:3245793"))
     compileOnly(rfg.deobf("curse.maven:dme-737252:5043404"))
     implementation(rfg.deobf("curse.maven:bountifulbaubles-313536:3568240"))
