@@ -144,7 +144,7 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     @Inject(method = "getCapability", at = @At("HEAD"), remap = false, cancellable = true)
     private void injectGetCapability(final Capability<?> capability, final EnumFacing facing, final CallbackInfoReturnable<Object> cir) {
         if (isEmpty) {
-            cir.setReturnValue(false);
+            cir.setReturnValue(null);
         }
         stellar_core$ensureCapInitialized();
     }

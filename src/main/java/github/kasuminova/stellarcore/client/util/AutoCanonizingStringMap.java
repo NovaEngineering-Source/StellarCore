@@ -11,25 +11,31 @@ import java.util.function.Function;
 
 @SuppressWarnings({"CloneableClassInSecureContext", "AssignmentToMethodParameter", "unchecked"})
 public class AutoCanonizingStringMap<V> extends Object2ObjectOpenHashMap<String, V> {
-    
-    private final Function<String, String> canonicalizer;
+
+    private Function<String, String> canonicalizer = null;
 
     public AutoCanonizingStringMap() {
-        canonicalizer = initCanonicalizer();
     }
 
     public AutoCanonizingStringMap(Map<String, V> map) {
         super(map);
-        canonicalizer = initCanonicalizer();
     }
 
     @Override
     public V put(String key, V value) {
+        Function<String, String> canonicalizer = getCanonicalizer();
         key = canonicalizer.apply(key);
         if (value instanceof String) {
             value = (V) canonicalizer.apply((String) value);
         }
         return super.put(key, value);
+    }
+
+    private Function<String, String> getCanonicalizer() {
+        if (canonicalizer == null) {
+            canonicalizer = initCanonicalizer();
+        }
+        return canonicalizer;
     }
 
     private static Function<String, String> initCanonicalizer() {
