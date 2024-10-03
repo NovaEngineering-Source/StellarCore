@@ -1,7 +1,7 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;

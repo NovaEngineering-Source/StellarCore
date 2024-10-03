@@ -3,13 +3,11 @@ package github.kasuminova.stellarcore.common.itemstack;
 import github.kasuminova.stellarcore.mixin.util.StellarItemStackCapLoader;
 import net.minecraft.item.ItemStack;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 @SuppressWarnings("DataFlowIssue")
 public class ItemStackCapInitTask implements Runnable {
 
     private final StellarItemStackCapLoader target;
-    private final AtomicBoolean done = new AtomicBoolean(false);
+    private volatile boolean done = false;
 
     public ItemStackCapInitTask(final ItemStack target) {
         this.target = (StellarItemStackCapLoader) (Object) target;
@@ -17,19 +15,19 @@ public class ItemStackCapInitTask implements Runnable {
 
     @Override
     public synchronized void run() {
-        if (done.get()) {
+        if (done) {
             return;
         }
         target.stellar_core$initCap();
-        done.set(true);
+        done = true;
     }
 
     public boolean isDone() {
-        return done.get();
+        return done;
     }
 
     public void join() {
-        if (!isDone()) {
+        if (!done) {
             run();
         }
         target.stellar_core$joinCapInit();

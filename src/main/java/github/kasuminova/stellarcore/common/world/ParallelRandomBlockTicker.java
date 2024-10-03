@@ -1,6 +1,11 @@
 package github.kasuminova.stellarcore.common.world;
 
 import com.github.bsideup.jabel.Desugar;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpmcArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpmcUnboundedXaddArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.SpscArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.SpscUnboundedArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.unpadded.MpmcUnpaddedArrayQueue;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -12,12 +17,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import org.spongepowered.asm.mixin.Unique;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class ParallelRandomBlockTicker {
 
@@ -25,7 +27,7 @@ public class ParallelRandomBlockTicker {
 
     private static final boolean SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
-    private final List<Tuple<Chunk, List<TickData>>> enqueuedChunks = new ObjectArrayList<>();
+    private final Queue<Tuple<Chunk, List<TickData>>> enqueuedChunks = new MpmcUnboundedXaddArrayQueue<>(1000);
 
     private World currentWorld = null;
     private Random currentRand = null;
@@ -35,11 +37,11 @@ public class ParallelRandomBlockTicker {
     }
 
     public void enqueueChunk(final Chunk chunk, final List<TickData> data) {
-        enqueuedChunks.add(new Tuple<>(chunk, data));
+        enqueuedChunks.offer(new Tuple<>(chunk, data));
     }
 
     public void execute(final World world, final Random rand, final Profiler profiler, final int randomTickSpeed) {
-        List<Tuple<Chunk, List<TickData>>> enqueuedChunks = this.enqueuedChunks;
+        Queue<Tuple<Chunk, List<TickData>>> enqueuedChunks = this.enqueuedChunks;
         if (enqueuedChunks.isEmpty()) {
             return;
         }
@@ -48,21 +50,25 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        boolean parallel = SHOULD_PARALLEL && enqueuedChunks.size() * randomTickSpeed >= 300;
-        List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
+        final boolean parallel = SHOULD_PARALLEL && enqueuedChunks.size() * randomTickSpeed >= 300;
+        final int concurrency = parallel ? Runtime.getRuntime().availableProcessors() : 1;
+        final List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
 
-        (parallel ? enqueuedChunks.parallelStream() : enqueuedChunks.stream()).forEach(entry -> {
-            Chunk chunk = entry.getFirst();
-            List<RandomTickTask> collectedData = new ObjectArrayList<>();
-            for (final TickData tickData : entry.getSecond()) {
-                List<RandomTickTask> data = getRandomTickData(chunk, tickData);
-                if (data.isEmpty()) {
-                    continue;
+        IntStream stream = parallel ? IntStream.range(0, concurrency).parallel() : IntStream.range(0, concurrency);
+        stream.forEach(i -> {
+            Tuple<Chunk, List<TickData>> data;
+            while ((data = enqueuedChunks.poll()) != null) {
+                List<RandomTickTask> collectedData = new ObjectArrayList<>();
+                for (final TickData tickData : data.getSecond()) {
+                    List<RandomTickTask> data1 = getRandomTickData(data.getFirst(), tickData);
+                    if (data1.isEmpty()) {
+                        continue;
+                    }
+                    collectedData.addAll(data1);
                 }
-                collectedData.addAll(data);
-            }
-            if (!collectedData.isEmpty()) {
-                randomTickData.add(collectedData);
+                if (!collectedData.isEmpty()) {
+                    randomTickData.add(collectedData);
+                }
             }
         });
 

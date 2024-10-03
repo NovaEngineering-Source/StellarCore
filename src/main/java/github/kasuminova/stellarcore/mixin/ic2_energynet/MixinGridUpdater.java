@@ -3,12 +3,12 @@ package github.kasuminova.stellarcore.mixin.ic2_energynet;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.IC2EnergySyncCalcTask;
 import github.kasuminova.stellarcore.mixin.util.IStellarEnergyCalculatorLeg;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import ic2.core.energy.grid.EnergyNetGlobal;
 import ic2.core.energy.grid.EnergyNetLocal;
 import ic2.core.energy.grid.Grid;
 import ic2.core.energy.grid.IEnergyCalculator;
-import io.netty.util.internal.shaded.org.jctools.queues.MpmcArrayQueue;
-import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -283,22 +283,12 @@ public class MixinGridUpdater {
 
     @Unique
     private static <E> Queue<E> stellar_core$createMpscQueue() {
-        try {
-            // May be incompatible with cleanroom.
-            return new MpscLinkedAtomicQueue<>();
-        } catch (Throwable e) {
-            return new ConcurrentLinkedQueue<>();
-        }
+        return new MpscLinkedAtomicQueue<>();
     }
 
     @Unique
     private static <E> Queue<E> stellar_core$createMpmcQueue(final int capacity) {
-        try {
-            // May be incompatible with cleanroom.
-            return new MpmcArrayQueue<>(capacity);
-        } catch (Throwable e) {
-            return new ConcurrentLinkedQueue<>();
-        }
+        return new MpmcAtomicArrayQueue<>(capacity);
     }
 
 }

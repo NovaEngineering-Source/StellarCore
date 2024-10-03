@@ -979,10 +979,8 @@ public class StellarCoreConfig {
 
         public static class EBWizardry {
 
-            @Config.Comment({
-                    "(Server Performance) Improved event listening performance for DispenserCastingData.",
-                    "Note: We are currently experiencing strange issues on some devices during testing, please report any unknown crashes with this feature enabled immediately."
-            })
+            @Config.Comment("(Server Performance) Improved event listening performance for DispenserCastingData, required mc restart.")
+            @Config.RequiresMcRestart
             @Config.Name("DispenserCastingDataImprovements")
             public boolean dispenserCastingData = false;
 

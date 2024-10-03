@@ -94,8 +94,11 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     @Override
     @SuppressWarnings("DataFlowIssue")
     public void stellar_core$initCap() {
-        ICapabilityProvider provider = getItem().initCapabilities((ItemStack) (Object) this, this.capNBT);
-        this.stellar_core$capabilities = ForgeEventFactory.gatherCapabilities((ItemStack) (Object) this, provider);
+        Item item = getItem();
+        if (item != Items.AIR) {
+            ICapabilityProvider provider = item.initCapabilities((ItemStack) (Object) this, this.capNBT);
+            this.stellar_core$capabilities = ForgeEventFactory.gatherCapabilities((ItemStack) (Object) this, provider);
+        }
     }
 
     @Override
