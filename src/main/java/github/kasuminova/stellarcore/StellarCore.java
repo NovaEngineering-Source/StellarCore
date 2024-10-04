@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore;
 
 import github.kasuminova.stellarcore.client.hitokoto.HitokotoAPI;
 import github.kasuminova.stellarcore.common.CommonProxy;
+import github.kasuminova.stellarcore.common.command.CommandStellarCore;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.Mod;
@@ -73,4 +74,10 @@ public class StellarCore {
     public void loadComplete(FMLLoadCompleteEvent event) {
         proxy.loadComplete();
     }
+
+    @Mod.EventHandler
+    public void onServerStart(FMLServerStartingEvent event) {
+        event.registerServerCommand(CommandStellarCore.INSTANCE);
+    }
+
 }

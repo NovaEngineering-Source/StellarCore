@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.integration.censoredasm.CensoredASMCompat;
 import github.kasuminova.stellarcore.common.mod.Mods;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.mixin.Mixins;
@@ -17,6 +18,8 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
+        StellarEnvironment.init();
+
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",        () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
         addMixinCFG("mixins.stellar_core_minecraft_bakedmodel.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.simpleBakedModelCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_bakedquad.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization);
@@ -51,7 +54,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",    () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_modelloader.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addMixinCFG("mixins.stellar_core_hudcaching.json",                    () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);
-        addMixinCFG("mixins.stellar_core_ebwizardry_early.json",              () -> StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData);
+        addMixinCFG("mixins.stellar_core_ebwizardry_early.json",              () -> StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData && !Mods.TICK_CENTRAL.loaded());
     }
 
     private static void addMixinCFG(final String mixinConfig) {

@@ -1,5 +1,7 @@
 package github.kasuminova.stellarcore.mixin.ic2_energynet;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.mixin.util.AccessorGridData;
 import github.kasuminova.stellarcore.mixin.util.IC2EnergySyncCalcTask;
 import github.kasuminova.stellarcore.mixin.util.IStellarEnergyCalculatorLeg;
@@ -31,9 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculatorLeg {
 
     @Unique
-    private static final boolean stellar_core$SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
-
-    @Unique
     private static volatile MethodHandle stellar_core$distribute = null;
 
     @Unique
@@ -50,7 +49,7 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
      */
     @Inject(method = "runSyncStep(Lic2/core/energy/grid/EnergyNetLocal;)Z", at = @At("HEAD"), cancellable = true)
     public void runSyncStep(final EnergyNetLocal enet, final CallbackInfoReturnable<Boolean> cir) {
-        if (!stellar_core$SHOULD_PARALLEL) {
+        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.energyCalculatorLeg || !StellarEnvironment.shouldParallel()) {
             return;
         }
 

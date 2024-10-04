@@ -1,15 +1,20 @@
 package github.kasuminova.stellarcore.mixin.ic2_energynet;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.IC2EnergySyncCalcTask;
 import github.kasuminova.stellarcore.mixin.util.IStellarEnergyCalculatorLeg;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpmcArrayQueue;
 import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import ic2.core.energy.grid.EnergyNetGlobal;
 import ic2.core.energy.grid.EnergyNetLocal;
 import ic2.core.energy.grid.Grid;
 import ic2.core.energy.grid.IEnergyCalculator;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -20,16 +25,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "unchecked"})
 @Mixin(targets = "ic2.core.energy.grid.GridUpdater", remap = false)
 public class MixinGridUpdater {
-
-    @Unique
-    private static final boolean stellar_core$SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
     @Shadow
     private boolean busy;
@@ -68,7 +69,7 @@ public class MixinGridUpdater {
      */
     @Inject(method = "startTransferCalc", at = @At("HEAD"), cancellable = true)
     void startTransferCalc(final CallbackInfo ci) {
-        if (!stellar_core$SHOULD_PARALLEL) {
+        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.energyCalculatorLeg || !StellarEnvironment.shouldParallel()) {
             return;
         }
         ci.cancel();
@@ -89,7 +90,7 @@ public class MixinGridUpdater {
         calculateQueue.addAll(grids);
         int tasks = grids.size();
         ForkJoinPool.commonPool().submit(() -> {
-            int concurrency = Math.min(tasks, Math.max(Runtime.getRuntime().availableProcessors(), 2));
+            int concurrency = Math.min(tasks, Math.max(StellarEnvironment.getConcurrency(), 2));
             IntStream.range(0, concurrency).parallel().forEach(i -> {
                 Grid grid;
                 while ((grid = calculateQueue.poll()) != null) {
@@ -288,7 +289,7 @@ public class MixinGridUpdater {
 
     @Unique
     private static <E> Queue<E> stellar_core$createMpmcQueue(final int capacity) {
-        return new MpmcAtomicArrayQueue<>(capacity);
+        return new MpmcArrayQueue<>(capacity);
     }
 
 }

@@ -1,11 +1,8 @@
 package github.kasuminova.stellarcore.common.world;
 
 import com.github.bsideup.jabel.Desugar;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpmcArrayQueue;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpmcUnboundedXaddArrayQueue;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.SpscArrayQueue;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.SpscUnboundedArrayQueue;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.unpadded.MpmcUnpaddedArrayQueue;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -24,8 +21,6 @@ import java.util.stream.IntStream;
 public class ParallelRandomBlockTicker {
 
     public static final ParallelRandomBlockTicker INSTANCE = new ParallelRandomBlockTicker();
-
-    private static final boolean SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
     private final Queue<Tuple<Chunk, List<TickData>>> enqueuedChunks = new MpmcUnboundedXaddArrayQueue<>(1000);
 
@@ -50,8 +45,8 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        final boolean parallel = SHOULD_PARALLEL && enqueuedChunks.size() * randomTickSpeed >= 300;
-        final int concurrency = parallel ? Runtime.getRuntime().availableProcessors() : 1;
+        final boolean parallel = StellarEnvironment.shouldParallel() && enqueuedChunks.size() * randomTickSpeed >= 300;
+        final int concurrency = parallel ? StellarEnvironment.getConcurrency() : 1;
         final List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
 
         IntStream stream = parallel ? IntStream.range(0, concurrency).parallel() : IntStream.range(0, concurrency);
@@ -60,11 +55,11 @@ public class ParallelRandomBlockTicker {
             while ((data = enqueuedChunks.poll()) != null) {
                 List<RandomTickTask> collectedData = new ObjectArrayList<>();
                 for (final TickData tickData : data.getSecond()) {
-                    List<RandomTickTask> data1 = getRandomTickData(data.getFirst(), tickData);
-                    if (data1.isEmpty()) {
+                    List<RandomTickTask> tasks = getRandomTickData(data.getFirst(), tickData);
+                    if (tasks.isEmpty()) {
                         continue;
                     }
-                    collectedData.addAll(data1);
+                    collectedData.addAll(tasks);
                 }
                 if (!collectedData.isEmpty()) {
                     randomTickData.add(collectedData);
@@ -82,8 +77,8 @@ public class ParallelRandomBlockTicker {
     private static List<RandomTickTask> getRandomTickData(Chunk chunk, TickData tickData) {
         ExtendedBlockStorage storage = tickData.blockStorage();
         IntList lcgList = tickData.lcgList();
-        int chunkXPos = chunk.x * 16;
-        int chunkZPos = chunk.z * 16;
+        int chunkXPos = chunk.x << 4;
+        int chunkZPos = chunk.z << 4;
         List<RandomTickTask> enqueuedData = new ObjectArrayList<>(lcgList.size());
         IntListIterator it = lcgList.iterator();
         while (it.hasNext()) {
@@ -91,8 +86,10 @@ public class ParallelRandomBlockTicker {
             int x = lcg & 15;
             int y = lcg >> 16 & 15;
             int z = lcg >> 8 & 15;
-            IBlockState blockState = storage.get(x, y, z);
-            Block block = blockState.getBlock();
+            IBlockState blockState;
+            blockState = storage.get(x, y, z);
+            Block block;
+            block = blockState.getBlock();
 
             if (block.getTickRandomly()) {
                 BlockPos pos = new BlockPos(x + chunkXPos, y + storage.getYLocation(), z + chunkZPos);
@@ -127,8 +124,7 @@ public class ParallelRandomBlockTicker {
     }
 
     @Desugar
-    public record RandomTickTask(ExtendedBlockStorage storage, BlockPos worldPos, int storageX, int storageY,
-                                 int storageZ) {
+    public record RandomTickTask(ExtendedBlockStorage storage, BlockPos worldPos, int storageX, int storageY, int storageZ) {
     }
 
 }

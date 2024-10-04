@@ -82,6 +82,23 @@ public enum Mods {
             }
         }
     },
+    EBWIZARDRY("ebwizardry"),
+    TICK_CENTRAL("tickcentral") {
+        @Override
+        public boolean loaded() {
+            if (initialized) {
+                return loaded;
+            }
+
+            try {
+                Class.forName("com.github.terminatornl.tickcentral.TickCentral");
+                initialized = true;
+                return loaded = true;
+            } catch (Throwable e) {
+                return loaded = false;
+            }
+        }
+    },
     ;
 
     protected final String modID;

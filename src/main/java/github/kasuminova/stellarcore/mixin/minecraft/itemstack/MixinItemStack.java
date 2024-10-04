@@ -160,13 +160,16 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
 
     @Unique
     public void stellar_core$ensureCapInitialized() {
-        if (this.stellar_core$capabilityLoading) {
+        if (this.stellar_core$capabilityLoading || this.capabilities != null) {
             return;
         }
         if (this.stellar_core$capInitTask != null) {
             this.stellar_core$capabilityLoading = true;
-            this.stellar_core$capInitTask.join();
-            this.stellar_core$capInitTask = null;
+            try {
+                this.stellar_core$capInitTask.join();
+                this.stellar_core$capInitTask = null;
+            } catch (NullPointerException ignored) { // If task is already done?
+            }
             this.stellar_core$capabilityLoading = false;
         }
     }

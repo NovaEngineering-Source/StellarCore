@@ -1,10 +1,9 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpscLinkedQueue;
 
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.LockSupport;
 
 public class CanonicalizeWorker<T> implements Runnable {
@@ -77,12 +76,7 @@ public class CanonicalizeWorker<T> implements Runnable {
     }
 
     private static <E> Queue<E> createConcurrentQueue() {
-        try {
-            // May be incompatible with cleanroom.
-            return new MpscLinkedAtomicQueue<>();
-        } catch (Throwable e) {
-            return new ConcurrentLinkedQueue<>();
-        }
+        return new MpscLinkedQueue<>();
     }
 
 }

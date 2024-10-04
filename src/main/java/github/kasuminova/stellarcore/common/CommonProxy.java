@@ -1,5 +1,8 @@
 package github.kasuminova.stellarcore.common;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.entity.EntityForceUpdateManager;
+import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
 import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
 import github.kasuminova.stellarcore.common.bugfix.TileEntityContainerFixes;
 import github.kasuminova.stellarcore.common.handler.StellarCoreTickHandler;
@@ -23,6 +26,7 @@ public class CommonProxy {
         }
         MinecraftForge.EVENT_BUS.register(TileEntityContainerFixes.INSTANCE);
         MinecraftForge.EVENT_BUS.register(StellarCoreTickHandler.class);
+        MinecraftForge.EVENT_BUS.register(EntityForceUpdateManager.INSTANCE);
     }
 
     public void init() {
@@ -35,6 +39,9 @@ public class CommonProxy {
 
     public void loadComplete() {
         ResourceLocationPool.INSTANCE.clear();
+        if (StellarCoreConfig.PERFORMANCE.vanilla.asyncItemStackCapabilityInit) {
+            ItemStackCapInitializer.resetStatus();
+        }
     }
 
 }

@@ -4,6 +4,7 @@ import com.cleanroommc.configanytime.ConfigAnytime;
 import github.kasuminova.stellarcore.StellarCore;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
+import github.kasuminova.stellarcore.common.entity.EntityForceUpdateManager;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -979,7 +980,10 @@ public class StellarCoreConfig {
 
         public static class EBWizardry {
 
-            @Config.Comment("(Server Performance) Improved event listening performance for DispenserCastingData, required mc restart.")
+            @Config.Comment({
+                    "(Server Performance) Improved event listening performance for DispenserCastingData, required mc restart.",
+                    "Incompatible with TickCentral mod, alternative optimisations are used when installing with this mod.",
+            })
             @Config.RequiresMcRestart
             @Config.Name("DispenserCastingDataImprovements")
             public boolean dispenserCastingData = false;
@@ -1299,6 +1303,25 @@ public class StellarCoreConfig {
             @Config.Name("HandleClientWorldLoad")
             public boolean handleClientWorldLoad = true;
 
+            @Config.Comment({
+                    "(Server) Define which entities will be forced to be updated.",
+                    "The update to stop when there are no players near the entity, which may cause some projectiles to pile up.",
+                    "This feature allows certain entities to be forced to be updated.",
+                    "Note: Entity classes must be explicitly defined and their superclasses cannot be retrieved, this is for performance reasons."
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ForceUpdateEntityClasses")
+            public String[] forceUpdateEntityClasses = {
+                    "cofh.redstonearsenal.entity.projectile.EntityArrowFlux",
+                    "com.brandon3055.draconicevolution.entity.EntityCustomArrow",
+                    "hellfirepvp.astralsorcery.common.entities.EntityFlare",
+                    "hellfirepvp.astralsorcery.common.entities.EntityLiquidSpark",
+                    "mekanism.weapons.common.entity.EntityMekaArrow", // MEKCEu
+                    "net.minecraft.entity.projectile.EntitySpectralArrow",
+                    "thundr.redstonerepository.entity.projectile.EntityArrowGelid",
+                    "xyz.phanta.tconevo.entity.EntityMagicMissile",
+            };
+
         }
 
         public static class FontScale {
@@ -1459,6 +1482,7 @@ public class StellarCoreConfig {
         if (event.getModID().equals(StellarCore.MOD_ID)) {
             ConfigManager.sync(StellarCore.MOD_ID, Config.Type.INSTANCE);
 
+            EntityForceUpdateManager.INSTANCE.reload();
             if (FMLLaunchHandler.side().isClient()) {
                 ParallelModelLoaderAsyncBlackList.INSTANCE.reload();
                 // Pool does not reference minecraft class, so is safety.

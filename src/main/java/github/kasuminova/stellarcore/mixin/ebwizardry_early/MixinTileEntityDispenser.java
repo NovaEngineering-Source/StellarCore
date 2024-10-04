@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.ebwizardry_early;
 
-import electroblob.wizardry.data.DispenserCastingData;
+import github.kasuminova.stellarcore.common.integration.ebwizardry.DispenserCastingCompat;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import net.minecraft.tileentity.TileEntityDispenser;
 import net.minecraft.tileentity.TileEntityLockableLoot;
 import net.minecraft.util.ITickable;
@@ -18,16 +19,15 @@ public abstract class MixinTileEntityDispenser extends TileEntityLockableLoot im
         if (world.isRemote) {
             return;
         }
-        stellar_core$handleEBWizardryUpdate();
+        if (Mods.EBWIZARDRY.loaded()) {
+            stellar_core$handleEBWizardryUpdate();
+        }
     }
 
     @Unique
     @Optional.Method(modid = "ebwizardry")
     private void stellar_core$handleEBWizardryUpdate() {
-        DispenserCastingData data = DispenserCastingData.get((TileEntityDispenser) (Object) this);
-        if (data != null) {
-            data.update();
-        }
+        DispenserCastingCompat.handleEBWizardryUpdate((TileEntityDispenser) (Object) this);
     }
 
 }

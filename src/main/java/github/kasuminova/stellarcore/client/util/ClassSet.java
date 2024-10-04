@@ -5,23 +5,22 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class ClassBlackList {
+public abstract class ClassSet {
 
+    protected final Set<Class<?>> classSet = new ReferenceOpenHashSet<>();
 
-    protected final Set<Class<?>> blackList = new ReferenceOpenHashSet<>();
-
-    public ClassBlackList() {
+    public ClassSet() {
         reload();
     }
 
     public abstract void reload();
 
     public void add(Class<?> clazz) {
-        blackList.add(clazz);
+        classSet.add(clazz);
     }
 
-    public boolean isInBlackList(Class<?> clazz) {
-        return blackList.contains(clazz);
+    public boolean isInSet(Class<?> clazz) {
+        return !classSet.isEmpty() && classSet.contains(clazz);
     }
 
     public static Optional<Class<?>> findClass(String name) {

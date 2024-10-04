@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.avaritia;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import morph.avaritia.recipe.AvaritiaRecipeManager;
 import morph.avaritia.recipe.IRecipeFactory;
 import morph.avaritia.recipe.compressor.ICompressorRecipe;
@@ -56,7 +57,7 @@ public class MixinAvaritiaRecipeManager {
             )
     )
     private static void injectInitForEach(final List instance, final Consumer consumer) {
-        if (!StellarCoreConfig.PERFORMANCE.avaritia.avaritiaRecipeManager) {
+        if (!StellarCoreConfig.PERFORMANCE.avaritia.avaritiaRecipeManager || !StellarEnvironment.shouldParallel()) {
             instance.forEach(consumer);
             return;
         }

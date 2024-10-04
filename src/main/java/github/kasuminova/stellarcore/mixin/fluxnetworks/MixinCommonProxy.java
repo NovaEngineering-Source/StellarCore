@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.fluxnetworks;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.mixin.util.IStellarFluxNetwork;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -20,12 +21,9 @@ import java.util.List;
 @Mixin(value = CommonProxy.class, remap = false)
 public class MixinCommonProxy {
 
-    @Unique
-    private static final boolean stellar_core$SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
-
     @Inject(method = "onServerTick", at = @At("HEAD"))
     private void injectOnServerTick(final TickEvent.ServerTickEvent event, final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.parallelNetworkCalculation || !stellar_core$SHOULD_PARALLEL) {
+        if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.parallelNetworkCalculation || !StellarEnvironment.shouldParallel()) {
             return;
         }
         if (event.phase == TickEvent.Phase.END) {

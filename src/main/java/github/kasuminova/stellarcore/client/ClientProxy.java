@@ -6,9 +6,11 @@ import github.kasuminova.stellarcore.client.pool.BlockFaceUVsPool;
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.CommonProxy;
+import github.kasuminova.stellarcore.common.command.CommandStellarCoreClient;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.common.util.StellarLog;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 
 public class ClientProxy extends CommonProxy {
@@ -43,6 +45,8 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void postInit() {
         super.postInit();
+
+        ClientCommandHandler.instance.registerCommand(CommandStellarCoreClient.INSTANCE);
 
         TitleUtils.setRandomTitle("*PostInit*");
     }

@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.ctm;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBlock;
@@ -66,7 +67,7 @@ public abstract class MixinTextureMetadataHandler {
     @SuppressWarnings("deprecation")
     @Inject(method = "onModelBake", at = @At("HEAD"), cancellable = true)
     public void onModelBake(final ModelBakeEvent event, final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler) {
+        if (!StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler || !StellarEnvironment.shouldParallel()) {
             return;
         }
         ci.cancel();

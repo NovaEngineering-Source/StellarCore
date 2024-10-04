@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.forge;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import org.apache.commons.lang3.tuple.Pair;
@@ -92,7 +93,7 @@ public abstract class MixinASMDataTable {
     private void stellar_core$initializeData(final ModContainer container) {
         stellar_core$initializingData.set(true);
         // 在自定义线程池提交会使 parallelStream 优先使用此线程池。
-        ForkJoinPool pool = new ForkJoinPool(Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
+        ForkJoinPool pool = new ForkJoinPool(Math.max(2, StellarEnvironment.getConcurrency() / 2));
         pool.submit(() -> {
             getAnnotationsFor(container);
         }).join();

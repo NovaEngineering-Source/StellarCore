@@ -81,7 +81,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         Class<? extends ICustomModelLoader> loaderClass = loader.getClass();
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Registered model loader: {}, AsyncBlackListed: {}",
                 loaderClass.getName(),
-                ParallelModelLoaderAsyncBlackList.INSTANCE.isInBlackList(loaderClass)
+                ParallelModelLoaderAsyncBlackList.INSTANCE.isInSet(loaderClass)
         );
     }
 
@@ -149,7 +149,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                 throw new ModelLoaderRegistry.LoaderException("no suitable loader found for the model " + location + ", skipping");
             }
             try {
-                if (ParallelModelLoaderAsyncBlackList.INSTANCE.isInBlackList(accepted.getClass())) {
+                if (ParallelModelLoaderAsyncBlackList.INSTANCE.isInSet(accepted.getClass())) {
                     synchronized (accepted) {
                         model = accepted.loadModel(actual);
                     }

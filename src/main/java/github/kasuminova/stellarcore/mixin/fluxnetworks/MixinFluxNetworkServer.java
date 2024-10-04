@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.fluxnetworks;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.mixin.util.IStellarFluxNetwork;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.*;
@@ -25,9 +26,6 @@ import java.util.UUID;
 @SuppressWarnings("SynchronizeOnNonFinalField")
 @Mixin(value = FluxNetworkServer.class, remap = false)
 public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements IFluxNetwork, IStellarFluxNetwork {
-
-    @Unique
-    private static final boolean stellar_core$SHOULD_PARALLEL = Runtime.getRuntime().availableProcessors() > 2;
 
     @Shadow
     protected abstract void handleConnectionQueue();
@@ -76,7 +74,7 @@ public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements 
      */
     @Inject(method = "onEndServerTick", at = @At("HEAD"), cancellable = true)
     public void onEndServerTick(final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.parallelNetworkCalculation || !stellar_core$SHOULD_PARALLEL) {
+        if (!StellarCoreConfig.PERFORMANCE.fluxNetworks.parallelNetworkCalculation || !StellarEnvironment.shouldParallel()) {
             return;
         }
         ci.cancel();
