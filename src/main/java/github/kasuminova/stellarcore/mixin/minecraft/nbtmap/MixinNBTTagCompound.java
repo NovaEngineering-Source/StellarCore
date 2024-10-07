@@ -231,7 +231,7 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
 
     @Unique
     @Override
-    public boolean stellar_core$isUnique() {
+    public Boolean stellar_core$isUnique() {
         return this.stellar_core$unique;
     }
 

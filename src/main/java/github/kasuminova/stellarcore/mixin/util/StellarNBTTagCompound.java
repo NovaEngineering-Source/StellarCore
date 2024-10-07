@@ -14,6 +14,9 @@ public interface StellarNBTTagCompound {
 
     void stellar_core$setUnique(final boolean unique);
 
-    boolean stellar_core$isUnique();
+    /**
+     * 使用 Boolean 而不是 boolean，沟槽的插件扫 Method 来获取方法。
+     */
+    Boolean stellar_core$isUnique();
 
 }
