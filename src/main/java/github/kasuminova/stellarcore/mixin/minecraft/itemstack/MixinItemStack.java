@@ -59,7 +59,7 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
     public abstract Item getItem();
 
     @Unique
-    private ItemStackCapInitTask stellar_core$capInitTask = null;
+    private volatile ItemStackCapInitTask stellar_core$capInitTask = null;
 
     @Unique
     private volatile boolean stellar_core$capabilityLoading = false;
@@ -158,19 +158,27 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
         ((StellarItemStackCapLoader) (Object) other).stellar_core$ensureCapInitialized();
     }
 
+    @SuppressWarnings("RedundantCast")
     @Unique
     public void stellar_core$ensureCapInitialized() {
         if (this.stellar_core$capabilityLoading || this.capabilities != null) {
             return;
         }
+
         if (this.stellar_core$capInitTask != null) {
-            this.stellar_core$capabilityLoading = true;
-            try {
-                this.stellar_core$capInitTask.join();
-                this.stellar_core$capInitTask = null;
-            } catch (NullPointerException ignored) { // If task is already done?
+            synchronized ((Object) this) {
+                if (this.stellar_core$capInitTask == null) {
+                    return;
+                }
+
+                this.stellar_core$capabilityLoading = true;
+                try {
+                    this.stellar_core$capInitTask.join();
+                    this.stellar_core$capInitTask = null;
+                } catch (NullPointerException ignored) { // If task is already done?
+                }
+                this.stellar_core$capabilityLoading = false;
             }
-            this.stellar_core$capabilityLoading = false;
         }
     }
 

@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.5.0"
+version = "1.5.3"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -278,7 +278,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:libnine-322344:3509087"))
     compileOnly(rfg.deobf("curse.maven:lazy-ae2-322347:3254160"))
     compileOnly(rfg.deobf("curse.maven:electroblobs-wizardry-265642:5354477"))
-    compileOnly(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
+    implementation(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
     compileOnly(rfg.deobf("curse.maven:ancient-spellcraft-358124:5413256"))
     compileOnly(rfg.deobf("curse.maven:random-psideas-302313:3215550"))
     compileOnly(rfg.deobf("curse.maven:journeymap-32274:5172461"))
@@ -289,7 +289,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:blahajasm-1081696:5623595")) // or ASM Compat?
     runtimeOnly(rfg.deobf("curse.maven:spark-361579:3245793"))
     compileOnly(rfg.deobf("curse.maven:dme-737252:5043404"))
-    implementation(rfg.deobf("curse.maven:bountifulbaubles-313536:3568240"))
+    compileOnly(rfg.deobf("curse.maven:bountifulbaubles-313536:3568240"))
 }
 
 // IDE Settings

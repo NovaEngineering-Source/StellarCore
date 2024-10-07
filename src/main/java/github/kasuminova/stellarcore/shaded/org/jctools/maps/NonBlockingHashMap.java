@@ -261,6 +261,12 @@ public class NonBlockingHashMap<TypeK, TypeV>
    *  elements will sacrifice space for a small amount of time gained.  The
    *  initial size will be rounded up internally to the next larger power of 2. */
   public NonBlockingHashMap( final int initial_sz ) { initialize(initial_sz); }
+
+  public NonBlockingHashMap( final Map<? extends TypeK, ? extends TypeV> m ) {
+    initialize(m.size());
+    putAll(m);
+  }
+
   private final void initialize( int initial_sz ) {
     RangeUtil.checkPositiveOrZero(initial_sz, "initial_sz");
     int i;                      // Convert to next largest power-of-2

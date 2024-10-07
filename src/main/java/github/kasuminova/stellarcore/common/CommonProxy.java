@@ -1,12 +1,12 @@
 package github.kasuminova.stellarcore.common;
 
+import github.kasuminova.stellarcore.common.bugfix.TileEntityContainerFixes;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.entity.EntityForceUpdateManager;
-import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
-import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
-import github.kasuminova.stellarcore.common.bugfix.TileEntityContainerFixes;
 import github.kasuminova.stellarcore.common.handler.StellarCoreTickHandler;
 import github.kasuminova.stellarcore.common.integration.fluxnetworks.IntegrationsFluxNetworks;
+import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
+import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 

@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings({"MethodMayBeStatic", "SynchronizeOnNonFinalField", "FieldAccessedSynchronizedAndUnsynchronized"})
 @Mixin(ModelBakery.class)
@@ -44,9 +44,9 @@ public abstract class MixinModelBakery {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final IResourceManager resourceManagerIn, final TextureMap textureMapIn, final BlockModelShapes blockModelShapesIn, final CallbackInfo ci) {
-        blockDefinitions = new ConcurrentHashMap<>();
-        variants = new ConcurrentHashMap<>();
-        multipartVariantMap = new ConcurrentHashMap<>();
+        blockDefinitions = new NonBlockingHashMap<>();
+        variants = new NonBlockingHashMap<>();
+        multipartVariantMap = new NonBlockingHashMap<>();
     }
 
     /**

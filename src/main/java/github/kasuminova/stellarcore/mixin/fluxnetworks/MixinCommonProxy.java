@@ -6,7 +6,6 @@ import github.kasuminova.stellarcore.mixin.util.IStellarFluxNetwork;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;

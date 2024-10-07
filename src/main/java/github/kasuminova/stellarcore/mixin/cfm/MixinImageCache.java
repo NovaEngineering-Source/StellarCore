@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.cfm;
 import com.mrcrayfish.furniture.MrCrayfishFurnitureMod;
 import com.mrcrayfish.furniture.client.ImageCache;
 import com.mrcrayfish.furniture.client.Texture;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
@@ -17,7 +18,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(ImageCache.class)
 public abstract class MixinImageCache {
@@ -30,7 +30,7 @@ public abstract class MixinImageCache {
 
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
     public void overwriteInit(final CallbackInfo ci) {
-        cacheMap = new ConcurrentHashMap<>();
+        cacheMap = new NonBlockingHashMap<>();
     }
 
     /**

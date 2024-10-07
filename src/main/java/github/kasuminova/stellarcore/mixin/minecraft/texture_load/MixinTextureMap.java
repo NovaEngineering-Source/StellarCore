@@ -4,6 +4,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingIdentityHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.renderer.texture.*;
@@ -29,7 +31,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 @SuppressWarnings("MethodMayBeStatic")
@@ -64,8 +65,8 @@ public abstract class MixinTextureMap {
     )
     private void injectLoadSpritesAfter(final IResourceManager resourceManager, final ITextureMapPopulator iconCreatorIn, final CallbackInfo ci) {
         SpriteBufferedImageCache.INSTANCE.clear();
-        stellar_core$cachedTextures = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        stellar_core$cachedLocations = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        stellar_core$cachedTextures = Collections.newSetFromMap(new NonBlockingIdentityHashMap<>());
+        stellar_core$cachedLocations = new NonBlockingHashSet<>();
         Future<Integer> detectMaxMipmapLevelTask = stellar_core$initializeOptifineTask(resourceManager);
         mapRegisteredSprites.values().parallelStream().forEach((sprite -> {
             ResourceLocation location = getResourceLocation(sprite);
@@ -85,10 +86,8 @@ public abstract class MixinTextureMap {
                 int[] rgb = image.getRGB(0, 0, image.getWidth(), image.getHeight(), new int[image.getWidth() * image.getHeight()], 0, image.getWidth());
                 SpriteBufferedImageCache.INSTANCE.put(sprite, image, rgb);
 
-                synchronized (stellar_core$cachedTextures) {
-                    stellar_core$cachedTextures.add(sprite);
-                    stellar_core$cachedLocations.add(location);
-                }
+                stellar_core$cachedTextures.add(sprite);
+                stellar_core$cachedLocations.add(location);
             } catch (Throwable e) {
                 StellarLog.LOG.warn(e);
             } finally {

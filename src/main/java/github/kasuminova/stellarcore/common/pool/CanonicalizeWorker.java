@@ -1,13 +1,15 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpscLinkedQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpscUnboundedArrayQueue;
 
+import java.lang.ref.WeakReference;
 import java.util.Queue;
 import java.util.concurrent.locks.LockSupport;
 
 public class CanonicalizeWorker<T> implements Runnable {
 
+    private final Queue<WeakReference<DeferredCanonicalizable<T>>> deferedQueue = createConcurrentQueue();
     private final Queue<CanonicalizeTask<T>> queue = createConcurrentQueue();
     private final String name;
 
@@ -38,14 +40,30 @@ public class CanonicalizeWorker<T> implements Runnable {
         return worker != null && worker.isAlive();
     }
 
+    public Thread getThread() {
+        return worker;
+    }
+
     public void offer(final CanonicalizeTask<T> task) {
         queue.offer(task);
+    }
+
+    public void defer(final DeferredCanonicalizable<T> canonicalizable) {
+        deferedQueue.offer(new WeakReference<>(canonicalizable));
     }
 
     @Override
     public void run() {
         StellarLog.LOG.info("[StellarCore-{}] CanonicalizeWorker started.", name);
         while (!Thread.currentThread().isInterrupted()) {
+            WeakReference<DeferredCanonicalizable<T>> ref;
+            while ((ref = deferedQueue.poll()) != null) {
+                DeferredCanonicalizable<T> canonicalizable = ref.get();
+                if (canonicalizable != null) {
+                    canonicalizable.canonicalizeAsync();
+                }
+            }
+
             CanonicalizeTask<T> task;
             boolean executed = false;
             while ((task = queue.poll()) != null) {
@@ -76,7 +94,7 @@ public class CanonicalizeWorker<T> implements Runnable {
     }
 
     private static <E> Queue<E> createConcurrentQueue() {
-        return new MpscLinkedQueue<>();
+        return new MpscUnboundedArrayQueue<>(10_000);
     }
 
 }

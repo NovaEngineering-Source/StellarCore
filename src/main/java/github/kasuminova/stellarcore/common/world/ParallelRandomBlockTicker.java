@@ -45,7 +45,7 @@ public class ParallelRandomBlockTicker {
         this.currentRand = rand;
         this.profiler = profiler;
 
-        final boolean parallel = StellarEnvironment.shouldParallel() && enqueuedChunks.size() * randomTickSpeed >= 300;
+        final boolean parallel = StellarEnvironment.shouldParallel();
         final int concurrency = parallel ? StellarEnvironment.getConcurrency() : 1;
         final List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
 

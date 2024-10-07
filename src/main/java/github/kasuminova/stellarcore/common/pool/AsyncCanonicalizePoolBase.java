@@ -15,6 +15,10 @@ public abstract class AsyncCanonicalizePoolBase<T> {
         worker.offer(new CanonicalizeTask<>(() -> canonicalize(target), callback));
     }
 
+    public void canonicalizeDeferred(final DeferredCanonicalizable<T> target) {
+        worker.defer(target);
+    }
+
     public abstract T canonicalize(@Nullable final T target);
 
     public CanonicalizeWorker<T> getWorker() {

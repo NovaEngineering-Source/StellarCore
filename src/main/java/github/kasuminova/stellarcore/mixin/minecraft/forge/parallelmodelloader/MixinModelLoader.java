@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -16,6 +17,7 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.FMLLog;
@@ -92,7 +94,7 @@ public abstract class MixinModelLoader extends ModelBakery {
             @Local(name = "missingBaked") IBakedModel missingBaked) {
         long startTime = System.currentTimeMillis();
 
-        Map<IModel, IBakedModel> bakedModelsConcurrent = new ConcurrentHashMap<>();
+        Map<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
         models.keySet().stream().parallel().forEach((model) -> {
             String modelLocations = "[" + Joiner.on(", ").join(models.get(model)) + "]";
             synchronized (bakeBar) {
@@ -173,7 +175,7 @@ public abstract class MixinModelLoader extends ModelBakery {
         stellar_core$concurrent = false;
     }
 
-    // TODO required to fix
+//    // TODO required to fix
 //    @Redirect(
 //            method = "loadItemModels",
 //            at = @At(
@@ -185,9 +187,9 @@ public abstract class MixinModelLoader extends ModelBakery {
 //    private Iterator<Object> stellar_core$injectLoadItemModels(
 //            List<Item> items,
 //            @Local(name = "itemBar") ProgressManager.ProgressBar itemBar) {
-//        if (!stellar_core$reflectInitialized) {
-//            stellar_core$initializeReflect();
-//        }
+////        if (!stellar_core$reflectInitialized) {
+////        }
+//        stellar_core$initializeReflect();
 //
 //        long startTime = System.currentTimeMillis();
 //
@@ -196,7 +198,8 @@ public abstract class MixinModelLoader extends ModelBakery {
 //                itemBar.step(item.getRegistryName().toString());
 //            }
 //
-//            getVariantNames(item).parallelStream().forEach(s -> {
+//            getVariantNames(item).forEach(s -> {
+////            getVariantNames(item).parallelStream().forEach(s -> {
 //                ResourceLocation file = getItemLocation(s);
 //                ModelResourceLocation memory = getInventoryVariant(s);
 //                IModel model = getMissingModel();
@@ -223,6 +226,8 @@ public abstract class MixinModelLoader extends ModelBakery {
 //            });
 //        });
 //
+//        stellar_core$toDefault();
+//
 //        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
 //        return Collections.emptyIterator();
 //    }
@@ -236,6 +241,7 @@ public abstract class MixinModelLoader extends ModelBakery {
 
     @Unique
     private static Class<?> stellar_core$ModelLoaderRegistry = null;
+
     @Unique
     private static MethodHandle stellar_core$addAlias = null;
     @Unique

@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.client.pool;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.pool.AsyncCanonicalizePool;
 import github.kasuminova.stellarcore.common.pool.CanonicalizeWorker;
+import github.kasuminova.stellarcore.common.pool.DeferredCanonicalizable;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.floats.FloatArrays;
@@ -51,6 +52,10 @@ public class StellarUnpackedDataPool {
             }
             callback.accept(floatsL1);
         });
+    }
+
+    public static void canonicalizeDeferred(final DeferredCanonicalizable<float[][][]> canonicalizable) {
+        POOL_LEVEL1.canonicalizeDeferred(canonicalizable);
     }
 
     public static float[][][] canonicalize(float[][][] data) {

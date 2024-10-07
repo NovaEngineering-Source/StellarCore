@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraft.client.resources.ResourceIndex;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(DefaultResourcePack.class)
 public abstract class MixinDefaultResourcePack implements StellarCoreResourcePack {
@@ -29,7 +29,7 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
     private ResourceIndex resourceIndex;
 
     @Unique
-    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new ConcurrentHashMap<>();
+    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new NonBlockingHashMap<>();
 
     @Unique
     private boolean stellar_core$cacheEnabled = false;

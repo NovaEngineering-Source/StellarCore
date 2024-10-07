@@ -76,6 +76,9 @@ public class StellarCoreConfig {
         @Config.Name("EnderIOConduits")
         public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
+        @Config.Name("EnderUtilities")
+        public final EnderUtilities enderUtilities = new EnderUtilities();
+
         @Config.Name("ExtraBotany")
         public final ExtraBotany extraBotany = new ExtraBotany();
 
@@ -293,6 +296,24 @@ public class StellarCoreConfig {
             })
             @Config.Name("ItemConduitItemStackCache")
             public boolean cachedItemConduit = false;
+
+        }
+        
+        public static class EnderUtilities {
+
+            @Config.Comment({
+                    "Fix an issue where HandyBag sometimes picking up items would cause them to be duplicated,",
+                    "with the side effect that the player's item bar would no longer be populated when picking up matching items."
+            })
+            @Config.Name("ItemHandyBagDupeFixes")
+            public boolean itemHandyBag = true;
+
+            @Config.Comment({
+                    "Fix an issue where Nullifier sometimes picking up items would cause them to be duplicated,",
+                    "with the side effect that the player's item bar would no longer be populated when picking up matching items."
+            })
+            @Config.Name("ItemNullifierDupeFixes")
+            public boolean itemNullifier = true;
 
         }
 
@@ -1321,6 +1342,14 @@ public class StellarCoreConfig {
                     "thundr.redstonerepository.entity.projectile.EntityArrowGelid",
                     "xyz.phanta.tconevo.entity.EntityMagicMissile",
             };
+
+            @Config.Comment({
+                    "Completely remove something from the Forge registry, use at your own risk.",
+                    "Usage: `minecraft:dirt`, `modid:something`"
+            })
+            @Config.RequiresMcRestart
+            @Config.Name("ForgeRegistryRemoveList")
+            public String[] forgeRegistryRemoveList = {};
 
         }
 

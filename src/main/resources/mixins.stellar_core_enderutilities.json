@@ -8,6 +8,8 @@
         "MixinGuiContainerLargeStacks"
     ],
     "mixins": [
+        "MixinItemHandyBag",
+        "MixinItemNullifier",
         "MixinUtilItemModular"
     ]
 }

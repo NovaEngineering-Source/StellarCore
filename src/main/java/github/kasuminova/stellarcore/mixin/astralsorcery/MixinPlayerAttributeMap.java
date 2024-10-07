@@ -1,6 +1,8 @@
 package github.kasuminova.stellarcore.mixin.astralsorcery;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import hellfirepvp.astralsorcery.common.constellation.perk.AbstractPerk;
 import hellfirepvp.astralsorcery.common.constellation.perk.PerkConverter;
 import hellfirepvp.astralsorcery.common.constellation.perk.PlayerAttributeMap;
@@ -15,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
@@ -41,8 +42,8 @@ public class MixinPlayerAttributeMap {
         if (!StellarCoreConfig.BUG_FIXES.astralSorcery.playerAttributeMap) {
             return;
         }
-        attributes = new ConcurrentHashMap<>();
-        cacheAppliedPerks = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        attributes = new NonBlockingHashMap<>();
+        cacheAppliedPerks = new NonBlockingHashSet<>();
         converters = Collections.synchronizedList(new LinkedList<>());
     }
 

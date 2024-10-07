@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.texture;
 
 import com.google.common.collect.ImmutableMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.IResource;
@@ -19,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Note: Incompatible with Optifine.
@@ -77,7 +77,7 @@ public abstract class MixinTextureMap {
             at = @At("RETURN")
     )
     private void injectInit(final String basePathIn, final ITextureMapPopulator iconCreatorIn, final boolean skipFirst, final CallbackInfo ci) {
-        this.mapRegisteredSprites = new ConcurrentHashMap<>();
+        this.mapRegisteredSprites = new NonBlockingHashMap<>();
     }
 
     /**

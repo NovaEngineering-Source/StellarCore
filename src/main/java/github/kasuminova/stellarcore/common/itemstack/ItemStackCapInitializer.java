@@ -2,7 +2,7 @@ package github.kasuminova.stellarcore.common.itemstack;
 
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.unpadded.MpmcUnpaddedArrayQueue;
 
 import java.util.List;
 import java.util.Queue;
@@ -143,7 +143,7 @@ public class ItemStackCapInitializer implements Runnable {
     }
 
     private static <E> Queue<E> createConcurrentQueue() {
-        return new MpmcAtomicArrayQueue<>(QUEUE_BOUND_SIZE * (MAX_WORKERS + 1));
+        return new MpmcUnpaddedArrayQueue<>(QUEUE_BOUND_SIZE * (MAX_WORKERS + 1));
     }
 
 }

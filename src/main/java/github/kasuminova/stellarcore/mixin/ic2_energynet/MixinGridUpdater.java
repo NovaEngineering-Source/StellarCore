@@ -289,7 +289,7 @@ public class MixinGridUpdater {
 
     @Unique
     private static <E> Queue<E> stellar_core$createMpmcQueue(final int capacity) {
-        return new MpmcArrayQueue<>(capacity);
+        return new MpmcArrayQueue<>(Math.max(capacity, 2));
     }
 
 }

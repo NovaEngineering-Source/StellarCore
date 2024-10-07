@@ -1,9 +1,11 @@
 package github.kasuminova.stellarcore.mixin.libnine;
 
 import com.google.gson.JsonObject;
+import github.kasuminova.stellarcore.client.integration.libnine.L9ModScanner;
 import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import io.github.phantamanta44.libnine.client.model.L9Models;
 import io.github.phantamanta44.libnine.util.helper.ResourceUtils;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("InstantiationOfUtilityClass")
 @Mixin(value = L9Models.class, remap = false)
@@ -44,7 +45,13 @@ public class MixinL9Models implements StellarCoreResourcePack {
         if (!StellarCoreConfig.PERFORMANCE.libNine.l9ModelsIsOfTypeCache) {
             return;
         }
-        cir.setReturnValue(stellar_core$getValidTypeCache().computeIfAbsent(type, (key) -> new ConcurrentHashMap<>())
+
+        // Skip non-libnine mods
+        if (!L9ModScanner.isValidMod(resource.getNamespace())) {
+            cir.setReturnValue(Boolean.FALSE);
+        }
+
+        cir.setReturnValue(stellar_core$getValidTypeCache().computeIfAbsent(type, (key) -> new NonBlockingHashMap<>())
                 .computeIfAbsent(resource, (key) -> {
                     try {
                         JsonObject model = ResourceUtils.getAsJson(resource).getAsJsonObject();
@@ -81,7 +88,7 @@ public class MixinL9Models implements StellarCoreResourcePack {
         if (stellar_core$validTypeCache == null) {
             synchronized (L9Models.class) {
                 if (stellar_core$validTypeCache == null) {
-                    stellar_core$validTypeCache = new ConcurrentHashMap<>();
+                    stellar_core$validTypeCache = new NonBlockingHashMap<>();
                 }
             }
         }

@@ -53,6 +53,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_bakedquad.json",               () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",    () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_modelloader.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
+        addMixinCFG("mixins.stellar_core_forge_registry.json",                () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
         addMixinCFG("mixins.stellar_core_hudcaching.json",                    () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);
         addMixinCFG("mixins.stellar_core_ebwizardry_early.json",              () -> StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData && !Mods.TICK_CENTRAL.loaded());
     }

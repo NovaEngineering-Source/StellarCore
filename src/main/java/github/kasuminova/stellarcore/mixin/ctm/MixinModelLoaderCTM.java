@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.ctm;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,7 +12,6 @@ import team.chisel.ctm.api.model.IModelCTM;
 import team.chisel.ctm.client.model.parsing.ModelLoaderCTM;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(value = ModelLoaderCTM.class, remap = false)
 public class MixinModelLoaderCTM {
@@ -24,7 +24,7 @@ public class MixinModelLoaderCTM {
         if (!StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader) {
             return;
         }
-        loadedModels = new ConcurrentHashMap<>();
+        loadedModels = new NonBlockingHashMap<>();
     }
 
 }

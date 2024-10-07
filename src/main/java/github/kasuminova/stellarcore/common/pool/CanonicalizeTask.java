@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class CanonicalizeTask<T> {
-    
+
     private final Supplier<T> task;
     private final Consumer<T> callback;
 

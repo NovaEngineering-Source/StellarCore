@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.mod.Mods;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import mirror.normalasm.api.NormalStringPool;
 import net.minecraftforge.fml.common.Optional;
@@ -8,7 +9,6 @@ import zone.rong.loliasm.api.LoliStringPool;
 
 import javax.annotation.Nullable;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
 
@@ -18,6 +18,8 @@ public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
     private volatile long processedCount = 0;
 
     private ResourceLocationPool() {
+        Thread thread = getWorker().getThread();
+        thread.setPriority(Thread.MAX_PRIORITY);
     }
 
     @Override
@@ -37,11 +39,6 @@ public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
                 return value;
             });
         }
-    }
-
-    @Override
-    public void canonicalizeAsync(final String target, final Consumer<String> callback) {
-        throw new UnsupportedOperationException("ResourceLocationPool does not supported yet.");
     }
 
     @Override
@@ -65,6 +62,8 @@ public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
             processedCount = 0;
             lowerCasePool.clear();
         }
+        Thread thread = getWorker().getThread();
+        thread.setPriority(Thread.NORM_PRIORITY);
     }
 
     @Optional.Method(modid = "loliasm")

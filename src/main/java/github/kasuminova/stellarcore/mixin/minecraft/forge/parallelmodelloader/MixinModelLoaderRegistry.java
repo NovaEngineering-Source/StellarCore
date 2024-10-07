@@ -6,6 +6,8 @@ import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackL
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.ConcurrentModelLoaderRegistry;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -34,13 +36,13 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     private static final ThreadLocal<Deque<ResourceLocation>> stellar_core$LOADING_MODELS = ThreadLocal.withInitial(ArrayDeque::new);
 
     @Unique
-    private static Map<ResourceLocation, IModel> stellar_core$cache = new ConcurrentHashMap<>();
+    private static Map<ResourceLocation, IModel> stellar_core$cache = new NonBlockingHashMap<>();
 
     @Unique
-    private static Map<ResourceLocation, ResourceLocation> stellar_core$aliases = new ConcurrentHashMap<>();
+    private static Map<ResourceLocation, ResourceLocation> stellar_core$aliases = new NonBlockingHashMap<>();
 
     @Unique
-    private static Set<ResourceLocation> stellar_core$textures = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static Set<ResourceLocation> stellar_core$textures = new NonBlockingHashSet<>();
 
     @Unique
     private static boolean stellar_core$concurrent = false;

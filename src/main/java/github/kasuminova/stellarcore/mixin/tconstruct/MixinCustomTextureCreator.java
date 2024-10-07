@@ -1,6 +1,8 @@
 package github.kasuminova.stellarcore.mixin.tconstruct;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,10 +13,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import slimeknights.tconstruct.library.client.CustomTextureCreator;
 import slimeknights.tconstruct.library.tools.IToolPart;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(value = CustomTextureCreator.class, remap = false)
 public class MixinCustomTextureCreator {
@@ -33,9 +33,9 @@ public class MixinCustomTextureCreator {
         if (!StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader) {
             return;
         }
-        sprites = new ConcurrentHashMap<>();
-        baseTextures = Collections.newSetFromMap(new ConcurrentHashMap<>());
-        texturePartMapping = new ConcurrentHashMap<>();
+        sprites = new NonBlockingHashMap<>();
+        baseTextures = new NonBlockingHashSet<>();
+        texturePartMapping = new NonBlockingHashMap<>();
     }
 
 }

@@ -1,11 +1,10 @@
 {
-    "package": "github.kasuminova.stellarcore.mixin.minecraft.entitytracker",
+    "package": "github.kasuminova.stellarcore.mixin.minecraft.forge.registry",
     "refmap": "mixins.stellar_core.refmap.json",
     "target": "@env(DEFAULT)",
     "minVersion": "0.8",
     "compatibilityLevel": "JAVA_8",
     "mixins": [
-        "MixinEntityTracker",
-        "MixinEntityTrackerEntry"
+        "MixinForgeRegistry"
     ]
 }

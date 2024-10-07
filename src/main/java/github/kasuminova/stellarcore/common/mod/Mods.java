@@ -99,6 +99,7 @@ public enum Mods {
             }
         }
     },
+    LIB_NINE("libnine"),
     ;
 
     protected final String modID;

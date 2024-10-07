@@ -2,11 +2,15 @@ package github.kasuminova.stellarcore.mixin.ctm;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBlock;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Tuple;
+import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
@@ -30,7 +34,6 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("StaticVariableMayNotBeInitialized")
@@ -54,7 +57,7 @@ public abstract class MixinTextureMetadataHandler {
     private static Field multipartPartModels;
 
     @Unique
-    private final Map<ResourceLocation, Boolean> stellar_core$wrappedModelsConcurrent = new ConcurrentHashMap<>();
+    private final Map<ResourceLocation, Boolean> stellar_core$wrappedModelsConcurrent = new NonBlockingHashMap<>();
 
     @Nonnull
     @Shadow
@@ -73,7 +76,10 @@ public abstract class MixinTextureMetadataHandler {
         ci.cancel();
 
         Map<ModelResourceLocation, IModel> stateModels = ReflectionHelper.getPrivateValue(ModelLoader.class, event.getModelLoader(), "stateModels");
-        event.getModelRegistry().getKeys().parallelStream().forEach(mrl -> {
+        IRegistry<ModelResourceLocation, IBakedModel> registry = event.getModelRegistry();
+        Queue<Tuple<ModelResourceLocation, IBakedModel>> wrappedConcurrent = new MpscLinkedAtomicQueue<>();
+
+        registry.getKeys().parallelStream().forEach(mrl -> {
             IModel rootModel = stateModels.get(mrl);
             if (rootModel == null || rootModel instanceof IModelCTM || ModelLoaderCTM.parsedLocations.contains(mrl)) {
                 return;
@@ -155,15 +161,18 @@ public abstract class MixinTextureMetadataHandler {
 
             if (shouldWrap) {
                 try {
-                    synchronized (event) {
-                        event.getModelRegistry().putObject(mrl, wrap(rootModel, event.getModelRegistry().getObject(mrl)));
-                    }
+                    IBakedModel wrapped = wrap(rootModel, registry.getObject(mrl));
+                    wrappedConcurrent.offer(new Tuple<>(mrl, wrapped));
                     dependencies.clear();
                 } catch (IOException e) {
                     CTM.logger.error("Could not wrap model " + mrl + ". Aborting...", e);
                 }
             }
         });
+        Tuple<ModelResourceLocation, IBakedModel> tuple;
+        while ((tuple = wrappedConcurrent.poll()) != null) {
+            registry.putObject(tuple.getFirst(), tuple.getSecond());
+        }
         stellar_core$wrappedModelsConcurrent.clear();
     }
 
