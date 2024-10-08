@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.itemstack;
 
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitTask;
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
+import github.kasuminova.stellarcore.common.itemstack.SharedEmptyTag;
 import github.kasuminova.stellarcore.mixin.util.StellarItemStack;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -22,9 +23,6 @@ import javax.annotation.Nullable;
 
 @Mixin(ItemStack.class)
 public abstract class MixinItemStack implements StellarItemStack {
-
-    @Unique
-    private static final NBTTagCompound stellar_core$EMPTY_TAG = new NBTTagCompound();
 
     @Nullable
     @Shadow(remap = false)
@@ -216,7 +214,7 @@ public abstract class MixinItemStack implements StellarItemStack {
     @Override
     public NBTTagCompound stellar_core$getCapNBT() {
         stellar_core$ensureCapNBTInitialized();
-        return this.capNBT == null ? stellar_core$EMPTY_TAG : this.capNBT;
+        return this.capNBT == null ? SharedEmptyTag.EMPTY_TAG : this.capNBT;
     }
 
 }
