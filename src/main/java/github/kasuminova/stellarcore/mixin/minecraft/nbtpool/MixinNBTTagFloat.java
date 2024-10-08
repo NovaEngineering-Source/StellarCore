@@ -16,7 +16,7 @@ import javax.annotation.Nonnull;
 public abstract class MixinNBTTagFloat implements StellarPooledNBT {
 
     @Override
-    public NBTBase stellar_core$getPooledNBT() {
+    public Object stellar_core$getPooledNBT() {
         return NBTTagPrimitivePool.getTagFloat((NBTTagFloat) (Object) this);
     }
 

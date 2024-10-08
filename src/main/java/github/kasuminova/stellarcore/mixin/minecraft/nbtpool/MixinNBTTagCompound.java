@@ -39,7 +39,7 @@ public class MixinNBTTagCompound {
         if (value == null) {
             throw new IllegalArgumentException("Invalid null NBT value with key " + key);
         }
-        this.tagMap.put(key, ((StellarPooledNBT) value).stellar_core$getPooledNBT());
+        this.tagMap.put(key, (NBTBase) ((StellarPooledNBT) value).stellar_core$getPooledNBT());
     }
 
     /**

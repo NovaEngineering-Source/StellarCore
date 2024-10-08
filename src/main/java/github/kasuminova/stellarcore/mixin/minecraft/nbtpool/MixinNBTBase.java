@@ -12,8 +12,9 @@ public class MixinNBTBase implements StellarPooledNBT {
     private boolean stellar_core$pooled = false;
 
     @Override
-    public NBTBase stellar_core$getPooledNBT() {
-        return (NBTBase) (Object) this;
+    @SuppressWarnings("RedundantCast")
+    public Object stellar_core$getPooledNBT() {
+        return (Object) this;
     }
 
     @Override
