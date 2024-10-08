@@ -6,7 +6,7 @@ import github.kasuminova.stellarcore.common.entity.EntityForceUpdateManager;
 import github.kasuminova.stellarcore.common.handler.StellarCoreTickHandler;
 import github.kasuminova.stellarcore.common.integration.fluxnetworks.IntegrationsFluxNetworks;
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
-import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
+import github.kasuminova.stellarcore.common.pool.LowerCaseStringPool;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 
@@ -38,7 +38,7 @@ public class CommonProxy {
     }
 
     public void loadComplete() {
-        ResourceLocationPool.INSTANCE.clear();
+        LowerCaseStringPool.INSTANCE.clear();
         if (StellarCoreConfig.PERFORMANCE.vanilla.asyncItemStackCapabilityInit) {
             ItemStackCapInitializer.resetStatus();
         }

@@ -44,7 +44,7 @@ public class AutoCanonizingStringMap<V> extends Object2ObjectOpenHashMap<String,
         } else if (Mods.FERMIUM_OR_BLAHAJ_ASM.loaded()) {
             return AutoCanonizingStringMap::canonicalizeFromNormalStringPool;
         } else {
-            throw new IllegalStateException("No valid StringPool implementation found!");
+            throw new IllegalStateException("No valid LowerCaseStringPool implementation found!");
         }
     }
 

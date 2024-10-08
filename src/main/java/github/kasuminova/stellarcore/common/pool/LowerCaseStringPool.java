@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.mod.Mods;
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import mirror.normalasm.api.NormalStringPool;
 import net.minecraftforge.fml.common.Optional;
@@ -10,14 +9,14 @@ import zone.rong.loliasm.api.LoliStringPool;
 import javax.annotation.Nullable;
 import java.util.Locale;
 
-public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
+public class LowerCaseStringPool extends AsyncCanonicalizePoolBase<String> {
 
-    public static final ResourceLocationPool INSTANCE = new ResourceLocationPool();
+    public static final LowerCaseStringPool INSTANCE = new LowerCaseStringPool();
 
     private final Object2ObjectOpenHashMap<String, String> lowerCasePool = new Object2ObjectOpenHashMap<>();
     private volatile long processedCount = 0;
 
-    private ResourceLocationPool() {
+    private LowerCaseStringPool() {
         Thread thread = getWorker().getThread();
         thread.setPriority(Thread.MAX_PRIORITY);
     }
@@ -53,7 +52,7 @@ public class ResourceLocationPool extends AsyncCanonicalizePoolBase<String> {
 
     @Override
     protected String getName() {
-        return "ResourceLocationPool";
+        return "LowerCaseStringPool";
     }
 
     @Override

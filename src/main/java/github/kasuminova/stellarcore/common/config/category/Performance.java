@@ -181,12 +181,21 @@ public class Performance {
         public boolean blockStateImplementationHashCodeCache = true;
 
         @Config.Comment({
-                "(Client/Server Performance) Improving NBTTagCompound Performance with Improved Data Structures.",
-                "Conflict with CensoredASM's `optimizeNBTTagCompoundBackingMap` and `nbtBackingMapStringCanonicalization` option."
+                "(Client/Server Performance) Improve the data structure of NBTTagCompound and NBTTagList and optimise the performance of matching, fetching and copying.",
+                "May conflict with other mods optimised for NBT.",
+                "Known to conflict with CensoredASM's `optimizeNBTTagCompoundBackingMap` and `nbtBackingMapStringCanonicalization` option."
         })
         @Config.RequiresMcRestart
-        @Config.Name("NBTTagCompoundMapImprovements")
-        public boolean nbtTagCompoundMap = true;
+        @Config.Name("NBTTagImprovements")
+        public boolean nbtTag = true;
+
+        @Config.Comment({
+                "(Client/Server Performance) Cache constants -32768 - 32767 of NBTTagByte, NBTTagInt, NBTTagLong, NBTTagFloat, NBTTagDouble using constant pool.",
+                "Like IntegerCache in the JVM, improves memory usage and reduces object creation overhead.",
+        })
+        @Config.RequiresMcRestart
+        @Config.Name("NBTPrimitiveConstantsPool")
+        public boolean nbtPrimitiveConstantsPool = true;
 
         @Config.Comment({
                 "(Client/Server Performance) Asynchronous loading of ItemStack's Capability to improve performance.",
@@ -281,13 +290,23 @@ public class Performance {
         public boolean blockFaceUVsCanonicalization = true;
 
         @Config.Comment({
-                "(Client Performance) Deduplicate internal strings of ResourceLocation to reduce memory usage.",
+                "(Client/Server Performance) Deduplicate internal strings of ResourceLocation to reduce memory usage.",
                 "When installed with CensoredASM, turn off the `resourceLocationCanonicalization` feature of CensoredASM.",
-                "StellarCore already has backend integration for it."
+                "StellarCore already has backend integration for it.",
+                "Note: This feature may have a large impact on load times."
         })
         @Config.RequiresMcRestart
         @Config.Name("ResourceLocationCanonicalization")
         public boolean resourceLocationCanonicalization = true;
+
+        @Config.Comment({
+                "(Client/Server Performance) ResourceLocationCanonicalization Available when enabled, makes the operation process asynchronous,",
+                "dramatically reduces the impact on startup time, but uses more memory (mainly in client model loading, very much more memory) during loading,",
+                "and the memory returns to normal after loading is complete."
+        })
+        @Config.RequiresMcRestart
+        @Config.Name("ResourceLocationCanonicalizationAsync")
+        public boolean resourceLocationCanonicalizationAsync = false;
 
     }
 

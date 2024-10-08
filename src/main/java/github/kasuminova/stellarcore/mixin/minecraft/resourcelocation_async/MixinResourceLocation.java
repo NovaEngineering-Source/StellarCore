@@ -1,7 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resourcelocation_async;
 
+import github.kasuminova.stellarcore.common.pool.LowerCaseStringPool;
 import github.kasuminova.stellarcore.common.pool.DeferredCanonicalizable;
-import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
 import github.kasuminova.stellarcore.mixin.util.AccessorResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
@@ -29,15 +29,15 @@ public class MixinResourceLocation implements DeferredCanonicalizable<String>, A
     @Inject(method = "<init>(I[Ljava/lang/String;)V", at = @At("RETURN"))
     private void injectInit(final int unused, final String[] resourceName, final CallbackInfo ci) {
         if (((ResourceLocation) (Object) this).getClass() == ResourceLocation.class) {
-            ResourceLocationPool.INSTANCE.canonicalizeDeferred((DeferredCanonicalizable<String>) (Object) this);
+            LowerCaseStringPool.INSTANCE.canonicalizeDeferred((DeferredCanonicalizable<String>) (Object) this);
         }
     }
 
     @Override
     @SuppressWarnings("AddedMixinMembersNamePattern")
     public void canonicalizeAsync() {
-        this.namespace = ResourceLocationPool.INSTANCE.canonicalize(this.namespace);
-        this.path = ResourceLocationPool.INSTANCE.canonicalize(this.path);
+        this.namespace = LowerCaseStringPool.INSTANCE.canonicalize(this.namespace);
+        this.path = LowerCaseStringPool.INSTANCE.canonicalize(this.path);
     }
 
     @Override

@@ -101,6 +101,10 @@ public class Features {
                 "hellfirepvp.astralsorcery.common.entities.EntityFlare",
                 "hellfirepvp.astralsorcery.common.entities.EntityLiquidSpark",
                 "mekanism.weapons.common.entity.EntityMekaArrow", // MEKCEu
+                "net.lrsoft.mets.entity.EntityGunBullet",
+                "net.lrsoft.mets.entity.EntityHyperGunBullet",
+                "net.lrsoft.mets.entity.EntityPlasmaBullet",
+                "net.lrsoft.mets.entity.EntityTachyonBullet",
                 "net.minecraft.entity.projectile.EntitySpectralArrow",
                 "thundr.redstonerepository.entity.projectile.EntityArrowGelid",
                 "xyz.phanta.tconevo.entity.EntityMagicMissile",

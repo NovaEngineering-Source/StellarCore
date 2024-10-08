@@ -2,7 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.itemstack;
 
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitTask;
 import github.kasuminova.stellarcore.common.itemstack.ItemStackCapInitializer;
-import github.kasuminova.stellarcore.mixin.util.StellarItemStackCapLoader;
+import github.kasuminova.stellarcore.mixin.util.StellarItemStack;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -21,7 +21,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nullable;
 
 @Mixin(ItemStack.class)
-public abstract class MixinItemStack implements StellarItemStackCapLoader {
+public abstract class MixinItemStack implements StellarItemStack {
+
+    @Unique
+    private static final NBTTagCompound stellar_core$EMPTY_TAG = new NBTTagCompound();
 
     @Nullable
     @Shadow(remap = false)
@@ -57,6 +60,9 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
 
     @Shadow
     public abstract Item getItem();
+
+    @Unique
+    private boolean stellar_core$capNBTCacheAvailable = true;
 
     @Unique
     private volatile ItemStackCapInitTask stellar_core$capInitTask = null;
@@ -125,8 +131,8 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
      */
     @Overwrite
     public ItemStack copy() {
-//        stellar_core$ensureCapInitialized();
-        ItemStack stack = new ItemStack(this.item, this.stackSize, this.itemDamage, this.capabilities != null ? this.capabilities.serializeNBT() : capNBT);
+        stellar_core$ensureCapNBTInitialized();
+        ItemStack stack = new ItemStack(this.item, this.stackSize, this.itemDamage, this.capNBT);
         stack.setAnimationsToGo(this.getAnimationsToGo());
 
         if (this.stackTagCompound != null) {
@@ -150,12 +156,25 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
             cir.setReturnValue(null);
         }
         stellar_core$ensureCapInitialized();
+
+        Object cap = this.capabilities == null ? null : this.capabilities.getCapability(capability, facing);
+        if (cap != null) {
+            // Capability can be changed.
+            stellar_core$disableCapNBTCache();
+        }
+        cir.setReturnValue(cap);
     }
 
-    @Inject(method = "areCapsCompatible", at = @At("HEAD"), remap = false)
+    @SuppressWarnings("DataFlowIssue")
+    @Inject(method = "areCapsCompatible", at = @At("HEAD"), remap = false, cancellable = true)
     private void injectAreCapsCompatible(final ItemStack other, final CallbackInfoReturnable<Boolean> cir) {
         stellar_core$ensureCapInitialized();
-        ((StellarItemStackCapLoader) (Object) other).stellar_core$ensureCapInitialized();
+        StellarItemStack otherAccessor = (StellarItemStack) (Object) other;
+        otherAccessor.stellar_core$ensureCapInitialized();
+
+        NBTTagCompound capNBT = stellar_core$getCapNBT();
+        NBTTagCompound otherCapNBT = otherAccessor.stellar_core$getCapNBT();
+        cir.setReturnValue(capNBT == otherCapNBT || capNBT.equals(otherCapNBT));
     }
 
     @Unique
@@ -177,6 +196,27 @@ public abstract class MixinItemStack implements StellarItemStackCapLoader {
             }
             this.stellar_core$capabilityLoading = false;
         }
+    }
+
+    @Unique
+    private void stellar_core$disableCapNBTCache() {
+        if (this.capNBT != null && this.capabilities != null && this.stellar_core$capNBTCacheAvailable) {
+            this.capNBT = null;
+            this.stellar_core$capNBTCacheAvailable = false;
+        }
+    }
+
+    @Unique
+    public void stellar_core$ensureCapNBTInitialized() {
+        if ((this.capNBT == null || !this.stellar_core$capNBTCacheAvailable) && this.capabilities != null) {
+            this.capNBT = this.capabilities.serializeNBT();
+        }
+    }
+
+    @Override
+    public NBTTagCompound stellar_core$getCapNBT() {
+        stellar_core$ensureCapNBTInitialized();
+        return this.capNBT == null ? stellar_core$EMPTY_TAG : this.capNBT;
     }
 
 }

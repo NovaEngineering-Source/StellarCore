@@ -1,16 +1,16 @@
 package github.kasuminova.stellarcore.common.itemstack;
 
-import github.kasuminova.stellarcore.mixin.util.StellarItemStackCapLoader;
+import github.kasuminova.stellarcore.mixin.util.StellarItemStack;
 import net.minecraft.item.ItemStack;
 
 @SuppressWarnings("DataFlowIssue")
 public class ItemStackCapInitTask implements Runnable {
 
-    private final StellarItemStackCapLoader target;
+    private final StellarItemStack target;
     private volatile boolean done = false;
 
     public ItemStackCapInitTask(final ItemStack target) {
-        this.target = (StellarItemStackCapLoader) (Object) target;
+        this.target = (StellarItemStack) (Object) target;
     }
 
     @Override

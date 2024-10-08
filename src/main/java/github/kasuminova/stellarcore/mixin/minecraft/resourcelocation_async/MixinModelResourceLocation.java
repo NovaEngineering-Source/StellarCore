@@ -1,7 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resourcelocation_async;
 
+import github.kasuminova.stellarcore.common.pool.LowerCaseStringPool;
 import github.kasuminova.stellarcore.common.pool.DeferredCanonicalizable;
-import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
 import github.kasuminova.stellarcore.mixin.util.AccessorResourceLocation;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
@@ -33,7 +33,7 @@ public class MixinModelResourceLocation extends ResourceLocation implements Defe
     @Inject(method = "<init>(I[Ljava/lang/String;)V", at = @At("RETURN"))
     private void injectInit(final int unused, final String[] resourceName, final CallbackInfo ci) {
         if (((ModelResourceLocation) (Object) this).getClass() == ModelResourceLocation.class) {
-            ResourceLocationPool.INSTANCE.canonicalizeDeferred((DeferredCanonicalizable<String>) (Object) this);
+            LowerCaseStringPool.INSTANCE.canonicalizeDeferred((DeferredCanonicalizable<String>) (Object) this);
         }
     }
 
@@ -41,9 +41,9 @@ public class MixinModelResourceLocation extends ResourceLocation implements Defe
     @SuppressWarnings({"RedundantCast", "AddedMixinMembersNamePattern"})
     public void canonicalizeAsync() {
         AccessorResourceLocation accessor = (AccessorResourceLocation) (Object) this;
-        accessor.stellar_core$setNamespace(ResourceLocationPool.INSTANCE.canonicalize(this.namespace));
-        accessor.stellar_core$setPath(ResourceLocationPool.INSTANCE.canonicalize(this.path));
-        this.variant = ResourceLocationPool.INSTANCE.canonicalize(this.variant);
+        accessor.stellar_core$setNamespace(LowerCaseStringPool.INSTANCE.canonicalize(this.namespace));
+        accessor.stellar_core$setPath(LowerCaseStringPool.INSTANCE.canonicalize(this.path));
+        this.variant = LowerCaseStringPool.INSTANCE.canonicalize(this.variant);
     }
 
 }

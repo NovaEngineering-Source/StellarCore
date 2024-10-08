@@ -11,7 +11,7 @@ import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
-import github.kasuminova.stellarcore.common.pool.ResourceLocationPool;
+import github.kasuminova.stellarcore.common.pool.LowerCaseStringPool;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import journeymap.common.feature.PlayerRadarManager;
 import mekanism.client.ClientTickHandler;
@@ -120,10 +120,10 @@ public class ClientEventHandler {
         }
 
         if (StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalization) {
-            long resourceLocationProcessedCount = ResourceLocationPool.INSTANCE.getProcessedCount();
-            int resourceLocationUniqueCount = ResourceLocationPool.INSTANCE.getUniqueCount();
+            long resourceLocationProcessedCount = LowerCaseStringPool.INSTANCE.getProcessedCount();
+            int resourceLocationUniqueCount = LowerCaseStringPool.INSTANCE.getUniqueCount();
 
-            left.add(String.format("%s<Stellar%sCore>%s: %s%d%s ResourceLocation Strings processed. %s%d%s Unique, %s%d%s Deduplicated.",
+            left.add(String.format("%s<Stellar%sCore>%s: %s%d%s LowerCase Strings processed. %s%d%s Unique, %s%d%s Deduplicated.",
                     Mods.RGB_CHAT.loaded() ? "#66CCFF-FF99CC" : TextFormatting.AQUA,
                     Mods.RGB_CHAT.loaded() ? ""               : TextFormatting.LIGHT_PURPLE,
                     TextFormatting.RESET,

@@ -30,6 +30,7 @@ public class StellarCore {
 
     @Mod.Instance(MOD_ID)
     public static StellarCore instance = null;
+
     @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
     public static CommonProxy proxy = null;
     public static Logger log = null;

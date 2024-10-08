@@ -5,14 +5,15 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import javax.annotation.Nonnull;
 
+@SuppressWarnings("CloneableClassInSecureContext")
 public class TagKeySet extends AbstractObjectSet<String> {
 
     private final AbstractObjectSet<String> parent;
-    private final Runnable onChanged;
+    private final StellarNBTTagCompound changeHandler;
 
-    public TagKeySet(final AbstractObjectSet<String> parent, final Runnable onChanged) {
+    public TagKeySet(final AbstractObjectSet<String> parent, final StellarNBTTagCompound changeHandler) {
         this.parent = parent;
-        this.onChanged = onChanged;
+        this.changeHandler = changeHandler;
     }
 
     @Nonnull
@@ -30,8 +31,8 @@ public class TagKeySet extends AbstractObjectSet<String> {
     public boolean rem(final Object key) {
         boolean removed = super.rem(key);
         if (removed) {
-            if (onChanged != null) {
-                onChanged.run();
+            if (changeHandler != null) {
+                changeHandler.stellar_core$onModified();
             }
         }
         return removed;
@@ -40,8 +41,8 @@ public class TagKeySet extends AbstractObjectSet<String> {
     @Override
     public void clear() {
         super.clear();
-        if (onChanged != null) {
-            onChanged.run();
+        if (changeHandler != null) {
+            changeHandler.stellar_core$onModified();
         }
     }
 
@@ -56,8 +57,8 @@ public class TagKeySet extends AbstractObjectSet<String> {
         @Override
         public void remove() {
             parent.remove();
-            if (onChanged != null) {
-                onChanged.run();
+            if (changeHandler != null) {
+                changeHandler.stellar_core$onModified();
             }
         }
 
