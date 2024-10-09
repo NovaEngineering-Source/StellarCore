@@ -55,6 +55,9 @@ public class Features {
     @Config.Name("Mekanism")
     public final Mekanism mekanism = new Mekanism();
 
+    @Config.Name("ModularRouters")
+    public final ModularRouters modularRouters = new ModularRouters();
+
     @Config.Name("NuclearCraftOverhauled")
     public final NuclearCraftOverhauled nuclearCraftOverhauled = new NuclearCraftOverhauled();
 
@@ -225,6 +228,14 @@ public class Features {
         })
         @Config.Name("FluxNetworksSupport")
         public boolean fluxNetworksSupport = true;
+
+    }
+
+    public static class ModularRouters {
+
+        @Config.Comment("(Client) Automatically enable the ECO mode for new routers.")
+        @Config.Name("RouterECOModeByDefault")
+        public boolean routerECOModeByDefault = true;
 
     }
 

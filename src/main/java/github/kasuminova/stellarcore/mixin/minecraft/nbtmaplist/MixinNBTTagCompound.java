@@ -139,6 +139,7 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
         StellarNBTTagCompound accessor = (StellarNBTTagCompound) copied;
         accessor.stellar_core$setUID(this.stellar_core$uid);
         accessor.stellar_core$setUnique(false);
+        stellar_core$setUnique(false);
 
         // Overwrite tagMap.
         NBTTagBackingMap cloned = ((NBTTagBackingMap) this.tagMap).clone();
@@ -400,7 +401,7 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
         } catch (ClassCastException ex) {
             throw new ReportedException(this.createCrashReport(key, Constants.NBT.TAG_INT_ARRAY, ex));
         }
-        
+
         return new int[0];
     }
 

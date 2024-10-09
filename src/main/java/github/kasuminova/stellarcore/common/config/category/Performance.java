@@ -183,7 +183,7 @@ public class Performance {
         @Config.Comment({
                 "(Client/Server Performance) Improve the data structure of NBTTagCompound and NBTTagList and optimise the performance of matching, fetching and copying.",
                 "May conflict with other mods optimised for NBT.",
-                "Known to conflict with CensoredASM's `optimizeNBTTagCompoundBackingMap` and `nbtBackingMapStringCanonicalization` option."
+                "Known to conflict with CensoredASM's `optimizeNBTTagCompoundBackingMap` and `nbtBackingMapStringCanonicalization` option.",
         })
         @Config.RequiresMcRestart
         @Config.Name("NBTTagImprovements")
@@ -192,6 +192,7 @@ public class Performance {
         @Config.Comment({
                 "(Client/Server Performance) Cache constants -32768 - 32767 of NBTTagByte, NBTTagInt, NBTTagLong, NBTTagFloat, NBTTagDouble using constant pool.",
                 "Like IntegerCache in the JVM, improves memory usage and reduces object creation overhead.",
+                "Incompatible with old version of Quark (< r1.6-189), which modifies the bytecode of the NBTTag class too early.",
         })
         @Config.RequiresMcRestart
         @Config.Name("NBTPrimitiveConstantsPool")
