@@ -5,8 +5,8 @@ import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.IC2EnergySyncCalcTask;
 import github.kasuminova.stellarcore.mixin.util.IStellarEnergyCalculatorLeg;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpmcArrayQueue;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpscUnboundedXaddArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueue;
 import ic2.core.energy.grid.EnergyNetGlobal;
 import ic2.core.energy.grid.EnergyNetLocal;
 import ic2.core.energy.grid.Grid;
@@ -26,6 +26,7 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.stream.IntStream;
 
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "unchecked"})
@@ -82,14 +83,13 @@ public class MixinGridUpdater {
         }
 
         this.busy = true;
-        Collection<Grid> grids = stellar_core$EnergyNetLocal$getGrids(enet);
 
-        IStellarEnergyCalculatorLeg stellarCalculator = (IStellarEnergyCalculatorLeg) energyCalculator;
-
-        Queue<Grid> calculateQueue = stellar_core$createMpmcQueue(grids.size());
+        final Collection<Grid> grids = stellar_core$EnergyNetLocal$getGrids(enet);
+        final IStellarEnergyCalculatorLeg stellarCalculator = (IStellarEnergyCalculatorLeg) energyCalculator;
+        final Queue<Grid> calculateQueue = stellar_core$createMpmcQueue(grids.size());
         calculateQueue.addAll(grids);
-        int tasks = grids.size();
-        ForkJoinPool.commonPool().submit(() -> {
+        final int tasks = grids.size();
+        final ForkJoinTask<?> future = ForkJoinPool.commonPool().submit(() -> {
             int concurrency = Math.min(tasks, Math.max(StellarEnvironment.getConcurrency(), 2));
             IntStream.range(0, concurrency).parallel().forEach(i -> {
                 Grid grid;
@@ -99,13 +99,7 @@ public class MixinGridUpdater {
             });
         });
 
-        stellar_core$executeSyncTasks(tasks, stellarCalculator, calculateQueue);
-
-        if (!stellar_core$syncTaskQueue.isEmpty()) {
-            StellarLog.LOG.warn("[StellarCore-IC2GridUpdater] Unable to complete all tasks, {} tasks left.", stellar_core$syncTaskQueue.size());
-            stellar_core$syncTaskQueue.forEach(stellarCalculator::doSyncCalc);
-            stellar_core$syncTaskQueue.clear();
-        }
+        stellar_core$executeSyncTasks(tasks, stellarCalculator, calculateQueue, future);
 
         // TODO why shuffle?
 //        if (grids.size() > 1) {
@@ -116,11 +110,11 @@ public class MixinGridUpdater {
     }
 
     @Unique
-    private void stellar_core$executeSyncTasks(final int totalTasks, final IStellarEnergyCalculatorLeg stellarCalculator, final Queue<Grid> calculateQueue) {
+    private void stellar_core$executeSyncTasks(final int totalTasks, final IStellarEnergyCalculatorLeg stellarCalculator, final Queue<Grid> calculateQueue, final ForkJoinTask<?> parallelFuture) {
         int completedTask = 0;
         IC2EnergySyncCalcTask task;
         boolean syncBusy;
-        while (completedTask < totalTasks) {
+        while (!parallelFuture.isDone()) {
             syncBusy = true;
 
             while ((task = stellar_core$syncTaskQueue.poll()) != null) {
@@ -137,6 +131,18 @@ public class MixinGridUpdater {
             if (syncBusy) {
                 stellar_core$awaitCompletion();
             }
+        }
+
+        while (stellar_core$helpComplete(stellarCalculator, calculateQueue)) {
+            completedTask++;
+        }
+        while ((task = stellar_core$syncTaskQueue.poll()) != null) {
+            stellarCalculator.doSyncCalc(task);
+            completedTask++;
+        }
+
+        if (completedTask < totalTasks) {
+            StellarLog.LOG.warn("[StellarCore-IC2GridUpdater] Unable to complete all tasks, {} tasks left.", totalTasks - completedTask);
         }
     }
 
@@ -284,12 +290,12 @@ public class MixinGridUpdater {
 
     @Unique
     private static <E> Queue<E> stellar_core$createMpscQueue() {
-        return new MpscLinkedAtomicQueue<>();
+        return new MpscUnboundedXaddArrayQueue<>(1000);
     }
 
     @Unique
     private static <E> Queue<E> stellar_core$createMpmcQueue(final int capacity) {
-        return new MpmcArrayQueue<>(Math.max(capacity, 2));
+        return new MpmcAtomicArrayQueue<>(Math.max(capacity, 2));
     }
 
 }

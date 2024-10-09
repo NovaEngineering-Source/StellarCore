@@ -4,118 +4,62 @@ import net.minecraftforge.fml.common.Loader;
 
 public enum Mods {
 
-    FTBLIB("ftblib"),
-    FTBQ(  "ftbquests"),
-    MEK(   "mekanism"),
-    MEKCEU("mekanism") {
+    FTBLIB(               "ftblib"),
+    FTBQ(                 "ftbquests"),
+    MEK(                  "mekanism"),
+    REPLAY(               "replaymod"),
+    VINTAGE_FIX(          "vintagefix"),
+    RGB_CHAT(             "jianghun"), // ?
+    TLM(                  "touhou_little_maid"),
+    MM(                   "modularmachinery"),
+    EBWIZARDRY(           "ebwizardry"),
+    LIB_NINE(             "libnine"),
+    MMCE(                 "modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
+    CENSORED_ASM(         "loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"),
+    FERMIUM_OR_BLAHAJ_ASM("normalasm",         "mirror.normalasm.core.NormalLoadingPlugin"),
+    TICK_CENTRAL(         "tickcentral",       "com.github.terminatornl.tickcentral.TickCentral"),
+    MEKCEU(               "mekanism",          "mekanism.common.concurrent.TaskExecutor") {
         @Override
         public boolean loaded() {
             if (!MEK.loaded()) {
                 return false;
             }
-            if (initialized) {
-                return loaded;
-            }
-
-            try {
-                Class.forName("mekanism.common.config.MEKCEConfig");
-                initialized = true;
-                return loaded = true;
-            } catch (Throwable e) {
-                return loaded = false;
-            }
+            return super.loaded();
         }
     },
-    MM("modularmachinery"),
-    MMCE("modularmachinery") {
-        @Override
-        public boolean loaded() {
-            if (!MM.loaded()) {
-                return false;
-            }
-            if (initialized) {
-                return loaded;
-            }
-
-            try {
-                Class.forName("github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader");
-                initialized = true;
-                return loaded = true;
-            } catch (Throwable e) {
-                return loaded = false;
-            }
-        }
-    },
-    REPLAY("replaymod"),
-    VINTAGE_FIX("vintagefix"),
-    RGB_CHAT("jianghun"), // ?
-    TLM("touhou_little_maid"),
-    CENSORED_ASM("loliasm") {
-        @Override
-        public boolean loaded() {
-            if (initialized) {
-                return loaded;
-            }
-
-            try {
-                Class.forName("zone.rong.loliasm.core.LoliLoadingPlugin");
-                initialized = true;
-                return loaded = true;
-            } catch (Throwable e) {
-                return loaded = false;
-            }
-        }
-    },
-    FERMIUM_OR_BLAHAJ_ASM("normalasm") {
-        @Override
-        public boolean loaded() {
-            if (initialized) {
-                return loaded;
-            }
-
-            try {
-                Class.forName("mirror.normalasm.core.NormalLoadingPlugin");
-                initialized = true;
-                return loaded = true;
-            } catch (Throwable e) {
-                return loaded = false;
-            }
-        }
-    },
-    EBWIZARDRY("ebwizardry"),
-    TICK_CENTRAL("tickcentral") {
-        @Override
-        public boolean loaded() {
-            if (initialized) {
-                return loaded;
-            }
-
-            try {
-                Class.forName("com.github.terminatornl.tickcentral.TickCentral");
-                initialized = true;
-                return loaded = true;
-            } catch (Throwable e) {
-                return loaded = false;
-            }
-        }
-    },
-    LIB_NINE("libnine"),
     ;
 
-    protected final String modID;
-    protected boolean loaded = false;
-    protected boolean initialized = false;
+    final String modID;
+    final String requiredClass;
+    boolean loaded = false;
+    boolean initialized = false;
 
     Mods(final String modID) {
         this.modID = modID;
+        this.requiredClass = null;
+    }
+
+    Mods(final String modID, final String requiredClass) {
+        this.modID = modID;
+        this.requiredClass = requiredClass;
     }
 
     public boolean loaded() {
-        if (!initialized) {
-            loaded = Loader.isModLoaded(modID);
-            initialized = true;
+        if (initialized) {
+            return loaded;
         }
-        return loaded;
+
+        initialized = true;
+
+        if (requiredClass != null) {
+            try {
+                Class.forName(requiredClass);
+                return loaded = true;
+            } catch (Throwable e) {
+                return loaded = false;
+            }
+        }
+        return loaded = Loader.isModLoaded(modID);
     }
 
 }
