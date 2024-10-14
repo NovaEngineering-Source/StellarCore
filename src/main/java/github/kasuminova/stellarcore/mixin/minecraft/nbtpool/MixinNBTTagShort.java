@@ -2,7 +2,6 @@ package github.kasuminova.stellarcore.mixin.minecraft.nbtpool;
 
 import github.kasuminova.stellarcore.common.pool.NBTTagPrimitivePool;
 import github.kasuminova.stellarcore.mixin.util.StellarPooledNBT;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagShort;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -27,7 +26,7 @@ public abstract class MixinNBTTagShort implements StellarPooledNBT {
     @Nonnull
     @Overwrite
     public NBTTagShort copy() {
-        return (NBTTagShort) (Object) this;
+        return stellar_core$isPooled() ? (NBTTagShort) (Object) this : NBTTagPrimitivePool.getTagShort((NBTTagShort) (Object) this);
     }
 
     /**

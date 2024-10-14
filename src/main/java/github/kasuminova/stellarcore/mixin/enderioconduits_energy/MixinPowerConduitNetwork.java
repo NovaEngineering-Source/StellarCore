@@ -21,11 +21,15 @@ public abstract class MixinPowerConduitNetwork extends AbstractConduitNetwork<IP
         super(null, null);
     }
 
+    @Override
+    public void stellar_core$tickParallel() {
+        ((IStellarNetworkPowerManager) powerManager).stellar_core$parallelTick();
+    }
+
     @Unique
     @Override
-    @SuppressWarnings("AddedMixinMembersNamePattern")
-    public void tickFinal() {
-        ((IStellarNetworkPowerManager) powerManager).finalApplyReceivedPower();
+    public void stellar_core$tickFinal() {
+        ((IStellarNetworkPowerManager) powerManager).stellar_core$finalApplyReceivedPower();
     }
 
 }

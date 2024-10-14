@@ -2,7 +2,6 @@ package github.kasuminova.stellarcore.mixin.minecraft.nbtpool;
 
 import github.kasuminova.stellarcore.common.pool.NBTTagPrimitivePool;
 import github.kasuminova.stellarcore.mixin.util.StellarPooledNBT;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagByte;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -13,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import javax.annotation.Nonnull;
 
 @Mixin(NBTTagByte.class)
-public abstract class MixinNBTTagByte extends NBTBase implements StellarPooledNBT {
+public abstract class MixinNBTTagByte implements StellarPooledNBT {
 
     @Override
     public Object stellar_core$getPooledNBT() {
@@ -27,7 +26,7 @@ public abstract class MixinNBTTagByte extends NBTBase implements StellarPooledNB
     @Nonnull
     @Overwrite
     public NBTTagByte copy() {
-        return (NBTTagByte) (Object) this;
+        return stellar_core$isPooled() ? (NBTTagByte) (Object) this : NBTTagPrimitivePool.getTagByte((NBTTagByte) (Object) this);
     }
 
     /**

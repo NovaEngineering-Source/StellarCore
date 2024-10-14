@@ -596,9 +596,9 @@ public class Performance {
         @Config.Name("EnergyNetLocalImprovements")
         public boolean energyNetLocal = true;
 
-        @Config.Comment("(Server Performance) Improve EnergyNetLocal#getIoTile and EnergyNetLocal#getSubTile fetching speed to optimise performance to some extent.")
-        @Config.Name("GetIoAndSubTileEnergyNetLocalImprovements")
-        public boolean getIoAndSubTile = true;
+//        @Config.Comment("(Server Performance) Improve EnergyNetLocal#getIoTile and EnergyNetLocal#getSubTile fetching speed to optimise performance to some extent.")
+//        @Config.Name("GetIoAndSubTileEnergyNetLocalImprovements")
+//        public boolean getIoAndSubTile = true;
 
         @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
         @Config.Name("GridImprovements")

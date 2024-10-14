@@ -12,7 +12,6 @@
         "MixinBaseElectricItem",
         "MixinElectricItemManager",
         "MixinEnergyCalculatorLegGridData",
-        "MixinEnergyNetLocal",
         "MixinGradualRecipe",
         "MixinGrid",
         "MixinItemArmorElectric",

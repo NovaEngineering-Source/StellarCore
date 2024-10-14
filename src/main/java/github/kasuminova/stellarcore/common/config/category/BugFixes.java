@@ -40,6 +40,9 @@ public class BugFixes {
     @Config.Name("DraconicEvolution")
     public final DraconicEvolution draconicEvolution = new DraconicEvolution();
 
+    @Config.Name("EBWizardry")
+    public final EBWizardry ebWizardry = new EBWizardry();
+
     @Config.Name("EnderIOConduits")
     public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
@@ -250,6 +253,14 @@ public class BugFixes {
         @Config.Comment("This option is used to fix some item duplication issues with CraftingInjector.")
         @Config.Name("CraftingInjectorFixes")
         public boolean craftingInjector = true;
+
+    }
+    
+    public static class EBWizardry {
+
+        @Config.Comment("Fix an issue where Imbuement Altar could copy items using a special interact method.")
+        @Config.Name("BlockImbuementAltarDupeFixes")
+        public boolean blockImbuementAltar = true;
 
     }
 

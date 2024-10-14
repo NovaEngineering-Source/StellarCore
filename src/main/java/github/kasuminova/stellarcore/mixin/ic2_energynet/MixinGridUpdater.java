@@ -111,7 +111,6 @@ public class MixinGridUpdater {
 
     @Unique
     private void stellar_core$executeSyncTasks(final int totalTasks, final IStellarEnergyCalculatorLeg stellarCalculator, final Queue<Grid> calculateQueue, final ForkJoinTask<?> parallelFuture) {
-        int completedTask = 0;
         IC2EnergySyncCalcTask task;
         boolean syncBusy;
         while (!parallelFuture.isDone()) {
@@ -119,12 +118,10 @@ public class MixinGridUpdater {
 
             while ((task = stellar_core$syncTaskQueue.poll()) != null) {
                 stellarCalculator.doSyncCalc(task);
-                completedTask++;
                 syncBusy = false;
             }
 
             if (stellar_core$helpComplete(stellarCalculator, calculateQueue)) {
-                completedTask++;
                 syncBusy = false;
             }
 
@@ -133,16 +130,13 @@ public class MixinGridUpdater {
             }
         }
 
-        while (stellar_core$helpComplete(stellarCalculator, calculateQueue)) {
-            completedTask++;
+        while (true) {
+            if (!stellar_core$helpComplete(stellarCalculator, calculateQueue)) {
+                break;
+            }
         }
         while ((task = stellar_core$syncTaskQueue.poll()) != null) {
             stellarCalculator.doSyncCalc(task);
-            completedTask++;
-        }
-
-        if (completedTask < totalTasks) {
-            StellarLog.LOG.warn("[StellarCore-IC2GridUpdater] Unable to complete all tasks, {} tasks left.", totalTasks - completedTask);
         }
     }
 

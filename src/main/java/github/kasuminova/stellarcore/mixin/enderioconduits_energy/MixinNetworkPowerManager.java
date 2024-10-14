@@ -73,9 +73,6 @@ public abstract class MixinNetworkPowerManager implements IStellarNetworkPowerMa
     private final List<ReceptorPowerInterface> stellar_core$collectedPowerInterface = new ObjectArrayList<>();
 
     @Unique
-    private ForkJoinTask<?> stellar_core$parallelTask = null;
-
-    @Unique
     private volatile boolean stellar_core$shouldFinalApply = false;
 
     // Reflections...
@@ -96,48 +93,44 @@ public abstract class MixinNetworkPowerManager implements IStellarNetworkPowerMa
 
         trackerStartTick();
         checkReceptors();
+    }
 
-        stellar_core$parallelTask = ForkJoinPool.commonPool().submit(() -> {
-            // Update our energy stored based on what's in our conduits
-            updateNetworkStorage();
-            networkPowerTracker.tickStart(energyStored);
+    @Override
+    public void stellar_core$parallelTick() {
+        // Update our energy stored based on what's in our conduits
+        updateNetworkStorage();
+        networkPowerTracker.tickStart(energyStored);
 
-            ICapBankSupply capSupply = stellar_core$getCapSupply();
-            capSupply.invokeInit();
+        ICapBankSupply capSupply = stellar_core$getCapSupply();
+        capSupply.invokeInit();
 
-            long available = energyStored + capSupply.getCanExtract();
+        long available = energyStored + capSupply.getCanExtract();
 
-            if (available <= 0 || (receptors.isEmpty() && storageReceptors.isEmpty())) {
-                trackerEndTick();
-                networkPowerTracker.tickEnd(energyStored);
-                stellar_core$shouldFinalApply = false;
-                return;
+        if (available <= 0 || (receptors.isEmpty() && storageReceptors.isEmpty())) {
+            trackerEndTick();
+            networkPowerTracker.tickEnd(energyStored);
+            stellar_core$shouldFinalApply = false;
+            return;
+        }
+
+        stellar_core$collectedPowerInterface.clear();
+        receptors.forEach(receptor -> {
+            AccessorReceptorEntry accessorReceptorEntry = (AccessorReceptorEntry) receptor;
+            IPowerInterface pp = accessorReceptorEntry.invokeGetPowerInterface();
+            if (pp != null) {
+                stellar_core$collectedPowerInterface.add(new ReceptorPowerInterface(pp, accessorReceptorEntry));
             }
-
-            stellar_core$collectedPowerInterface.clear();
-            receptors.forEach(receptor -> {
-                AccessorReceptorEntry accessorReceptorEntry = (AccessorReceptorEntry) receptor;
-                IPowerInterface pp = accessorReceptorEntry.invokeGetPowerInterface();
-                if (pp != null) {
-                    stellar_core$collectedPowerInterface.add(new ReceptorPowerInterface(pp, accessorReceptorEntry));
-                }
-            });
-            stellar_core$shouldFinalApply = true;
         });
+        stellar_core$shouldFinalApply = true;
     }
 
     @Unique
     @Override
-    @SuppressWarnings("AddedMixinMembersNamePattern")
-    public void finalApplyReceivedPower() {
+    public void stellar_core$finalApplyReceivedPower() {
         if (!StellarCoreConfig.PERFORMANCE.enderIOConduits.networkPowerManager) {
             return;
         }
 
-        if (stellar_core$parallelTask != null && !stellar_core$parallelTask.isDone()) {
-            stellar_core$parallelTask.join();
-        }
-        stellar_core$parallelTask = null;
         if (!stellar_core$shouldFinalApply) {
             return;
         }

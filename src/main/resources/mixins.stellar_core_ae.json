@@ -7,5 +7,8 @@
     "client": [
         "MixinFluidStackSizeRenderer",
         "MixinStackSizeRenderer"
+    ],
+    "mixins": [
+        "MixinCraftingGridCache"
     ]
 }

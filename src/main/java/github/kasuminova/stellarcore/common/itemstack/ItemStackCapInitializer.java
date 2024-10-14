@@ -2,7 +2,7 @@ package github.kasuminova.stellarcore.common.itemstack;
 
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.shaded.org.jctools.queues.unpadded.MpmcUnpaddedArrayQueue;
+import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.unpadded.MpmcAtomicUnpaddedArrayQueue;
 
 import java.util.List;
 import java.util.Queue;
@@ -15,6 +15,7 @@ public class ItemStackCapInitializer implements Runnable {
 
     public static final ItemStackCapInitializer INSTANCE = new ItemStackCapInitializer();
 
+    private static final ThreadLocal<Boolean> SHOULD_ADD_TASK = ThreadLocal.withInitial(() -> true);
     private static final int QUEUE_BOUND_SIZE = 50_000;
     private static final int MAX_WORKERS = Math.min(StellarEnvironment.getConcurrency(), 8);
 
@@ -31,6 +32,10 @@ public class ItemStackCapInitializer implements Runnable {
 
     private ItemStackCapInitializer() {
         createWorkerInternal();
+    }
+
+    public static void setShouldAddTask(final boolean shouldAddTask) {
+        SHOULD_ADD_TASK.set(shouldAddTask);
     }
 
     public static void resetStatus() {
@@ -80,6 +85,9 @@ public class ItemStackCapInitializer implements Runnable {
     }
 
     public void addTask(final ItemStackCapInitTask task) {
+        if (!SHOULD_ADD_TASK.get()) {
+            return;
+        }
         while (!taskQueue.offer(task)) {
             if (taskQueue.offer(task)) {
                 break;
@@ -143,7 +151,7 @@ public class ItemStackCapInitializer implements Runnable {
     }
 
     private static <E> Queue<E> createConcurrentQueue() {
-        return new MpmcUnpaddedArrayQueue<>(QUEUE_BOUND_SIZE * (MAX_WORKERS + 1));
+        return new MpmcAtomicUnpaddedArrayQueue<>(QUEUE_BOUND_SIZE * (MAX_WORKERS + 1));
     }
 
 }

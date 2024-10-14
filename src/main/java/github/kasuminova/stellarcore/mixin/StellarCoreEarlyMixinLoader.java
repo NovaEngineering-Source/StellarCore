@@ -49,15 +49,15 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);
         addMixinCFG("mixins.stellar_core_minecraft_stitcher.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
 //        addMixinCFG("mixins.stellar_core_minecraft_texturemap.json",      () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad);
-        addMixinCFG("mixins.stellar_core_minecraft_texture_load.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad);
-        addMixinCFG("mixins.stellar_core_forge.json",                         () -> StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress);
-        addMixinCFG("mixins.stellar_core_forge_asmdatatable.json",            () -> StellarCoreConfig.PERFORMANCE.forge.asmDataTable);
-        addMixinCFG("mixins.stellar_core_forge_bakedquad.json",               () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization);
-        addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",    () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
-        addMixinCFG("mixins.stellar_core_forge_modelloader.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
-        addMixinCFG("mixins.stellar_core_forge_registry.json",                () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
-        addMixinCFG("mixins.stellar_core_hudcaching.json",                    () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);
-        addMixinCFG("mixins.stellar_core_ebwizardry_early.json",              () -> StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData && !Mods.TICK_CENTRAL.loaded());
+        addMixinCFG("mixins.stellar_core_minecraft_texture_load.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad);
+        addMixinCFG("mixins.stellar_core_forge.json",                            () -> StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress);
+        addMixinCFG("mixins.stellar_core_forge_asmdatatable.json",               () -> StellarCoreConfig.PERFORMANCE.forge.asmDataTable);
+        addMixinCFG("mixins.stellar_core_forge_bakedquad.json",                  () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization);
+        addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",       () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
+        addMixinCFG("mixins.stellar_core_forge_modelloader.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
+        addMixinCFG("mixins.stellar_core_forge_registry.json",                   () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
+        addMixinCFG("mixins.stellar_core_hudcaching.json",                       () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);
+        addMixinCFG("mixins.stellar_core_ebwizardry_early.json",                 () -> StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData && !Mods.TICK_CENTRAL.loaded());
     }
 
     private static void addMixinCFG(final String mixinConfig) {

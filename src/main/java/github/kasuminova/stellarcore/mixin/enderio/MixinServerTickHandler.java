@@ -35,7 +35,8 @@ public class MixinServerTickHandler {
 
     @Inject(method = "onWorldTick", at = @At("RETURN"))
     private static void injectOnWorldTickEnd(final TickEvent.WorldTickEvent event, final CallbackInfo ci) {
-        FINAL_TICK_LISTENERS.forEach(IStellarServerTickListener::tickFinal);
+        FINAL_TICK_LISTENERS.parallelStream().forEach(IStellarServerTickListener::stellar_core$tickParallel);
+        FINAL_TICK_LISTENERS.forEach(IStellarServerTickListener::stellar_core$tickFinal);
         FINAL_TICK_LISTENERS.clear();
     }
 

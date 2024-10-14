@@ -2,7 +2,6 @@ package github.kasuminova.stellarcore.mixin.minecraft.nbtpool;
 
 import github.kasuminova.stellarcore.common.pool.NBTTagPrimitivePool;
 import github.kasuminova.stellarcore.mixin.util.StellarPooledNBT;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagLong;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
