@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.vecmath.Matrix4f;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
@@ -127,6 +128,8 @@ public abstract class MixinModelLoader extends ModelBakery {
             @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
             @Local(name = "mapper") BlockStateMapper mapper) {
         // It Loaded? Don't remove this local var.
+        //noinspection unused
+        Class<Matrix4f> Matrix4f = Matrix4f.class;
         //noinspection unused
         Class<ModelRotation> ModelRotation = ModelRotation.class;
 
