@@ -92,6 +92,12 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, int damage, bo
         return new HashedItemStack(stack.copy(), stackHashCode, damage, hasTag);
     }
 
+    public HashedItemStack copyWithSize(final int size) {
+        ItemStack copied = stack.copy();
+        copied.setCount(size);
+        return new HashedItemStack(copied, stackHashCode, damage, hasTag);
+    }
+
     @Override
     public int hashCode() {
         return stackHashCode;

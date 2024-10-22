@@ -79,6 +79,9 @@ public class Performance {
     @Config.Name("Mekanism")
     public final Mekanism mekanism = new Mekanism();
 
+    @Config.Name("NuclearCraftOverhauled")
+    public final NuclearCraftOverhauled nuclearCraftOverhauled = new NuclearCraftOverhauled();
+
     @Config.Name("TConstruct")
     public final TConstruct tConstruct = new TConstruct();
 
@@ -348,6 +351,11 @@ public class Performance {
         @Config.RequiresMcRestart
         @Config.Name("UnpackedBakedQuadVertexDataCanonicalization")
         public boolean unpackedBakedQuadVertexDataCanonicalization = false;
+
+        @Config.Comment("When writing to Capability's NBT, if the returned NBT is empty, no content is written, which may help improve performance.")
+        @Config.RequiresMcRestart
+        @Config.Name("DeallocateEmptyCapabilityNBT")
+        public boolean deallocateEmptyCapabilityNBT = true;
 
     }
 
@@ -677,6 +685,17 @@ public class Performance {
         })
         @Config.Name("FrequencyImprovements")
         public boolean frequency = true;
+
+    }
+
+    public static class NuclearCraftOverhauled {
+
+        @Config.Comment({
+                "(Server Performance) Improvements search performance of basic recipes.",
+                "Requires disable processor.smart_processor_input option at nuclearcraft.cfg."
+        })
+        @Config.Name("BasicRecipeSearchImprovements")
+        public boolean basicRecipeImprovements = true;
 
     }
 

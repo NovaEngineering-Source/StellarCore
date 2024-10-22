@@ -27,9 +27,6 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
     @Unique
     private static final AtomicLong stellar_core$UID = new AtomicLong();
 
-    @Unique
-    private static final ThreadLocal<Boolean> stellar_core$CREATE_TAG_MAP = ThreadLocal.withInitial(() -> Boolean.TRUE);
-
     @Mutable
     @Shadow
     @Final
@@ -71,10 +68,8 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final CallbackInfo ci) {
-        if (stellar_core$CREATE_TAG_MAP.get() == Boolean.TRUE) {
-            stellar_core$setTagMap(new NBTTagBackingMap());
-            this.stellar_core$uid = stellar_core$UID.incrementAndGet();
-        }
+        stellar_core$setTagMap(new NBTTagBackingMap());
+        this.stellar_core$uid = stellar_core$UID.incrementAndGet();
     }
 
     @Inject(method = "read", at = @At("HEAD"))
@@ -130,10 +125,7 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
     @Nonnull
     @Overwrite
     public NBTTagCompound copy() {
-        // Create NBTTagCompound without tagMap creation.
-        stellar_core$CREATE_TAG_MAP.set(Boolean.FALSE);
         NBTTagCompound copied = new NBTTagCompound();
-        stellar_core$CREATE_TAG_MAP.set(Boolean.TRUE);
 
         // Copy UID.
         StellarNBTTagCompound accessor = (StellarNBTTagCompound) copied;

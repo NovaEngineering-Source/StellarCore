@@ -137,6 +137,10 @@ public class BugFixes {
         @Config.Name("DisplayLargeNBTWarning")
         public boolean displayLargeNBTWarning = true;
 
+        @Config.Comment("Fix the NPE problem that occasionally occurs with the client when the server sends a null block packet.")
+        @Config.Name("ClientNullBlockPacket")
+        public boolean clientNullBlockPacket = true;
+
     }
 
     public static class Critical {

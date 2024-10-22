@@ -9,6 +9,7 @@
         "MixinModelBakery",
         "MixinModelLoader",
         "MixinModelLoaderRegistry",
-        "MixinModelManager"
+        "MixinModelManager",
+        "MixinModelRotation"
     ]
 }

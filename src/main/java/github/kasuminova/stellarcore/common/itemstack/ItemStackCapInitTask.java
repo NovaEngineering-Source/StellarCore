@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.common.itemstack;
 
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.StellarItemStack;
 import net.minecraft.item.ItemStack;
 
@@ -18,7 +19,11 @@ public class ItemStackCapInitTask implements Runnable {
         if (done) {
             return;
         }
-        target.stellar_core$initCap();
+        try {
+            target.stellar_core$initCap();
+        } catch (Throwable e) {
+            StellarLog.LOG.warn("[StellarCore-ItemStackCapInitTask] Failed to execute capability init task!", e);
+        }
         done = true;
     }
 

@@ -34,6 +34,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_modelblock.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.modelBlockStringCanonicalization && CensoredASMCompat.isPresent());
         addMixinCFG("mixins.stellar_core_minecraft_nbtmaplist.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.nbtTag && !(CensoredASMCompat.isPresent() && CensoredASMCompat.checkNBTMapModified()));
         addMixinCFG("mixins.stellar_core_minecraft_nbtpool.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.nbtPrimitiveConstantsPool);
+        addMixinCFG("mixins.stellar_core_minecraft_nethandlerplayserver.json");
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",                 () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_property.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.propertyEnumHashCodeCache);
@@ -45,6 +46,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_world.json",                  () -> StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots);
         addMixinCFG("mixins.stellar_core_minecraft_world_load.json",             () -> StellarCoreConfig.FEATURES.vanilla.handleClientWorldLoad);
         addMixinCFG("mixins.stellar_core_minecraft_world_pos_judgement.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.worldBlockPosJudgement);
+        addMixinCFG("mixins.stellar_core_minecraft_worldclient.json",            () -> StellarCoreConfig.BUG_FIXES.vanilla.clientNullBlockPacket);
         addMixinCFG("mixins.stellar_core_minecraft_worldserver.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.worldServerGetPendingBlockUpdates);
         addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);
         addMixinCFG("mixins.stellar_core_minecraft_stitcher.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
@@ -54,6 +56,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_asmdatatable.json",               () -> StellarCoreConfig.PERFORMANCE.forge.asmDataTable);
         addMixinCFG("mixins.stellar_core_forge_bakedquad.json",                  () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",       () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
+        addMixinCFG("mixins.stellar_core_forge_capability.json",                 () -> StellarCoreConfig.PERFORMANCE.forge.deallocateEmptyCapabilityNBT);
         addMixinCFG("mixins.stellar_core_forge_modelloader.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addMixinCFG("mixins.stellar_core_forge_registry.json",                   () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
         addMixinCFG("mixins.stellar_core_hudcaching.json",                       () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);

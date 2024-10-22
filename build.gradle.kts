@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.5.9"
+version = "1.5.12"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -207,17 +207,17 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:jei-utilities-616190:4630499"))
     implementation(rfg.deobf("curse.maven:the-one-probe-245211:2667280"))
     implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
-    compileOnly(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
-    compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197"))
+    implementation(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
+    compileOnly(rfg.deobf("curse.maven:nuclearcraft-overhauled-336895:5446445"))
     implementation(rfg.deobf("curse.maven:industrialcraft-2-242638:3838713"))
     compileOnly(rfg.deobf("curse.maven:mekanism-ce-unofficial-840735:5130458"))
 //    compileOnly(rfg.deobf("curse.maven:mekanism-unofficial-edition-v10-edition-840735:4464199"))
-    compileOnly(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
-    compileOnly(rfg.deobf("curse.maven:cofh-core-69162:2920433"))
-    compileOnly(rfg.deobf("curse.maven:cofh-world-271384:2920434"))
-    compileOnly(rfg.deobf("curse.maven:thermal-foundation-222880:2926428"))
-    compileOnly(rfg.deobf("curse.maven:thermal-innovation-291737:2920441"))
-    compileOnly(rfg.deobf("curse.maven:thermal-expansion-69163:2926431"))
+    implementation(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
+    implementation(rfg.deobf("curse.maven:cofh-core-69162:2920433"))
+    implementation(rfg.deobf("curse.maven:cofh-world-271384:2920434"))
+    implementation(rfg.deobf("curse.maven:thermal-foundation-222880:2926428"))
+    implementation(rfg.deobf("curse.maven:thermal-innovation-291737:2920441"))
+    implementation(rfg.deobf("curse.maven:thermal-expansion-69163:2926431"))
     compileOnly(rfg.deobf("curse.maven:botania-225643:3330934"))
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
     implementation(rfg.deobf("curse.maven:baubles-227083:2518667"))
@@ -243,8 +243,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:more-electric-tools-366298:3491973"))
     compileOnly(rfg.deobf("curse.maven:brandonscore-231382:3051539"))
     compileOnly(rfg.deobf("curse.maven:draconicevolution-223565:3051542"))
-    compileOnly(rfg.deobf("curse.maven:mantle-74924:2713386"))
-    compileOnly(rfg.deobf("curse.maven:tinkers-construct-74072:2902483"))
+    implementation(rfg.deobf("curse.maven:mantle-74924:2713386"))
+    implementation(rfg.deobf("curse.maven:tinkers-construct-74072:2902483"))
     compileOnly(rfg.deobf("curse.maven:thermal-dynamics-227443:2920505"))
     compileOnly(rfg.deobf("curse.maven:armourers-workshop-229523:3101995"))
     compileOnly(rfg.deobf("curse.maven:avaritia-1-10-261348:3143349"))
@@ -278,7 +278,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:libnine-322344:3509087"))
     compileOnly(rfg.deobf("curse.maven:lazy-ae2-322347:3254160"))
     compileOnly(rfg.deobf("curse.maven:electroblobs-wizardry-265642:5354477"))
-    implementation(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
+    compileOnly(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
     compileOnly(rfg.deobf("curse.maven:ancient-spellcraft-358124:5413256"))
     compileOnly(rfg.deobf("curse.maven:random-psideas-302313:3215550"))
     compileOnly(rfg.deobf("curse.maven:journeymap-32274:5172461"))

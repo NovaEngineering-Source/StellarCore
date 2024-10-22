@@ -24,25 +24,25 @@ import java.util.Queue;
 @Mixin(value = EnergyNetLocal.class, remap = false)
 public abstract class MixinEnergyNetLocal {
 
-//    @Final
-//    @Shadow
-//    @Mutable
-//    Map<BlockPos, Tile> registeredTiles;
-//
+    @Final
+    @Shadow
+    @Mutable
+    Map<BlockPos, Tile> registeredTiles;
+
 //    @Unique
 //    private final BlockPos2ValueMap<List<AccessorGridChange>> stellar_core$gridChangesMap = new BlockPos2ValueMap<>();
 //
 //    @Unique
 //    private static final Object STELLAR_CORE$QUEUE_DELAY_CHANGE = stellar_core$getQueueDelayChange();
-//
-//    @Inject(method = "<init>", at = @At("RETURN"))
-//    private void injectInit(final CallbackInfo ci) {
-//        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.energyNetLocal) {
-//            return;
-//        }
-//        this.registeredTiles = new BlockPos2ValueMap<>();
-//    }
-//
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void injectInit(final CallbackInfo ci) {
+        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.energyNetLocal) {
+            return;
+        }
+        this.registeredTiles = new BlockPos2ValueMap<>();
+    }
+
 //    @Inject(method = "getIoTile", at = @At(value = "INVOKE", target = "Ljava/util/Queue;iterator()Ljava/util/Iterator;"), cancellable = true)
 //    private void injectGetIOTileBeforeScanQueue(final BlockPos pos, final CallbackInfoReturnable<IEnergyTile> cir) {
 //        if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.getIoAndSubTile) {

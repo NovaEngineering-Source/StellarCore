@@ -60,9 +60,6 @@ public abstract class MixinItemStack implements StellarItemStack {
     public abstract Item getItem();
 
     @Unique
-    private boolean stellar_core$capNBTCacheAvailable = true;
-
-    @Unique
     private volatile ItemStackCapInitTask stellar_core$capInitTask = null;
 
     @Unique
@@ -84,10 +81,8 @@ public abstract class MixinItemStack implements StellarItemStack {
         Item item = getItemRaw();
         if (item != null) {
             this.delegate = item.delegate;
-            if (item != Items.AIR) {
-                this.stellar_core$capInitTask = new ItemStackCapInitTask((ItemStack) (Object) this);
-                ItemStackCapInitializer.INSTANCE.addTask(this.stellar_core$capInitTask);
-            }
+            this.stellar_core$capInitTask = new ItemStackCapInitTask((ItemStack) (Object) this);
+            ItemStackCapInitializer.INSTANCE.addTask(this.stellar_core$capInitTask);
         }
     }
 
@@ -156,10 +151,6 @@ public abstract class MixinItemStack implements StellarItemStack {
         stellar_core$ensureCapInitialized();
 
         Object cap = this.capabilities == null ? null : this.capabilities.getCapability(capability, facing);
-        if (cap != null) {
-            // Capability can be changed.
-            stellar_core$disableCapNBTCache();
-        }
         cir.setReturnValue(cap);
     }
 
@@ -197,16 +188,8 @@ public abstract class MixinItemStack implements StellarItemStack {
     }
 
     @Unique
-    private void stellar_core$disableCapNBTCache() {
-        if (this.capNBT != null && this.capabilities != null && this.stellar_core$capNBTCacheAvailable) {
-            this.capNBT = null;
-            this.stellar_core$capNBTCacheAvailable = false;
-        }
-    }
-
-    @Unique
     public void stellar_core$ensureCapNBTInitialized() {
-        if ((this.capNBT == null || !this.stellar_core$capNBTCacheAvailable) && this.capabilities != null) {
+        if (this.capabilities != null) {
             this.capNBT = this.capabilities.serializeNBT();
         }
     }
@@ -214,7 +197,12 @@ public abstract class MixinItemStack implements StellarItemStack {
     @Override
     public NBTTagCompound stellar_core$getCapNBT() {
         stellar_core$ensureCapNBTInitialized();
-        return this.capNBT == null ? SharedEmptyTag.EMPTY_TAG : this.capNBT;
+        return this.capNBT == null || this.capNBT.isEmpty() ? SharedEmptyTag.EMPTY_TAG : this.capNBT;
+    }
+
+    @Override
+    public CapabilityDispatcher stellar_core$getCap() {
+        return capabilities;
     }
 
 }

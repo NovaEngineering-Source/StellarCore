@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.ClassUtils;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
@@ -17,7 +18,6 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.FMLLog;
@@ -28,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.vecmath.Matrix4f;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
@@ -127,12 +126,6 @@ public abstract class MixinModelLoader extends ModelBakery {
             List<Block> blocks,
             @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
             @Local(name = "mapper") BlockStateMapper mapper) {
-        // It Loaded? Don't remove this local var.
-        //noinspection unused
-        Class<Matrix4f> Matrix4f = Matrix4f.class;
-        //noinspection unused
-        Class<ModelRotation> ModelRotation = ModelRotation.class;
-
         long startTime = System.currentTimeMillis();
         stellar_core$toConcurrent();
 
