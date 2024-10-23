@@ -22,20 +22,27 @@ public class ItemStackCapInitTask implements Runnable {
     }
 
     @Override
-    public synchronized void run() {
-        if (done.get()) {
+    public void run() {
+        if (done.get() || working != null) {
             return;
         }
-        working = Thread.currentThread();
 
-        try {
-            target.stellar_core$initCap();
-        } catch (Throwable e) {
-            StellarLog.LOG.warn("[StellarCore-ItemStackCapInitTask] Failed to execute capability init task!", e);
+        synchronized (this) {
+            if (working != null) {
+                return;
+            }
+
+            working = Thread.currentThread();
+
+            try {
+                target.stellar_core$initCap();
+            } catch (Throwable e) {
+                StellarLog.LOG.warn("[StellarCore-ItemStackCapInitTask] Failed to execute capability init task!", e);
+            }
+
+            working = null;
+            done.set(true);
         }
-
-        working = null;
-        done.set(true);
     }
 
     public boolean isDone() {
