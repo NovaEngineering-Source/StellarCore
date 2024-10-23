@@ -103,6 +103,13 @@ public abstract class MixinItemStack implements StellarItemStack {
 
     @Override
     public void stellar_core$joinCapInit() {
+        if (this.capabilities != null) {
+            return;
+        }
+        if (this.stellar_core$capabilities == null) {
+            return;
+        }
+
         this.capabilities = this.stellar_core$capabilities;
         this.stellar_core$capabilities = null;
         if (this.capNBT != null && this.capabilities != null) {
@@ -179,12 +186,9 @@ public abstract class MixinItemStack implements StellarItemStack {
             }
 
             try {
-                while (true) {
-                    if (this.stellar_core$capInitTask.join()) {
-                        break;
-                    }
+                if (this.stellar_core$capInitTask.join()) {
+                    this.stellar_core$capInitTask = null;
                 }
-                this.stellar_core$capInitTask = null;
             } catch (NullPointerException ignored) { // If task is already done?
             }
         }

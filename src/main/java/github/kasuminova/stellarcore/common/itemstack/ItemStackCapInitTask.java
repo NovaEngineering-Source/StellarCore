@@ -3,14 +3,15 @@ package github.kasuminova.stellarcore.common.itemstack;
 import github.kasuminova.stellarcore.mixin.util.StellarItemStack;
 import net.minecraft.item.ItemStack;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings("DataFlowIssue")
 public class ItemStackCapInitTask {
 
-    private static final ThreadLocal<Boolean> CAPABILITY_JOINING = ThreadLocal.withInitial(() -> false);
+    private static final ThreadLocal<Deque<ItemStackCapInitTask>> JOINING_STACK = ThreadLocal.withInitial(ArrayDeque::new);
 
     private final StellarItemStack target;
 
@@ -18,8 +19,8 @@ public class ItemStackCapInitTask {
     private AtomicBoolean done;
     private AtomicBoolean joining;
 
-    private Lock loadLock;
-    private Lock joinLock;
+    private ReentrantLock loadLock;
+    private ReentrantLock joinLock;
 
     public ItemStackCapInitTask(final ItemStack target) {
         this.target = (StellarItemStack) (Object) target;
@@ -34,15 +35,22 @@ public class ItemStackCapInitTask {
     }
 
     public boolean tryRun() {
-        if (loadLock.tryLock()) {
+        // Current: JoinLock = locked / unlocked, LoadLock = unlocked
+        if (acquireLoadLock()) {
+            // Acquired LoadLock, start running
+            // Current: JoinLock = locked / unlocked, LoadLock = locked
             if (!done.get()) {
                 run();
                 done.set(true);
             }
-            loadLock.unlock();
+
+            // Unlock LoadLock
+            // Current: JoinLock = locked / unlocked, LoadLock = unlocked
+            releaseLoadLock();
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public void run() {
@@ -54,48 +62,62 @@ public class ItemStackCapInitTask {
     }
 
     public boolean join() {
+        final Deque<ItemStackCapInitTask> taskStack = JOINING_STACK.get();
         // Recursion check
-        if (CAPABILITY_JOINING.get()) {
-            return true;
+        if (taskStack.peekFirst() == this) {
+            return false;
         }
-        CAPABILITY_JOINING.set(true);
+        taskStack.push(this);
 
-        if (asyncComponentInitialized) {
-            acquireJoinLock();
+        try {
+            if (asyncComponentInitialized) {
+                // Current: JoinLock = locked
+                acquireJoinLock();
 
-            // If another thread is currently running.
-            if (!tryRun()) {
-                releaseJoinLock();
-                CAPABILITY_JOINING.set(false);
-                return false;
+                if (tryRun()) {
+                    target.stellar_core$joinCapInit();
+
+                    // Current: JoinLock = unlocked
+                    releaseJoinLock();
+                } else {
+                    // Current: JoinLock = unlocked
+                    releaseJoinLock();
+                    // If we cannot acquire LoadLock, wait for the another thread to finish load.
+                    awaitLoadComplete();
+                }
+            } else {
+                run();
             }
-            target.stellar_core$joinCapInit();
-
-            releaseJoinLock();
-        } else {
-            run();
+        } finally {
+            taskStack.pop();
         }
 
-        CAPABILITY_JOINING.set(false);
         return true;
     }
 
     private void acquireJoinLock() {
         while (true) {
-            // Wait for the another thread finish
-            while (joining.get()) {
-                Thread.yield();
-            }
+            awaitJoinComplete();
 
-            joinLock.lock();
-            // Check again
-            if (!joining.get()) {
-                // Acquired lock
-                joining.set(true);
+            if (joinLock.tryLock()) {
+                // Check again.
+                if (!joining.get()) {
+                    // Acquired lock.
+                    joining.set(true);
+                    joinLock.unlock();
+                    break;
+                }
+                // Acquire failed, unlock and wait for the another thread, then retry.
+                // Join cannot be interrupted.
                 joinLock.unlock();
-                break;
             }
-            joinLock.unlock();
+        }
+    }
+
+    private void awaitJoinComplete() {
+        // Wait for the another thread finish
+        while (joining.get()) {
+            Thread.yield();
         }
     }
 
@@ -104,6 +126,23 @@ public class ItemStackCapInitTask {
         joinLock.lock();
         joining.set(false);
         joinLock.unlock();
+    }
+
+    private boolean acquireLoadLock() {
+        return loadLock.tryLock();
+    }
+
+    private void releaseLoadLock() {
+        loadLock.unlock();
+    }
+
+    private void awaitLoadComplete() {
+        while (true) {
+            // Wait for the another thread finish
+            if (!loadLock.isLocked()) {
+                break;
+            }
+        }
     }
 
 }
