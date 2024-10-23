@@ -64,7 +64,7 @@ public class ItemStackCapInitTask {
     public boolean join() {
         final Deque<ItemStackCapInitTask> taskStack = JOINING_STACK.get();
         // Recursion check
-        if (taskStack.peekFirst() == this) {
+        if (taskStack.contains(this)) {
             return false;
         }
         taskStack.push(this);
