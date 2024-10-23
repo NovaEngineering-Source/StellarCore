@@ -1,48 +1,52 @@
 package github.kasuminova.stellarcore.common.itemstack;
 
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.StellarItemStack;
 import net.minecraft.item.ItemStack;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings("DataFlowIssue")
-public class ItemStackCapInitTask implements Runnable {
+public class ItemStackCapInitTask {
+
+    private static final ThreadLocal<Boolean> CAPABILITY_JOINING = ThreadLocal.withInitial(() -> false);
 
     private final StellarItemStack target;
 
-    private final AtomicBoolean done = new AtomicBoolean(false);
-    private final AtomicBoolean joined = new AtomicBoolean(false);
+    private boolean asyncComponentInitialized = false;
+    private AtomicBoolean done;
+    private AtomicBoolean joining;
 
-    private volatile Thread working = null;
-    private volatile Thread joining = null;
+    private Lock loadLock;
+    private Lock joinLock;
 
     public ItemStackCapInitTask(final ItemStack target) {
         this.target = (StellarItemStack) (Object) target;
     }
 
-    @Override
+    void initAsyncComponents() {
+        this.done = new AtomicBoolean(false);
+        this.joining = new AtomicBoolean(false);
+        this.loadLock = new ReentrantLock();
+        this.joinLock = new ReentrantLock();
+        this.asyncComponentInitialized = true;
+    }
+
+    public boolean tryRun() {
+        if (loadLock.tryLock()) {
+            if (!done.get()) {
+                run();
+                done.set(true);
+            }
+            loadLock.unlock();
+            return true;
+        }
+        return false;
+    }
+
     public void run() {
-        if (done.get() || working != null) {
-            return;
-        }
-
-        synchronized (this) {
-            if (working != null) {
-                return;
-            }
-
-            working = Thread.currentThread();
-
-            try {
-                target.stellar_core$initCap();
-            } catch (Throwable e) {
-                StellarLog.LOG.warn("[StellarCore-ItemStackCapInitTask] Failed to execute capability init task!", e);
-            }
-
-            working = null;
-            done.set(true);
-        }
+        target.stellar_core$initCap();
     }
 
     public boolean isDone() {
@@ -50,45 +54,56 @@ public class ItemStackCapInitTask implements Runnable {
     }
 
     public boolean join() {
-        if (joined.get()) {
+        // Recursion check
+        if (CAPABILITY_JOINING.get()) {
             return true;
         }
+        CAPABILITY_JOINING.set(true);
 
-        final Thread current = Thread.currentThread();
-        // Recursion check.
-        if (this.joining == current || this.working == current) {
-            return false;
-        }
+        if (asyncComponentInitialized) {
+            acquireJoinLock();
 
-        // Lock the target instead of the task itself.
-        synchronized (this) {
-            // Recursion check.
-            if (this.joining == current || this.working == current) {
+            // If another thread is currently running.
+            if (!tryRun()) {
+                releaseJoinLock();
+                CAPABILITY_JOINING.set(false);
                 return false;
             }
-            // Wait for another thread finish.
-            awaitJoinComplete();
-            // Set the joining thread.
-            this.joining = current;
-        }
+            target.stellar_core$joinCapInit();
 
-        if (!done.get()) {
+            releaseJoinLock();
+        } else {
             run();
         }
-        if (!joined.get()) {
-            target.stellar_core$joinCapInit();
-            joined.set(true);
-        }
 
-        this.joining = null;
+        CAPABILITY_JOINING.set(false);
         return true;
     }
 
-    private void awaitJoinComplete() {
-        // Wait for the task to finish.
-        while (this.joining != null) {
-            Thread.yield();
+    private void acquireJoinLock() {
+        while (true) {
+            // Wait for the another thread finish
+            while (joining.get()) {
+                Thread.yield();
+            }
+
+            joinLock.lock();
+            // Check again
+            if (!joining.get()) {
+                // Acquired lock
+                joining.set(true);
+                joinLock.unlock();
+                break;
+            }
+            joinLock.unlock();
         }
+    }
+
+    private void releaseJoinLock() {
+        // Release lock
+        joinLock.lock();
+        joining.set(false);
+        joinLock.unlock();
     }
 
 }

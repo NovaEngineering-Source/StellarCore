@@ -63,9 +63,6 @@ public abstract class MixinItemStack implements StellarItemStack {
     private volatile ItemStackCapInitTask stellar_core$capInitTask = null;
 
     @Unique
-    private volatile boolean stellar_core$capabilityLoading = false;
-
-    @Unique
     private volatile CapabilityDispatcher stellar_core$capabilities = null;
 
     // ===========================================================================
@@ -93,6 +90,10 @@ public abstract class MixinItemStack implements StellarItemStack {
     @Override
     @SuppressWarnings("DataFlowIssue")
     public void stellar_core$initCap() {
+        if (this.stellar_core$capabilities != null) {
+            return;
+        }
+
         Item item = getItem();
         if (item != Items.AIR) {
             ICapabilityProvider provider = item.initCapabilities((ItemStack) (Object) this, this.capNBT);
@@ -168,7 +169,7 @@ public abstract class MixinItemStack implements StellarItemStack {
 
     @Unique
     public void stellar_core$ensureCapInitialized() {
-        if (this.stellar_core$capabilityLoading || this.capabilities != null) {
+        if (this.capabilities != null) {
             return;
         }
 
@@ -177,13 +178,15 @@ public abstract class MixinItemStack implements StellarItemStack {
                 return;
             }
 
-            this.stellar_core$capabilityLoading = true;
             try {
-                this.stellar_core$capInitTask.join();
+                while (true) {
+                    if (this.stellar_core$capInitTask.join()) {
+                        break;
+                    }
+                }
                 this.stellar_core$capInitTask = null;
             } catch (NullPointerException ignored) { // If task is already done?
             }
-            this.stellar_core$capabilityLoading = false;
         }
     }
 

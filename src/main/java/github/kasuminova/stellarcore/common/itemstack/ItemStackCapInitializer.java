@@ -88,6 +88,7 @@ public class ItemStackCapInitializer implements Runnable {
         if (!SHOULD_ADD_TASK.get()) {
             return;
         }
+        task.initAsyncComponents();
         while (!taskQueue.offer(task)) {
             if (taskQueue.offer(task)) {
                 break;
@@ -111,7 +112,7 @@ public class ItemStackCapInitializer implements Runnable {
             try {
                 int completed = 0;
                 while ((task = pollTask()) != null) {
-                    task.run();
+                    task.tryRun();
                     executed = true;
                     completed++;
                     queueSize.decrementAndGet();
