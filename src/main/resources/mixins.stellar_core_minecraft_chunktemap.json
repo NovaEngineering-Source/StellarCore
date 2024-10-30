@@ -1,5 +1,5 @@
 {
-    "package": "github.kasuminova.stellarcore.mixin.minecraft.chunk",
+    "package": "github.kasuminova.stellarcore.mixin.minecraft.chunktemap",
     "refmap": "mixins.stellar_core.refmap.json",
     "target": "@env(DEFAULT)",
     "minVersion": "0.8",

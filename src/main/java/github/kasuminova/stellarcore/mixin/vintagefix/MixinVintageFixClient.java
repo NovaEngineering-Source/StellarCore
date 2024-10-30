@@ -46,7 +46,7 @@ public class MixinVintageFixClient {
     }
 
     @Unique
-    private ResourceLocation stellar_core$getResourceLocation(ResourceLocation loc, TextureMap map) {
+    private static ResourceLocation stellar_core$getResourceLocation(ResourceLocation loc, TextureMap map) {
         String path = loc.getPath().toLowerCase();
         boolean absPath = path.startsWith("mcpatcher/") || path.startsWith("optifine/");
         return absPath

@@ -20,17 +20,23 @@ public class MixinReflectionUtil {
     @Unique
     private static final Map<Class<?>, Map<String, Optional<Field>>> STELLAR_CORE$FIELD_CACHE = new Reference2ObjectOpenHashMap<>();
 
+    @Unique
+    private static final ThreadLocal<Class<?>> STELLAR_CORE$CURRENT_SEARCH_CLASS = new ThreadLocal<>();
+
     @Inject(method = "getFieldRecursive(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/reflect/Field;", at = @At("HEAD"), cancellable = true)
     private static void injectGetFieldRecursive(final Class<?> clazz, final String fieldName, final CallbackInfoReturnable<Field> cir) {
         Optional<Field> cached = STELLAR_CORE$FIELD_CACHE.computeIfAbsent(clazz, (key) -> new Object2ObjectOpenHashMap<>()).get(fieldName);
         if (cached != null) {
             cir.setReturnValue(cached.orElse(null));
+        } else {
+            STELLAR_CORE$CURRENT_SEARCH_CLASS.set(clazz);
         }
     }
 
     @ModifyReturnValue(method = "getFieldRecursive(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/reflect/Field;", at = @At("TAIL"))
     private static Field injectGetFieldRecursiveReturn(final Field ret, final Class<?> clazz, final String fieldName) {
-        STELLAR_CORE$FIELD_CACHE.computeIfAbsent(clazz, (key) -> new Object2ObjectOpenHashMap<>()).put(fieldName, Optional.ofNullable(ret));
+        STELLAR_CORE$FIELD_CACHE.computeIfAbsent(STELLAR_CORE$CURRENT_SEARCH_CLASS.get(), (key) -> new Object2ObjectOpenHashMap<>()).put(fieldName, Optional.ofNullable(ret));
+        STELLAR_CORE$CURRENT_SEARCH_CLASS.remove();
         return ret;
     }
 

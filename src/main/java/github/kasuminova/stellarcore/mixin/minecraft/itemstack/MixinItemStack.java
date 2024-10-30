@@ -103,10 +103,7 @@ public abstract class MixinItemStack implements StellarItemStack {
 
     @Override
     public void stellar_core$joinCapInit() {
-        if (this.capabilities != null) {
-            return;
-        }
-        if (this.stellar_core$capabilities == null) {
+        if (this.capabilities != null || this.stellar_core$capabilities == null) {
             return;
         }
 

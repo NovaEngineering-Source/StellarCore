@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.ic2_energynet;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.AccessorGridData;
 import github.kasuminova.stellarcore.mixin.util.IC2EnergySyncCalcTask;
 import github.kasuminova.stellarcore.mixin.util.IStellarEnergyCalculatorLeg;
@@ -54,29 +55,33 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
         }
 
         final AtomicBoolean foundAny = new AtomicBoolean(false);
-        enet.getSources().parallelStream().forEach(tile -> {
-            IEnergySource source = (IEnergySource) tile.getMainTile();
-            int packets = 1;
-            double amount;
-            if (tile.isDisabled() || !((amount = source.getOfferedEnergy()) > 0.0D) ||
-                (source instanceof IMultiEnergySource multiSource && (multiSource).sendMultipleEnergyPackets() && (packets = multiSource.getMultipleEnergyPacketAmount()) <= 0)) {
-                tile.setSourceData(0.0D, 0);
-                return;
-            }
-
-            int tier = source.getSourceTier();
-            if (tier < 0) {
-                if (EnergyNetSettings.logGridCalculationIssues) {
-                    IC2.log.warn(LogCategory.EnergyNet, "Tile %s reported an invalid tier (%d).", Util.toString(source, enet.getWorld(), EnergyNet.instance.getPos(source)), tier);
+        try {
+            enet.getSources().parallelStream().forEach(tile -> {
+                IEnergySource source = (IEnergySource) tile.getMainTile();
+                int packets = 1;
+                double amount;
+                if (tile.isDisabled() || !((amount = source.getOfferedEnergy()) > 0.0D) ||
+                    (source instanceof IMultiEnergySource multiSource && (multiSource).sendMultipleEnergyPackets() && (packets = multiSource.getMultipleEnergyPacketAmount()) <= 0)) {
+                    tile.setSourceData(0.0D, 0);
+                    return;
                 }
-                tile.setSourceData(0.0D, 0);
-                return;
-            }
-            foundAny.set(true);
-            double power = EnergyNet.instance.getPowerFromTier(tier);
-            amount = Math.min(amount, power * packets);
-            tile.setSourceData(amount, packets);
-        });
+
+                int tier = source.getSourceTier();
+                if (tier < 0) {
+                    if (EnergyNetSettings.logGridCalculationIssues) {
+                        IC2.log.warn(LogCategory.EnergyNet, "Tile %s reported an invalid tier (%d).", Util.toString(source, enet.getWorld(), EnergyNet.instance.getPos(source)), tier);
+                    }
+                    tile.setSourceData(0.0D, 0);
+                    return;
+                }
+                foundAny.set(true);
+                double power = EnergyNet.instance.getPowerFromTier(tier);
+                amount = Math.min(amount, power * packets);
+                tile.setSourceData(amount, packets);
+            });
+        } catch (Throwable e) {
+            StellarLog.LOG.warn("[StellarCore-MixinEnergyCalculatorLeg] Failed to execute energy grids data!", e);
+        }
 
         cir.setReturnValue(foundAny.get());
     }

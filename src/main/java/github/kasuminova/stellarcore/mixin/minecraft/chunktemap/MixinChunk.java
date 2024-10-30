@@ -1,4 +1,4 @@
-package github.kasuminova.stellarcore.mixin.minecraft.chunk;
+package github.kasuminova.stellarcore.mixin.minecraft.chunktemap;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.BlockPos2ValueMap;
@@ -19,11 +19,14 @@ import java.util.Map;
 @Mixin(Chunk.class)
 public class MixinChunk {
 
-    @Shadow @Final @Mutable private Map<BlockPos, TileEntity> tileEntities;
+    @Final
+    @Shadow
+    @Mutable
+    private Map<BlockPos, TileEntity> tileEntities;
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;II)V", at = @At("RETURN"))
     private void injectInit(final World worldIn, final int x, final int z, final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.chunkTEMap) {
             return;
         }
         this.tileEntities = new BlockPos2ValueMap<>();

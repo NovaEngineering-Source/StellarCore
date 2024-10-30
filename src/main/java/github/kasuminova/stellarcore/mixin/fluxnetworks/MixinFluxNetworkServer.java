@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.fluxnetworks;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.IStellarFluxNetwork;
 import net.minecraft.entity.player.EntityPlayer;
 import org.spongepowered.asm.mixin.Final;
@@ -58,13 +59,17 @@ public abstract class MixinFluxNetworkServer extends FluxNetworkBase implements 
         return () -> {
             List<IFluxConnector> devices = getConnections(FluxLogicType.ANY);
             devices.parallelStream().forEach(device -> {
-                ITransferHandler handler = device.getTransferHandler();
-                if (handler instanceof FluxControllerHandler) {
-                    synchronized (FluxControllerHandler.class) {
+                try {
+                    ITransferHandler handler = device.getTransferHandler();
+                    if (handler instanceof FluxControllerHandler) {
+                        synchronized (FluxControllerHandler.class) {
+                            handler.onCycleStart();
+                        }
+                    } else {
                         handler.onCycleStart();
                     }
-                } else {
-                    handler.onCycleStart();
+                } catch (Throwable e) {
+                    StellarLog.LOG.warn("[StellarCore-FluxNetworkServer] Execute transfer handler `onCycleStart` failed.", e);
                 }
             });
         };

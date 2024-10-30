@@ -2,7 +2,6 @@ package github.kasuminova.stellarcore.mixin.ic2_energynet;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.IC2EnergySyncCalcTask;
 import github.kasuminova.stellarcore.mixin.util.IStellarEnergyCalculatorLeg;
 import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpscUnboundedXaddArrayQueue;
@@ -64,6 +63,12 @@ public class MixinGridUpdater {
     @Unique
     private final Queue<IC2EnergySyncCalcTask> stellar_core$syncTaskQueue = stellar_core$createMpscQueue();
 
+    @Unique
+    private Queue<Grid> stellar_core$calculateQueue = null;
+
+    @Unique
+    private int stellar_core$queueSize = 0;
+
     /**
      * @author Kasumi_Nova
      * @reason Parallel Calculation
@@ -85,12 +90,14 @@ public class MixinGridUpdater {
         this.busy = true;
 
         final Collection<Grid> grids = stellar_core$EnergyNetLocal$getGrids(enet);
+        final int gridsSize = grids.size();
         final IStellarEnergyCalculatorLeg stellarCalculator = (IStellarEnergyCalculatorLeg) energyCalculator;
-        final Queue<Grid> calculateQueue = stellar_core$createMpmcQueue(grids.size());
-        calculateQueue.addAll(grids);
-        final int tasks = grids.size();
+        final Queue<Grid> calculateQueue = stellar_core$getCalculateQueue(gridsSize);
         final ForkJoinTask<?> future = ForkJoinPool.commonPool().submit(() -> {
-            int concurrency = Math.min(tasks, Math.max(StellarEnvironment.getConcurrency(), 2));
+            // Fill work queue
+            grids.parallelStream().forEach(calculateQueue::offer);
+            // Calculate
+            final int concurrency = Math.min(gridsSize, StellarEnvironment.getConcurrency());
             IntStream.range(0, concurrency).parallel().forEach(i -> {
                 Grid grid;
                 while ((grid = calculateQueue.poll()) != null) {
@@ -99,7 +106,7 @@ public class MixinGridUpdater {
             });
         });
 
-        stellar_core$executeSyncTasks(tasks, stellarCalculator, calculateQueue, future);
+        stellar_core$executeSyncTasks(gridsSize, stellarCalculator, calculateQueue, future);
 
         // TODO why shuffle?
 //        if (grids.size() > 1) {
@@ -138,6 +145,22 @@ public class MixinGridUpdater {
         while ((task = stellar_core$syncTaskQueue.poll()) != null) {
             stellarCalculator.doSyncCalc(task);
         }
+    }
+
+    @Unique
+    private Queue<Grid> stellar_core$getCalculateQueue(final int minSize) {
+        // First init.
+        if (this.stellar_core$calculateQueue == null) {
+            this.stellar_core$calculateQueue = stellar_core$createMpmcQueue(minSize);
+            this.stellar_core$queueSize = minSize;
+            return this.stellar_core$calculateQueue;
+        }
+        // Or expand the queue.
+        if (this.stellar_core$queueSize < minSize) {
+            this.stellar_core$calculateQueue = stellar_core$createMpmcQueue(minSize);
+            this.stellar_core$queueSize = minSize;
+        }
+        return this.stellar_core$calculateQueue;
     }
 
     @Unique

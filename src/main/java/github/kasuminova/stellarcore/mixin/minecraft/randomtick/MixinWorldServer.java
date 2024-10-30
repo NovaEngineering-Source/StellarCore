@@ -66,8 +66,8 @@ public abstract class MixinWorldServer extends World {
             )
     )
     @SuppressWarnings("RedundantCast")
-    private void injectUpdateBlocksEndSelection(final CallbackInfo ci, final @Local(name = "i") int tickSpeed) {
-        ParallelRandomBlockTicker.INSTANCE.execute((World) (Object) this, rand, profiler, tickSpeed);
+    private void injectUpdateBlocksEndSelection(final CallbackInfo ci) {
+        ParallelRandomBlockTicker.INSTANCE.execute((World) (Object) this, rand, profiler);
     }
 
 }

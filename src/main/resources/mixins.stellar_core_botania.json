@@ -7,6 +7,9 @@
     "mixins": [
         "MixinCosmeticAttachRecipe",
         "MixinCosmeticRemoveRecipe",
-        "MixinEntitySpark"
+        "MixinEntitySpark",
+        "MixinTileAlfPortal",
+        "MixinTilePylon",
+        "MixinTileRuneAltar"
     ]
 }

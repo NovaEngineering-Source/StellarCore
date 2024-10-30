@@ -84,6 +84,8 @@ public class ItemStackCapInitTask {
                     releaseJoinLock();
                     // If we cannot acquire LoadLock, wait for the another thread to finish load.
                     awaitLoadComplete();
+
+                    target.stellar_core$joinCapInit();
                 }
             } else {
                 run();
@@ -137,11 +139,9 @@ public class ItemStackCapInitTask {
     }
 
     private void awaitLoadComplete() {
-        while (true) {
+        while (loadLock.isLocked()) {
             // Wait for the another thread finish
-            if (!loadLock.isLocked()) {
-                break;
-            }
+            Thread.yield();
         }
     }
 

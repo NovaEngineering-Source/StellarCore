@@ -160,6 +160,10 @@ public class BugFixes {
         @Config.Name("ContainerUnloadTileEntityFixes")
         public boolean containerTileEntityFixes = false;
 
+        @Config.Comment("Restricts the player from interacting with the world's blocks when the player opens any container interface (except the player inventory).")
+        @Config.Name("ContainerInteractRestriction")
+        public boolean containerInteract = false;
+
     }
 
     public static class AdvancedRocketry {

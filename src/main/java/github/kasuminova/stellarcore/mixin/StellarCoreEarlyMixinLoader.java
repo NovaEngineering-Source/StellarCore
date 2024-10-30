@@ -26,7 +26,9 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_blockfaceuv.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockpart.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPartDataStructure);
         addMixinCFG("mixins.stellar_core_minecraft_blockstateimpl.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockStateImplementationHashCodeCache);
-        addMixinCFG("mixins.stellar_core_minecraft_chunk.json",                  () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPos2ValueMap);
+        addMixinCFG("mixins.stellar_core_minecraft_chunktecache.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.chunkTECache);
+        addMixinCFG("mixins.stellar_core_minecraft_chunktemap.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.chunkTEMap);
+        addMixinCFG("mixins.stellar_core_minecraft_chunktequeue.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.chunkTEQueue);
         addMixinCFG("mixins.stellar_core_minecraft_classmultimap.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.classMultiMap);
         addMixinCFG("mixins.stellar_core_minecraft_entitytracker.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.entitytracker);
         addMixinCFG("mixins.stellar_core_minecraft_itemstack_cap.json",          () -> StellarCoreConfig.PERFORMANCE.vanilla.asyncItemStackCapabilityInit && !(CensoredASMCompat.isPresent() && CensoredASMCompat.checkDelayItemStackCapInitEnabled()));
@@ -34,7 +36,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_modelblock.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.modelBlockStringCanonicalization && CensoredASMCompat.isPresent());
         addMixinCFG("mixins.stellar_core_minecraft_nbtmaplist.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.nbtTag && !(CensoredASMCompat.isPresent() && CensoredASMCompat.checkNBTMapModified()));
         addMixinCFG("mixins.stellar_core_minecraft_nbtpool.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.nbtPrimitiveConstantsPool);
-        addMixinCFG("mixins.stellar_core_minecraft_nethandlerplayserver.json");
+        addMixinCFG("mixins.stellar_core_minecraft_nethandlerplayserver.json",   () -> StellarCoreConfig.BUG_FIXES.container.containerInteract);
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",                 () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_property.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.propertyEnumHashCodeCache);
@@ -57,6 +59,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_bakedquad.json",                  () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",       () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_capability.json",                 () -> StellarCoreConfig.PERFORMANCE.forge.deallocateEmptyCapabilityNBT);
+        addMixinCFG("mixins.stellar_core_forge_chunkmanager.json",               () -> StellarCoreConfig.PERFORMANCE.forge.chunkManager);
         addMixinCFG("mixins.stellar_core_forge_modelloader.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addMixinCFG("mixins.stellar_core_forge_registry.json",                   () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
         addMixinCFG("mixins.stellar_core_hudcaching.json",                       () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);

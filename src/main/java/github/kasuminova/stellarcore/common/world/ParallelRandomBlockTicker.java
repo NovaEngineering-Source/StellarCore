@@ -9,7 +9,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.profiler.Profiler;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -22,7 +21,7 @@ public class ParallelRandomBlockTicker {
 
     public static final ParallelRandomBlockTicker INSTANCE = new ParallelRandomBlockTicker();
 
-    private final Queue<Tuple<Chunk, List<TickData>>> enqueuedChunks = new MpmcUnboundedXaddArrayQueue<>(1000);
+    private final Queue<ChunkData> enqueuedChunks = new MpmcUnboundedXaddArrayQueue<>(1000);
 
     private World currentWorld = null;
     private Random currentRand = null;
@@ -32,11 +31,11 @@ public class ParallelRandomBlockTicker {
     }
 
     public void enqueueChunk(final Chunk chunk, final List<TickData> data) {
-        enqueuedChunks.offer(new Tuple<>(chunk, data));
+        enqueuedChunks.offer(new ChunkData(chunk, data));
     }
 
-    public void execute(final World world, final Random rand, final Profiler profiler, final int randomTickSpeed) {
-        Queue<Tuple<Chunk, List<TickData>>> enqueuedChunks = this.enqueuedChunks;
+    public void execute(final World world, final Random rand, final Profiler profiler) {
+        Queue<ChunkData> enqueuedChunks = this.enqueuedChunks;
         if (enqueuedChunks.isEmpty()) {
             return;
         }
@@ -51,11 +50,11 @@ public class ParallelRandomBlockTicker {
 
         IntStream stream = parallel ? IntStream.range(0, concurrency).parallel() : IntStream.range(0, concurrency);
         stream.forEach(i -> {
-            Tuple<Chunk, List<TickData>> data;
+            ChunkData data;
             while ((data = enqueuedChunks.poll()) != null) {
                 List<RandomTickTask> collectedData = new ObjectArrayList<>();
-                for (final TickData tickData : data.getSecond()) {
-                    List<RandomTickTask> tasks = getRandomTickData(data.getFirst(), tickData);
+                for (final TickData tickData : data.data()) {
+                    List<RandomTickTask> tasks = getRandomTickData(data.chunk(), tickData);
                     if (tasks.isEmpty()) {
                         continue;
                     }
@@ -117,6 +116,10 @@ public class ParallelRandomBlockTicker {
         }
 
         profiler.endSection();
+    }
+
+    @Desugar
+    public record ChunkData(Chunk chunk, List<TickData> data) {
     }
 
     @Desugar

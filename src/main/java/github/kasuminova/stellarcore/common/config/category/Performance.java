@@ -156,7 +156,17 @@ public class Performance {
         })
         @Config.RequiresMcRestart
         @Config.Name("ChunkTileEntityMapImprovements")
-        public boolean blockPos2ValueMap = false;
+        public boolean chunkTEMap = false;
+
+        @Config.Comment("(Client/Server Performance | Experimental) Cache the TileEntity state of the IBlockState in a chunk to improve performance.")
+        @Config.RequiresMcRestart
+        @Config.Name("ChunkTileEntityCache")
+        public boolean chunkTECache = false;
+
+        @Config.Comment("(Client/Server Performance) Improving Chunk Performance with Improved Data Structures.")
+        @Config.RequiresMcRestart
+        @Config.Name("ChunkTileEntityQueueImprovements")
+        public boolean chunkTEQueue = true;
 
         @Config.Comment("(Server Performance) Improving the performance of ClassInheritanceMultiMap (up to ~40%).")
         @Config.RequiresMcRestart
@@ -202,12 +212,12 @@ public class Performance {
         public boolean nbtPrimitiveConstantsPool = true;
 
         @Config.Comment({
-                "(Client/Server Performance) Asynchronous loading of ItemStack's Capability to improve performance.",
+                "(Client/Server Performance | Experimental) Asynchronous loading of ItemStack's Capability to improve performance.",
                 "Conflict with CensoredASM's `delayItemStackCapabilityInit` option."
         })
         @Config.RequiresMcRestart
         @Config.Name("AsyncItemStackCapabilityInit")
-        public boolean asyncItemStackCapabilityInit = true;
+        public boolean asyncItemStackCapabilityInit = false;
 
         @Config.Comment("(Client/Server Performance | Experimental) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (may not work).")
         @Config.RequiresMcRestart
@@ -246,8 +256,8 @@ public class Performance {
         public boolean resourceExistStateCache = true;
 
         @Config.Comment({
-                "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments,",
-                "possibly affecting the random logic of the original game."
+                "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments.",
+                "Note: Possibly affecting the random logic of the original game."
         })
         @Config.RequiresMcRestart
         @Config.Name("ParallelRandomBlockTicker")
@@ -323,6 +333,11 @@ public class Performance {
         @Config.RequiresMcRestart
         @Config.Name("ASMDataTableCPUUsageImprovements")
         public boolean asmDataTable = false;
+
+        @Config.Comment("(Client/Server Performance) ChunkManager optimisation, improves performance in more player environments.")
+        @Config.RequiresMcRestart
+        @Config.Name("ChunkManager")
+        public boolean chunkManager = true;
 
         @Config.Comment({
                 "(Client Performance | Experimental) Deduplicate unpackedData array to optimise memory usage, with significant optimisation for some mods.",
@@ -431,6 +446,15 @@ public class Performance {
         @Config.Comment("(Server Performance) A feature with some side effects to make sparks use less performance through dynamic Tick acceleration.")
         @Config.Name("SparkEntityImprovements")
         public boolean sparkImprovements = false;
+
+        @Config.Comment("(Server Performance) Improvements to the way Alf Portals work to slightly improve performance.")
+        public boolean alfPortalImprovements = true;
+
+        @Config.Comment("(Server Performance) Improvements to the way Pylons work to slightly improve performance.")
+        public boolean pylonImprovements = true;
+
+        @Config.Comment("(Server Performance) Improvements to the way Rune Altars work to slightly improve performance.")
+        public boolean runeAltarImprovements = true;
 
         @Config.Comment({
                 "What is the maximum working interval of the sparks? They will eventually be accelerated to 1 tick.",
