@@ -62,11 +62,12 @@ tasks.injectTags.configure {
 
 // Put the version from gradle into mcmod.info
 tasks.processResources.configure {
-//    inputs.property("version", project.version)
-//
-//    filesMatching("mcmod.info") {
-//        expand(mapOf("version" to project.version))
-//    }
+    inputs.property("version", project.version)
+    inputs.property("mcversion", minecraft.mcVersion.get())
+
+    filesMatching("mcmod.info") {
+        expand(mapOf("version" to project.version, "mcversion" to minecraft.mcVersion.get()))
+    }
 }
 
 tasks.compileJava.configure {
