@@ -60,6 +60,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_modularrouters.json",         "modularrouters");
         addMixinCFG(      "mixins.stellar_core_nco.json",                           Mods.NCO::loaded);
         addModdedMixinCFG("mixins.stellar_core_psi.json",                    "psi");
+        addModdedMixinCFG("mixins.stellar_core_railcraft.json",              "railcraft", () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addModdedMixinCFG("mixins.stellar_core_rgb_chat.json",               "jianghun");
         addModdedMixinCFG("mixins.stellar_core_scalingguis.json",            "scalingguis");
         addModdedMixinCFG("mixins.stellar_core_specialmobs.json",            "specialmobs");
