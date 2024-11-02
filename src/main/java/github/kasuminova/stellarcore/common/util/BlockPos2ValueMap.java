@@ -1,8 +1,10 @@
 package github.kasuminova.stellarcore.common.util;
 
 import com.google.common.collect.Iterators;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
@@ -13,6 +15,15 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
     protected final Long2ObjectMap<V> internal = new Long2ObjectLinkedOpenHashMap<>();
     protected EntrySet entrySet = null;
     protected KeySet keySet = null;
+
+    @Nonnull
+    public static <V> Map<BlockPos, V> create() {
+        // Cubic chunks breaks the height limit.
+        if (Mods.CUBIC_CHUNKS.loaded()) {
+            return new Object2ObjectLinkedOpenHashMap<>();
+        }
+        return new BlockPos2ValueMap<>();
+    }
 
     @Override
     public int size() {

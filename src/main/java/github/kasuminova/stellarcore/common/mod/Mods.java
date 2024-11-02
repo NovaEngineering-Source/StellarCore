@@ -14,6 +14,7 @@ public enum Mods {
     MM(                   "modularmachinery"),
     EBWIZARDRY(           "ebwizardry"),
     LIB_NINE(             "libnine"),
+    CUBIC_CHUNKS(         "cubicchunks"),
     MMCE(                 "modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
     CENSORED_ASM(         "loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"),
     FERMIUM_OR_BLAHAJ_ASM("normalasm",         "mirror.normalasm.core.NormalLoadingPlugin"),

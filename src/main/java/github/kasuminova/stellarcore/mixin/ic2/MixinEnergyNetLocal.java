@@ -40,7 +40,7 @@ public abstract class MixinEnergyNetLocal {
         if (!StellarCoreConfig.PERFORMANCE.industrialCraft2.energyNetLocal) {
             return;
         }
-        this.registeredTiles = new BlockPos2ValueMap<>();
+        this.registeredTiles = BlockPos2ValueMap.create();
     }
 
 //    @Inject(method = "getIoTile", at = @At(value = "INVOKE", target = "Ljava/util/Queue;iterator()Ljava/util/Iterator;"), cancellable = true)

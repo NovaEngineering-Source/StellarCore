@@ -29,7 +29,7 @@ public class MixinChunk {
         if (!StellarCoreConfig.PERFORMANCE.vanilla.chunkTEMap) {
             return;
         }
-        this.tileEntities = new BlockPos2ValueMap<>();
+        this.tileEntities = BlockPos2ValueMap.create();
     }
 
 }

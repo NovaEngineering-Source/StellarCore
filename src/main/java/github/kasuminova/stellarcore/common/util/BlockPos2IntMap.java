@@ -2,13 +2,11 @@ package github.kasuminova.stellarcore.common.util;
 
 import com.github.bsideup.jabel.Desugar;
 import com.google.common.collect.Iterators;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
@@ -21,6 +19,15 @@ public class BlockPos2IntMap implements Object2IntMap<BlockPos> {
     protected final Long2IntOpenHashMap internal = new Long2IntOpenHashMap();
     protected EntrySet entrySet = null;
     protected KeySet keySet = null;
+
+    @Nonnull
+    public static Object2IntMap<BlockPos> create() {
+        // Cubic chunks breaks the height limit.
+        if (Mods.CUBIC_CHUNKS.loaded()) {
+            return new Object2IntOpenHashMap<>();
+        }
+        return new BlockPos2IntMap();
+    }
 
     @Nonnull
     @Override

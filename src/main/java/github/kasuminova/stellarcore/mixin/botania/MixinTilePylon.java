@@ -19,7 +19,7 @@ import java.util.Map;
 public class MixinTilePylon {
 
     @Unique
-    private final Map<BlockPos, IBlockState> stellar_core$stateCache = new BlockPos2ValueMap<>();
+    private final Map<BlockPos, IBlockState> stellar_core$stateCache = BlockPos2ValueMap.create();
 
     @Inject(method = "update", at = {@At("HEAD"), @At("RETURN")})
     private void injectUpdateStartAndEnd(final CallbackInfo ci) {

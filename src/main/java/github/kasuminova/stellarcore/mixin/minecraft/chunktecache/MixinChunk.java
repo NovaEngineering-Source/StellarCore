@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Set;
+
 @SuppressWarnings("DataFlowIssue")
 @Mixin(Chunk.class)
 public class MixinChunk {
@@ -24,7 +26,7 @@ public class MixinChunk {
     private World world;
 
     @Unique
-    private final BlockPosSet stellar_core$invalidTESet = new BlockPosSet();
+    private final Set<BlockPos> stellar_core$invalidTESet = BlockPosSet.create();
 
     @Inject(method = "createNewTileEntity", at = @At("HEAD"), cancellable = true)
     private void injectCreateNewTileEntity(final BlockPos pos, final CallbackInfoReturnable<TileEntity> cir) {

@@ -1,9 +1,11 @@
 package github.kasuminova.stellarcore.common.util;
 
 import com.google.common.collect.Iterators;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
@@ -14,6 +16,15 @@ import java.util.Set;
 public class BlockPosSet implements Set<BlockPos> {
 
     protected final LongSet internal = new LongOpenHashSet();
+
+    @Nonnull
+    public static Set<BlockPos> create() {
+        // Cubic chunks breaks the height limit.
+        if (Mods.CUBIC_CHUNKS.loaded()) {
+            return new ObjectOpenHashSet<>();
+        }
+        return new BlockPosSet();
+    }
 
     @Override
     public int size() {
