@@ -58,9 +58,11 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addMixinCFG(      "mixins.stellar_core_mekanism.json",                      () -> Mods.MEK.loaded() && !Mods.MEKCEU.loaded());
         addModdedMixinCFG("mixins.stellar_core_mets.json",                   "mets");
         addModdedMixinCFG("mixins.stellar_core_modularrouters.json",         "modularrouters");
-        addModdedMixinCFG("mixins.stellar_core_nco.json",                    "nuclearcraft");
+        addMixinCFG(      "mixins.stellar_core_nco.json",                           Mods.NCO::loaded);
+        addModdedMixinCFG("mixins.stellar_core_psi.json",                    "psi");
         addModdedMixinCFG("mixins.stellar_core_rgb_chat.json",               "jianghun");
         addModdedMixinCFG("mixins.stellar_core_scalingguis.json",            "scalingguis");
+        addModdedMixinCFG("mixins.stellar_core_specialmobs.json",            "specialmobs");
         addModdedMixinCFG("mixins.stellar_core_sync.json",                   "sync");
         addModdedMixinCFG("mixins.stellar_core_sync_techguns.json",          "sync", "techguns");
         addModdedMixinCFG("mixins.stellar_core_tconevo.json",                "tconevo");

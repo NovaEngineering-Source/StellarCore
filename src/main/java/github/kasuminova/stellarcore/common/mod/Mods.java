@@ -27,6 +27,15 @@ public enum Mods {
             return super.loaded();
         }
     },
+    NCO(                  "nuclearcraft") {
+        @Override
+        public boolean loaded() {
+            if (!super.loaded()) {
+                return false;
+            }
+            return this.loaded = Loader.instance().getIndexedModList().get(modID).getVersion().contains("2o");
+        }
+    }
     ;
 
     final String modID;
