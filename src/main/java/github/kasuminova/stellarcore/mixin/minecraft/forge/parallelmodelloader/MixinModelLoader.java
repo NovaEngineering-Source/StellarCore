@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
+import github.kasuminova.stellarcore.client.integration.railcraft.RCModelBaker;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.ClassUtils;
 import github.kasuminova.stellarcore.common.util.StellarLog;
@@ -95,8 +96,10 @@ public abstract class MixinModelLoader extends ModelBakery {
         long startTime = System.currentTimeMillis();
 
         Map<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
+        DefaultTextureGetter textureGetter = new DefaultTextureGetter();
         models.keySet().stream().parallel().forEach((model) -> {
-            String modelLocations = "[" + Joiner.on(", ").join(models.get(model)) + "]";
+            Set<ModelResourceLocation> locations = models.get(model);
+            String modelLocations = "[" + Joiner.on(", ").join(locations) + "]";
             synchronized (bakeBar) {
                 bakeBar.step(modelLocations);
             }
@@ -107,7 +110,12 @@ public abstract class MixinModelLoader extends ModelBakery {
             }
 
             try {
-                bakedModelsConcurrent.put(model, model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, new DefaultTextureGetter()));
+                IBakedModel loaded = RCModelBaker.load(locations, model, textureGetter);
+                if (loaded != null) {
+                    bakedModelsConcurrent.put(model, loaded);
+                    return;
+                }
+                bakedModelsConcurrent.put(model, model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, textureGetter));
             } catch (Exception e) {
                 if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
                     FMLLog.log.error("Exception baking model for location(s) {}:", modelLocations, e);
