@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.botania;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +28,9 @@ public abstract class MixinTileRuneAltar extends TileSimpleInventory {
     @Shadow(remap = false)
     RecipeRuneAltar currentRecipe;
 
+    @Shadow
+    List<ItemStack> lastRecipe;
+
     @Unique
     private boolean stellar_core$shouldGetEntities = true;
 
@@ -36,7 +40,7 @@ public abstract class MixinTileRuneAltar extends TileSimpleInventory {
             return;
         }
 
-        if (this.currentRecipe == null && isEmpty()) {
+        if ((this.lastRecipe == null || this.lastRecipe.isEmpty()) && this.currentRecipe == null && isEmpty()) {
             ci.cancel();
         }
     }
