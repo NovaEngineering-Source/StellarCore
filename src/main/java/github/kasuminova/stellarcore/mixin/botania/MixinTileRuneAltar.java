@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import vazkii.botania.api.recipe.RecipeRuneAltar;
 import vazkii.botania.common.block.tile.TileRuneAltar;
 import vazkii.botania.common.block.tile.TileSimpleInventory;
 
@@ -23,6 +24,9 @@ public abstract class MixinTileRuneAltar extends TileSimpleInventory {
     @Shadow(remap = false)
     public abstract boolean isEmpty();
 
+    @Shadow(remap = false)
+    RecipeRuneAltar currentRecipe;
+
     @Unique
     private boolean stellar_core$shouldGetEntities = true;
 
@@ -32,7 +36,7 @@ public abstract class MixinTileRuneAltar extends TileSimpleInventory {
             return;
         }
 
-        if (isEmpty()) {
+        if (this.currentRecipe == null && isEmpty()) {
             ci.cancel();
         }
     }

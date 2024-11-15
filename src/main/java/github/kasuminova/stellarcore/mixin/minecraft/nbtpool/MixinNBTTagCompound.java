@@ -27,7 +27,7 @@ public class MixinNBTTagCompound {
     @SuppressWarnings("MethodMayBeStatic")
     @Redirect(method = "read", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", remap = false))
     private Object redirectRead(final Map<Object, Object> instance, final Object key, final Object value) {
-        return instance.put(key, ((StellarPooledNBT) value).stellar_core$getPooledNBT());
+        return instance.put(key, StellarPooledNBT.stellar_core$getPooledNBT((NBTBase) value));
     }
 
     /**
@@ -39,7 +39,7 @@ public class MixinNBTTagCompound {
         if (value == null) {
             throw new IllegalArgumentException("Invalid null NBT value with key " + key);
         }
-        this.tagMap.put(key, (NBTBase) ((StellarPooledNBT) value).stellar_core$getPooledNBT());
+        this.tagMap.put(key, (NBTBase) StellarPooledNBT.stellar_core$getPooledNBT(value));
     }
 
     /**

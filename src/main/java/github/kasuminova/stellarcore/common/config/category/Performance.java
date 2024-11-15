@@ -205,6 +205,7 @@ public class Performance {
         @Config.Comment({
                 "(Client/Server Performance) Cache constants -32768 - 32767 of NBTTagByte, NBTTagInt, NBTTagLong, NBTTagFloat, NBTTagDouble using constant pool.",
                 "Like IntegerCache in the JVM, improves memory usage and reduces object creation overhead.",
+                "Note: Some mods may not comply with the specification causing NBTBase to be loaded prematurely, so there may be a higher probability of problems with this feature.",
                 "Incompatible with old version of Quark (< r1.6-189), which modifies the bytecode of the NBTTag class too early.",
         })
         @Config.RequiresMcRestart
@@ -333,6 +334,10 @@ public class Performance {
         @Config.RequiresMcRestart
         @Config.Name("ASMDataTableCPUUsageImprovements")
         public boolean asmDataTable = false;
+
+        @Config.Comment("(Client/Server Performance) Improved performance of ASMModParser in parsing bytecode, improved startup speed (~1 ~ 5 seconds).")
+        @Config.Name("ASMModParserImprovements")
+        public boolean asmModParser = true;
 
         @Config.Comment("(Client/Server Performance) ChunkManager optimisation, improves performance in more player environments.")
         @Config.RequiresMcRestart
