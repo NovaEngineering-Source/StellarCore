@@ -26,7 +26,7 @@ public abstract class MixinNBTTagByte implements StellarPooledNBT {
     @Nonnull
     @Overwrite
     public NBTTagByte copy() {
-        return stellar_core$isPooled() ? (NBTTagByte) (Object) this : NBTTagPrimitivePool.getTagByte((NBTTagByte) (Object) this);
+        return NBTTagPrimitivePool.getTagByte((NBTTagByte) (Object) this);
     }
 
     /**

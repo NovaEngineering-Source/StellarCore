@@ -26,7 +26,7 @@ public abstract class MixinNBTTagShort implements StellarPooledNBT {
     @Nonnull
     @Overwrite
     public NBTTagShort copy() {
-        return stellar_core$isPooled() ? (NBTTagShort) (Object) this : NBTTagPrimitivePool.getTagShort((NBTTagShort) (Object) this);
+        return NBTTagPrimitivePool.getTagShort((NBTTagShort) (Object) this);
     }
 
     /**

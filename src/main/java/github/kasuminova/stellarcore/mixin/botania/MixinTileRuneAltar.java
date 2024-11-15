@@ -28,7 +28,7 @@ public abstract class MixinTileRuneAltar extends TileSimpleInventory {
     @Shadow(remap = false)
     RecipeRuneAltar currentRecipe;
 
-    @Shadow
+    @Shadow(remap = false)
     List<ItemStack> lastRecipe;
 
     @Unique

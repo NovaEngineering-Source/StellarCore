@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.mixin.util.StellarPooledNBT;
 import net.minecraft.nbt.*;
 
 import java.util.Arrays;
@@ -30,19 +29,10 @@ public class NBTTagPrimitivePool {
         Arrays.setAll(TAG_LONGS,   i -> new NBTTagLong  (i - SHORT_OFFSET));
         Arrays.setAll(TAG_FLOATS,  i -> new NBTTagFloat (i - SHORT_OFFSET));
         Arrays.setAll(TAG_DOUBLES, i -> new NBTTagDouble(i - SHORT_OFFSET));
-        Arrays.stream(TAG_BYTES)  .forEach(tag -> ((StellarPooledNBT) tag).stellar_core$setPooled(true));
-        Arrays.stream(TAG_SHORTS) .forEach(tag -> ((StellarPooledNBT) tag).stellar_core$setPooled(true));
-        Arrays.stream(TAG_INTS)   .forEach(tag -> ((StellarPooledNBT) tag).stellar_core$setPooled(true));
-        Arrays.stream(TAG_LONGS)  .forEach(tag -> ((StellarPooledNBT) tag).stellar_core$setPooled(true));
-        Arrays.stream(TAG_FLOATS) .forEach(tag -> ((StellarPooledNBT) tag).stellar_core$setPooled(true));
-        Arrays.stream(TAG_DOUBLES).forEach(tag -> ((StellarPooledNBT) tag).stellar_core$setPooled(true));
         StellarLog.LOG.info("[StellarCore-NBTTagPrimitivePool] PrimitiveType NBTTagPrimitivePool initialized, took {}ms.", System.currentTimeMillis() - start);
     }
 
     public static NBTTagByte getTagByte(final NBTTagByte tag) {
-        if (((StellarPooledNBT) tag).stellar_core$isPooled()) {
-            return tag;
-        }
         return TAG_BYTES[tag.getByte() + 128];
     }
 
@@ -51,9 +41,6 @@ public class NBTTagPrimitivePool {
     }
 
     public static NBTTagShort getTagShort(final NBTTagShort tag) {
-        if (((StellarPooledNBT) tag).stellar_core$isPooled()) {
-            return tag;
-        }
         return TAG_SHORTS[tag.getShort() + SHORT_OFFSET];
     }
 
@@ -62,9 +49,6 @@ public class NBTTagPrimitivePool {
     }
 
     public static NBTTagInt getTagInt(final NBTTagInt tag) {
-        if (((StellarPooledNBT) tag).stellar_core$isPooled()) {
-            return tag;
-        }
         final int value = tag.getInt();
         return value < MINIMUM || value > MAXIMUM
                 ? tag
@@ -78,9 +62,6 @@ public class NBTTagPrimitivePool {
     }
 
     public static NBTTagLong getTagLong(final NBTTagLong tag) {
-        if (((StellarPooledNBT) tag).stellar_core$isPooled()) {
-            return tag;
-        }
         final long value = tag.getLong();
         return value < MINIMUM || value > MAXIMUM
                 ? tag
@@ -94,9 +75,6 @@ public class NBTTagPrimitivePool {
     }
 
     public static NBTTagFloat getTagFloat(final NBTTagFloat tag) {
-        if (((StellarPooledNBT) tag).stellar_core$isPooled()) {
-            return tag;
-        }
         final float value = tag.getFloat();
         return isFloatInteger(value)
                 ? value < MINIMUM || value > MAXIMUM ? tag : TAG_FLOATS[((int) value + SHORT_OFFSET)]
@@ -110,9 +88,6 @@ public class NBTTagPrimitivePool {
     }
 
     public static NBTTagDouble getTagDouble(final NBTTagDouble tag) {
-        if (((StellarPooledNBT) tag).stellar_core$isPooled()) {
-            return tag;
-        }
         final double value = tag.getDouble();
         return isDoubleInteger(value) 
                 ? value < MINIMUM || value > MAXIMUM ? tag : TAG_DOUBLES[((int) value + SHORT_OFFSET)]
