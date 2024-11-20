@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.Map;
 
 @Mixin(NBTTagCompound.class)
-public class MixinNBTTagCompound {
+public class MixinNBTTagCompound implements StellarPooledNBT {
 
     @Final
     @Shadow
@@ -94,6 +94,12 @@ public class MixinNBTTagCompound {
     @Overwrite
     public void setDouble(String key, double value) {
         this.tagMap.put(key, NBTTagPrimitivePool.getTagDouble(value));
+    }
+
+    @SuppressWarnings("RedundantCast")
+    @Override
+    public Object stellar_core$getPooledNBT() {
+        return (Object) this;
     }
 
 }
