@@ -35,6 +35,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_customstartinggear.json",     "customstartinggear");
         addModdedMixinCFG("mixins.stellar_core_deepmoblearing.json",         "deepmoblearning");
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",      "draconicevolution");
+        addModdedMixinCFG("mixins.stellar_core_draconicevolution_chunk.json","draconicevolution", () -> StellarCoreConfig.FEATURES.draconicEvolution.ChaosIslandChunks);
         addModdedMixinCFG("mixins.stellar_core_ebwizardry.json",             "ebwizardry");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",              "endercore");
         addModdedMixinCFG("mixins.stellar_core_enderio.json",                "enderio");
