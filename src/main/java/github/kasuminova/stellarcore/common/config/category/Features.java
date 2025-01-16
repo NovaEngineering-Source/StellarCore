@@ -70,6 +70,10 @@ public class Features {
     @Config.Name("MoreElectricTools")
     public final MoreElectricTools moreElectricTools = new MoreElectricTools();
 
+
+    @Config.Name("DraconicEvolution")
+    public final DraconicEvolution draconicEvolution = new DraconicEvolution();
+
     public static class Vanilla {
 
         @Config.Comment("(Server) Allows CriterionProgress to be serialized in multiple threads.")
@@ -272,6 +276,14 @@ public class Features {
         @Config.Comment("Disable the Efficient enchantment, if you think this enchantment will appear on any item it's just too bad.")
         @Config.Name("RemoveEfficientEnergyCostEnchantment")
         public boolean disableEfficientEnergyCost = false;
+
+    }
+
+    public static class DraconicEvolution {
+
+        @Config.Comment("This option modifies the way Chaos Islands are generated")
+        @Config.Name("ChaosIslandChunks")
+        public boolean ChaosIslandChunks = true;
 
     }
 
