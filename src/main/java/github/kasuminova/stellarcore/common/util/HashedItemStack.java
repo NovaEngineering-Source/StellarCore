@@ -84,7 +84,7 @@ public record HashedItemStack(ItemStack stack, int stackHashCode, int damage, bo
                     stackDamage == OreDictionary.WILDCARD_VALUE ||
                     otherDamage == OreDictionary.WILDCARD_VALUE);
         } else {
-            return sItem.equals(other.getItem());
+            return sItem == oItem;
         }
     }
 

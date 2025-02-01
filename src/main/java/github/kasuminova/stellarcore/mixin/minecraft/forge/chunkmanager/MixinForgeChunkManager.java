@@ -1,8 +1,9 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.chunkmanager;
 
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Iterators;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -34,7 +35,7 @@ public abstract class MixinForgeChunkManager {
     @Overwrite(remap = false)
     public static Iterator<Chunk> getPersistentChunksIterableFor(final World world, final Iterator<Chunk> chunkIterator) {
         final ImmutableSetMultimap<ChunkPos, ForgeChunkManager.Ticket> persistentChunksFor = getPersistentChunksFor(world);
-        final Set<Chunk> chunks = new ReferenceOpenHashSet<>();
+        final Set<Chunk> chunks = new NonBlockingHashSet<>();
         final List<ChunkPos> requiredToLoad = new ObjectArrayList<>();
         final IChunkProvider chunkProvider = world.getChunkProvider();
 
@@ -43,10 +44,8 @@ public abstract class MixinForgeChunkManager {
         persistentChunksFor.keys().parallelStream().forEach(pos -> {
             Chunk loadedChunk = chunkProvider.getLoadedChunk(pos.x, pos.z);
             if (loadedChunk != null) {
-                synchronized (chunks) {
-                    // Chunk is already loaded.
-                    chunks.add(loadedChunk);
-                }
+                // Chunk is already loaded.
+                chunks.add(loadedChunk);
             } else {
                 synchronized (requiredToLoad) {
                     // Chunk is not loaded, queue to main thread for loading.
@@ -56,14 +55,13 @@ public abstract class MixinForgeChunkManager {
         });
 
         // Load all queued chunks.
-        world.profiler.endStartSection("forcedChunkLoading");
-        requiredToLoad.forEach(pos -> chunks.add(chunkProvider.provideChunk(pos.x, pos.z)));
-
-        world.profiler.endStartSection("regularChunkLoading");
-        chunkIterator.forEachRemaining(chunks::add);
-
+        if (!requiredToLoad.isEmpty()) {
+            world.profiler.endStartSection("forcedChunkLoading");
+            requiredToLoad.forEach(pos -> chunks.add(chunkProvider.provideChunk(pos.x, pos.z)));
+        }
         world.profiler.endSection();
-        return chunks.iterator();
+
+        return Iterators.concat(chunks.iterator(), chunkIterator);
     }
 
 }

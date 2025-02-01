@@ -214,7 +214,8 @@ public class Performance {
 
         @Config.Comment({
                 "(Client/Server Performance | Experimental) Asynchronous loading of ItemStack's Capability to improve performance.",
-                "Conflict with CensoredASM's `delayItemStackCapabilityInit` option."
+                "Conflict with CensoredASM's `delayItemStackCapabilityInit` option.",
+                "Deprecated: unstable, use at your own risk."
         })
         @Config.RequiresMcRestart
         @Config.Name("AsyncItemStackCapabilityInit")

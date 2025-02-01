@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.5.21"
+version = "1.5.22"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -293,7 +293,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:dme-737252:5043404"))
     compileOnly(rfg.deobf("curse.maven:bountifulbaubles-313536:3568240"))
     compileOnly(rfg.deobf("curse.maven:special-mobs-59968:3320102"))
-    implementation(rfg.deobf("curse.maven:railcraft-51195:3853491"))
+    compileOnly(rfg.deobf("curse.maven:railcraft-51195:3853491"))
+    compileOnly(rfg.deobf("curse.maven:deep-blood-evolution-836009:4690550"))
 }
 
 // IDE Settings
