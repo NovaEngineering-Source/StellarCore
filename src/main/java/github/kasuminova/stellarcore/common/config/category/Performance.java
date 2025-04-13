@@ -188,6 +188,11 @@ public class Performance {
         @Config.Name("PropertyEnumHashCodeCache")
         public boolean propertyEnumHashCodeCache = true;
 
+        @Config.Comment("(Client/Server Performance) Optimize BoundingBox intersect check.")
+        @Config.RequiresMcRestart
+        @Config.Name("BoundingBoxIntersectCheck")
+        public boolean boundingBoxIntersectCheck = true;
+
         @Config.Comment("(Server Performance) Improving BlockStateContainer$BlockStateImplementation#hashCode Performance with hashCode cache.")
         @Config.RequiresMcRestart
         @Config.Name("BlockStateImplementationHashCodeCache")
