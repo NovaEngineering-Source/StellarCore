@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.integration.censoredasm.CensoredASMCompat;
 import github.kasuminova.stellarcore.common.mod.Mods;
+import github.kasuminova.stellarcore.common.util.RuntimeEnv;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
@@ -40,7 +41,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_nnlist.json",                 () -> StellarCoreConfig.PERFORMANCE.vanilla.nonNullList);
         addMixinCFG("mixins.stellar_core_minecraft_noglerror.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.noGlError);
         addMixinCFG("mixins.stellar_core_minecraft_property.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.propertyEnumHashCodeCache);
-        addMixinCFG("mixins.stellar_core_minecraft_phys.json",                   () -> StellarCoreConfig.PERFORMANCE.vanilla.boundingBoxIntersectCheck);
+        addMixinCFG("mixins.stellar_core_minecraft_phys.json",                   () -> StellarCoreConfig.PERFORMANCE.vanilla.boundingBoxIntersectCheck && !RuntimeEnv.IS_CLEANROOM_LOADER);
         addMixinCFG("mixins.stellar_core_minecraft_randomtick.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelRandomBlockTicker);
         addMixinCFG("mixins.stellar_core_minecraft_renderglobal.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.alwaysDeferChunkUpdates);
         addMixinCFG("mixins.stellar_core_minecraft_resourcelocation.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalization && !StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalizationAsync);
