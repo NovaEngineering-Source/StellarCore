@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin;
 
+import github.kasuminova.stellarcore.common.NewOptimizations.MathematicalSubstitution.MathTransformer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.integration.censoredasm.CensoredASMCompat;
 import github.kasuminova.stellarcore.common.mod.Mods;
@@ -7,7 +8,7 @@ import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.mixin.Mixins;
-
+import net.minecraft.client.Minecraft;
 import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[0];
+        return new String[]{MathTransformer.class.getName()};
     }
 
     @Override
