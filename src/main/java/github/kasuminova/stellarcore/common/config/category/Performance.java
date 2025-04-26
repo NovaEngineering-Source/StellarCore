@@ -178,6 +178,11 @@ public class Performance {
         @Config.Name("EntityTrackerImprovements")
         public boolean entitytracker = true;
 
+        @Config.Comment("(Server Performance) Raytracing Entity Tracker.")
+        @Config.RequiresMcRestart
+        @Config.Name("EntityTrackerRayTrace")
+        public boolean entitytrackerRaytrace = false;
+
         @Config.Comment("(Server Performance) Improving WorldServer#getPendingBlockUpdates Performance with Improved Data Structures.")
         @Config.RequiresMcRestart
         @Config.Name("WorldServerGetPendingBlockUpdatesImprovements")
