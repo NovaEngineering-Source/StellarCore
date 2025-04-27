@@ -45,10 +45,11 @@ public class MixinEntityPlayer {
                     10
             );
 
+            stellarCore$cullTask.requestCullSignal();
             stellarCore$cullTask.setup();
             stellarCore$lastWorld = currentWorld;
         } else {
-            stellarCore$cullTask.requestCullSignal();
+            stellarCore$cullTask.requestCullSignal(); // TODO: Check this if it's needed
         }
     }
 
