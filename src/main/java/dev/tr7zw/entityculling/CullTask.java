@@ -1,6 +1,5 @@
 package dev.tr7zw.entityculling;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.logisticscraft.occlusionculling.OcclusionCullingInstance;
 import com.logisticscraft.occlusionculling.util.Vec3d;
@@ -10,7 +9,6 @@ import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
 
-import java.util.List;
 import java.util.concurrent.*;
 
 public class CullTask implements Runnable {
@@ -83,7 +81,7 @@ public class CullTask implements Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         try {
             if (this.checkTarget.ticksExisted > 10) {
                 // getEyePosition can use a fixed delta as its debug only anyway
@@ -109,7 +107,7 @@ public class CullTask implements Runnable {
     }
 
     private void cullEntities(net.minecraft.util.math.Vec3d cameraMC, Vec3d camera) {
-        List<Entity> copy = ImmutableList.copyOf(this.checkTarget.getEntityWorld().loadedEntityList);
+        Entity[] copy = this.checkTarget.getEntityWorld().loadedEntityList.toArray(new Entity[0]);
         for (Entity entity : copy) {
             if (!(entity instanceof Cullable cullable)) {
                 continue; // Not sure how this could happen outside from mixin screwing up the inject into
