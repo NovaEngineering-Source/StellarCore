@@ -36,8 +36,10 @@ public class MixinEntityPlayer {
                 50,
                 10
         );
-        if (this.stellarCore$cullTask != null) this.stellarCore$cullTask.setup();
-        if (this.stellarCore$cullTask != null) this.stellarCore$cullTask.requestCullSignal();
+        if (this.stellarCore$cullTask != null) {
+            this.stellarCore$cullTask.requestCullSignal();
+            this.stellarCore$cullTask.setup();
+        }
     }
 
     @Inject(method = "setDead", at = @At("TAIL"))
