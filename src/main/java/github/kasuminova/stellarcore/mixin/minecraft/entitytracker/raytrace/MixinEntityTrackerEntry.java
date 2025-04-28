@@ -17,7 +17,7 @@ public class MixinEntityTrackerEntry {
     @Shadow
     private Entity trackedEntity;
     @Inject(method = "isVisibleTo", at = @At("RETURN"), cancellable = true)
-    private void onIsVisibleTo(EntityPlayerMP playerMP, CallbackInfoReturnable<Boolean> cir, @Local(ordinal = 0) int range) {
+    private void onIsVisibleTo(EntityPlayerMP playerMP, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) {
             if (((Cullable) trackedEntity).isCulled()) {
                 cir.setReturnValue(false);
