@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.entitytracker.raytrace;
 
+import dev.tr7zw.entityculling.CullTask;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
@@ -14,7 +15,7 @@ public class MixinEntityPlayer {
     @Unique
     private final boolean stellarCore$isFakePlayer = ((EntityPlayer) (Object) this) instanceof FakePlayer;
     @Unique
-    public dev.tr7zw.entityculling.CullTask stellarCore$cullTask = null;
+    public CullTask stellarCore$cullTask = null;
     @Unique
     private World stellarCore$lastWorld = null;
 
@@ -35,21 +36,18 @@ public class MixinEntityPlayer {
 
             final com.logisticscraft.occlusionculling.OcclusionCullingInstance culling =
                     new com.logisticscraft.occlusionculling.OcclusionCullingInstance(
-                            64,
+                            CullTask.TRACING_DISTANCE,
                             new dev.tr7zw.entityculling.DefaultChunkDataProvider(currentWorld)
                     );
 
             stellarCore$cullTask = new dev.tr7zw.entityculling.CullTask(
                     culling, player,
                     50,
-                    10
+                    25
             );
 
-            stellarCore$cullTask.requestCullSignal();
             stellarCore$cullTask.setup();
             stellarCore$lastWorld = currentWorld;
-        } else {
-            stellarCore$cullTask.requestCullSignal(); // TODO: Check this if it's needed
         }
     }
 

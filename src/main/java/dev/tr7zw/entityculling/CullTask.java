@@ -13,11 +13,12 @@ import java.util.concurrent.*;
 
 public class CullTask implements Runnable {
 
-    private volatile boolean requestCull = false;
     private volatile boolean scheduleNext = true;
-    private volatile boolean inited = false;
+    private volatile boolean init = false;
 
     private final OcclusionCullingInstance culling;
+    public static final int TRACING_DISTANCE = 64;
+    public static final int TRACING_DISTANCE_SQ = TRACING_DISTANCE * TRACING_DISTANCE;
     private final EntityPlayer checkTarget;
 
     private final int hitboxLimit;
@@ -37,7 +38,7 @@ public class CullTask implements Runnable {
     );
 
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(
-            Runtime.getRuntime().availableProcessors() / 2,
+            1,
             new ThreadFactoryBuilder()
                     .setNameFormat("Raytrace Entity Tracker Scheduler Thread - %d")
                     .setDaemon(true)
@@ -64,17 +65,13 @@ public class CullTask implements Runnable {
         }, checkIntervalMs, TimeUnit.MILLISECONDS);
     }
 
-    public void requestCullSignal() {
-        this.requestCull = true;
-    }
-
     public void signalStop() {
         this.scheduleNext = false;
     }
 
     public void setup() {
-        if (!this.inited)
-            this.inited = true;
+        if (!this.init)
+            this.init = true;
         else
             return;
         this.worker.execute(this);
@@ -86,18 +83,16 @@ public class CullTask implements Runnable {
             if (this.checkTarget.ticksExisted > 10) {
                 // getEyePosition can use a fixed delta as its debug only anyway
                 net.minecraft.util.math.Vec3d cameraMC = this.checkTarget.getPositionEyes(0);
-                if (requestCull || !(cameraMC.x == lastPos.x && cameraMC.y == lastPos.y && cameraMC.z == lastPos.z)) {
-                    long start = System.currentTimeMillis();
-
-                    requestCull = false;
-
-                    lastPos.set(cameraMC.x, cameraMC.y, cameraMC.z);
+                long start = System.currentTimeMillis();
+                if (!(cameraMC.x == lastPos.x && cameraMC.y == lastPos.y && cameraMC.z == lastPos.z) || start - lastCheckedTime > 1000) {
                     culling.resetCache();
-
-                    cullEntities(cameraMC, lastPos);
-
-                    lastCheckedTime = (System.currentTimeMillis() - start);
                 }
+
+                lastPos.set(cameraMC.x, cameraMC.y, cameraMC.z);
+
+                cullEntities(cameraMC, lastPos);
+
+                lastCheckedTime = (System.currentTimeMillis() - start);
             }
         } finally {
             if (this.scheduleNext) {
@@ -119,14 +114,14 @@ public class CullTask implements Runnable {
 //            }
 
             if (!cullable.isForcedVisible()) {
-                if (entity.isGlowing() || isSkippableArmorstand(entity)) {
-                    cullable.setCulled(false);
+                if (entity.getPositionVector().squareDistanceTo(cameraMC) > TRACING_DISTANCE_SQ) {
+                    cullable.setCulled(false); // If your entity view distance is larger than tracingDistance just
+                    // render it
                     continue;
                 }
 
-                if (entity.getPositionVector().squareDistanceTo(cameraMC) > 64 * 64) {
-                    cullable.setCulled(false); // If your entity view distance is larger than tracingDistance just
-                    // render it
+                if (entity.isGlowing() || isSkippableArmorstand(entity)) {
+                    cullable.setCulled(false);
                     continue;
                 }
 
