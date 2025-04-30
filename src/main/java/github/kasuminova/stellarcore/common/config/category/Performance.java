@@ -178,6 +178,11 @@ public class Performance {
         @Config.Name("EntityTrackerImprovements")
         public boolean entitytracker = true;
 
+        @Config.Comment("(Server Performance) Include Y distance checks when tracking entities.")
+        @Config.RequiresMcRestart
+        @Config.Name("EntityTrackerIncludeY")
+        public boolean entitytrackerIncludeY = false;
+
         @Config.Comment("(Server Performance) Improving WorldServer#getPendingBlockUpdates Performance with Improved Data Structures.")
         @Config.RequiresMcRestart
         @Config.Name("WorldServerGetPendingBlockUpdatesImprovements")
