@@ -280,7 +280,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:lazy-ae2-322347:3254160"))
     compileOnly(rfg.deobf("curse.maven:electroblobs-wizardry-265642:5354477"))
     compileOnly(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))
-    compileOnly(rfg.deobf("curse.maven:ancient-spellcraft-358124:5413256"))
+    compileOnly(rfg.deobf("curse.maven:ancient-spellcraft-358124:7134366"))
     compileOnly(rfg.deobf("curse.maven:psi-241665:3085917"))
     compileOnly(rfg.deobf("curse.maven:random-psideas-302313:3215550"))
     compileOnly(rfg.deobf("curse.maven:journeymap-32274:5172461"))

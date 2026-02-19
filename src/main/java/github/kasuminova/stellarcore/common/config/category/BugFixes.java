@@ -16,9 +16,6 @@ public class BugFixes {
     @Config.Name("AdvancedRocketry")
     public final AdvancedRocketry advancedRocketry = new AdvancedRocketry();
 
-    @Config.Name("AncientSpellCraft")
-    public final AncientSpellCraft ancientSpellCraft = new AncientSpellCraft();
-
     @Config.Name("ArmourersWorkshop")
     public final ArmourersWorkshop armourersWorkshop = new ArmourersWorkshop();
 
@@ -178,18 +175,6 @@ public class BugFixes {
         })
         @Config.Name("PreventDimensionManagerCrash")
         public boolean dimensionManager = true;
-
-    }
-
-    public static class AncientSpellCraft {
-
-        @Config.Comment({
-                "(Client Only) Fix a memory leak caused by AncientSpellCraft's FakePlayer,",
-                "mainly in that it would cause the first world loaded not to be cleaned up by Java GC.",
-                "Experimental, if a crash occurs with anything related to ASFakePlayer, please report this issue immediately."
-        })
-        @Config.Name("ASFakePlayerFixes")
-        public boolean asFakePlayer = false;
 
     }
 

@@ -5,7 +5,6 @@ import com.cleanroommc.neverenoughanimations.NEAConfig;
 import com.cleanroommc.neverenoughanimations.animations.HotbarAnimation;
 import com.kamefrede.rpsideas.items.components.ItemBioticSensor;
 import com.llamalad7.betterchat.gui.GuiBetterChat;
-import com.windanesz.ancientspellcraft.client.entity.ASFakePlayer;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
 import github.kasuminova.stellarcore.client.util.TitleUtils;
@@ -139,9 +138,6 @@ public class ClientEventHandler {
      * 修复各种奇怪的模组导致 WorldClient 无法被 GC 导致内存泄露的问题。
      */
     public void onClientWorldLoad(@Nullable final World world) {
-        if (Loader.isModLoaded("ancientspellcraft")) {
-            callAncientSpellCraftFakePlayerWorldChanged(world);
-        }
         if (Loader.isModLoaded("libvulpes")) {
             callLibVulpesWorldChanged();
         }
@@ -206,14 +202,6 @@ public class ClientEventHandler {
             return;
         }
         ClientTickHandler.portableTeleports.remove(Minecraft.getMinecraft().player);
-    }
-
-    @Optional.Method(modid = "ancientspellcraft")
-    private static void callAncientSpellCraftFakePlayerWorldChanged(final World world) {
-        if (!StellarCoreConfig.BUG_FIXES.ancientSpellCraft.asFakePlayer) {
-            return;
-        }
-        ASFakePlayer.FAKE_PLAYER.setWorld(world);
     }
 
     @Optional.Method(modid = "libvulpes")
