@@ -655,6 +655,22 @@ public class Performance {
         @Config.Name("EnergyCalculatorLegImprovements")
         public boolean energyCalculatorLeg = true;
 
+        @Config.RequiresMcRestart
+        @Config.Comment({
+                "(Server Performance | Experimental) Select IC2 EnergyCalculatorLeg parallel mode.",
+                "AUTO: Automatically choose a safe mode based on the loaded environment (e.g. uses SEMI_ASYNC when Galacticraft is loaded).",
+                "FULL_ASYNC: Fully parallel. May crash with mods that are not thread-safe (e.g. Galacticraft).",
+                "SEMI_ASYNC: Fallback parallel. Avoids calling external energy tiles' methods off-thread, improving compatibility at the cost of performance."
+        })
+        @Config.Name("EnergyCalculatorLegParallelMode")
+        public EnergyCalculatorLegParallelMode energyCalculatorLegParallelMode = EnergyCalculatorLegParallelMode.AUTO;
+
+        public enum EnergyCalculatorLegParallelMode {
+            AUTO,
+            FULL_ASYNC,
+            SEMI_ASYNC
+        }
+
         @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
         @Config.Name("GridDataImprovements")
         public boolean energyCalculatorLegGridData = true;

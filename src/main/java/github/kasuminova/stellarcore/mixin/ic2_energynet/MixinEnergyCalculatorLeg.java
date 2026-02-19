@@ -1,6 +1,8 @@
 package github.kasuminova.stellarcore.mixin.ic2_energynet;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.config.category.Performance.IndustrialCraft2.EnergyCalculatorLegParallelMode;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.AccessorGridData;
@@ -39,6 +41,19 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
     @Unique
     private static volatile MethodHandle stellar_core$getData = null;
 
+    @Unique
+    private static EnergyCalculatorLegParallelMode stellar_core$getEffectiveParallelMode() {
+        final EnergyCalculatorLegParallelMode configured = StellarCoreConfig.PERFORMANCE.industrialCraft2.energyCalculatorLegParallelMode;
+        if (configured == null || configured == EnergyCalculatorLegParallelMode.AUTO) {
+            // Galacticraft energy network is not thread-safe (see Issue #36).
+            if (Mods.GC.loaded()) {
+                return EnergyCalculatorLegParallelMode.SEMI_ASYNC;
+            }
+            return EnergyCalculatorLegParallelMode.FULL_ASYNC;
+        }
+        return configured;
+    }
+
     @Shadow
     @SuppressWarnings("rawtypes")
     private static void applyCableEffects(final Collection eventPaths, final World world) {
@@ -54,9 +69,11 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
             return;
         }
 
+        final boolean fullAsync = stellar_core$getEffectiveParallelMode() == EnergyCalculatorLegParallelMode.FULL_ASYNC;
+
         final AtomicBoolean foundAny = new AtomicBoolean(false);
         try {
-            enet.getSources().parallelStream().forEach(tile -> {
+            (fullAsync ? enet.getSources().parallelStream() : enet.getSources().stream()).forEach(tile -> {
                 IEnergySource source = (IEnergySource) tile.getMainTile();
                 int packets = 1;
                 double amount;
@@ -95,6 +112,8 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
             return IC2EnergySyncCalcTask.EMPTY;
         }
 
+        final boolean fullAsync = stellar_core$getEffectiveParallelMode() == EnergyCalculatorLegParallelMode.FULL_ASYNC;
+
         List<Node> activeSources = gridData.getActiveSources();
         Map<Node, MutableDouble> activeSinks = gridData.getActiveSinks();
 
@@ -112,9 +131,16 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
                 activeSources.add(node);
                 continue;
             }
-            double amount;
-            if (node.getType() == NodeType.Sink && (amount = ((IEnergySink) tile.getMainTile()).getDemandedEnergy()) > 0.0D) {
-                activeSinks.put(node, new MutableDouble(amount));
+            if (node.getType() == NodeType.Sink) {
+                if (fullAsync) {
+                    double amount;
+                    if ((amount = ((IEnergySink) tile.getMainTile()).getDemandedEnergy()) > 0.0D) {
+                        activeSinks.put(node, new MutableDouble(amount));
+                    }
+                } else {
+                    // Defer demanded energy calculation to the sync phase to avoid calling external mod code off-thread.
+                    activeSinks.put(node, new MutableDouble(Double.NaN));
+                }
             }
         }
 
@@ -140,6 +166,13 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
         int calcID = task.calcID();
         Grid grid = task.grid();
 
+        if (stellar_core$needsSyncDemandCalculation(activeSinks)) {
+            stellar_core$syncCalculateDemands(activeSinks);
+            if (activeSinks.isEmpty()) {
+                return;
+            }
+        }
+
         Random rand = world.rand;
         boolean shufflePaths = ((world.getTotalWorldTime() & 0x3L) != 0L);
 
@@ -162,6 +195,44 @@ public abstract class MixinEnergyCalculatorLeg implements IStellarEnergyCalculat
         if (!eventPaths.isEmpty()) {
             applyCableEffects(eventPaths, grid.getEnergyNet().getWorld());
             eventPaths.clear();
+        }
+    }
+
+    @Unique
+    private static boolean stellar_core$needsSyncDemandCalculation(final Map<Node, MutableDouble> activeSinks) {
+        if (stellar_core$getEffectiveParallelMode() != EnergyCalculatorLegParallelMode.SEMI_ASYNC) {
+            return false;
+        }
+        // In SEMI_ASYNC we always defer sink demanded-energy calculation to the sync phase.
+        return true;
+    }
+
+    @Unique
+    private static void stellar_core$syncCalculateDemands(final Map<Node, MutableDouble> activeSinks) {
+        final Iterator<Map.Entry<Node, MutableDouble>> iterator = activeSinks.entrySet().iterator();
+        while (iterator.hasNext()) {
+            final Map.Entry<Node, MutableDouble> entry = iterator.next();
+            final Node node = entry.getKey();
+            final Tile tile = node.getTile();
+            if (tile.isDisabled()) {
+                iterator.remove();
+                continue;
+            }
+
+            final double amount;
+            try {
+                amount = ((IEnergySink) tile.getMainTile()).getDemandedEnergy();
+            } catch (Throwable e) {
+                // Avoid crashing the server tick when a mod has unexpected behaviour.
+                iterator.remove();
+                continue;
+            }
+
+            if (amount > 0.0D) {
+                entry.getValue().setValue(amount);
+            } else {
+                iterator.remove();
+            }
         }
     }
 

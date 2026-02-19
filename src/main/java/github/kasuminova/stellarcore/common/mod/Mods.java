@@ -4,22 +4,24 @@ import net.minecraftforge.fml.common.Loader;
 
 public enum Mods {
 
-    FTBLIB(               "ftblib"),
-    FTBQ(                 "ftbquests"),
-    MEK(                  "mekanism"),
-    REPLAY(               "replaymod"),
-    VINTAGE_FIX(          "vintagefix"),
-    RGB_CHAT(             "jianghun"), // ?
-    TLM(                  "touhou_little_maid"),
-    MM(                   "modularmachinery"),
-    EBWIZARDRY(           "ebwizardry"),
-    LIB_NINE(             "libnine"),
-    CUBIC_CHUNKS(         "cubicchunks"),
-    MMCE(                 "modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
-    CENSORED_ASM(         "loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"),
-    FERMIUM_OR_BLAHAJ_ASM("normalasm",         "mirror.normalasm.core.NormalLoadingPlugin"),
-    TICK_CENTRAL(         "tickcentral",       "com.github.terminatornl.tickcentral.TickCentral"),
-    MEKCEU(               "mekanism",          "mekanism.common.concurrent.TaskExecutor") {
+    FTBLIB       ("ftblib"            ),
+    FTBQ         ("ftbquests"         ),
+    MEK          ("mekanism"          ),
+    REPLAY       ("replaymod"         ),
+    VINTAGE_FIX  ("vintagefix"        ),
+    RGB_CHAT     ("jianghun"          ), // ?
+    TLM          ("touhou_little_maid"),
+    MM           ("modularmachinery"  ),
+    EBWIZARDRY   ("ebwizardry"        ),
+    LIB_NINE     ("libnine"           ),
+    CUBIC_CHUNKS ("cubicchunks"       ),
+    GC           ("galacticraftcore"  ),
+
+    MMCE                  ("modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
+    CENSORED_ASM          ("loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"         ),
+    FERMIUM_OR_BLAHAJ_ASM ("normalasm",         "mirror.normalasm.core.NormalLoadingPlugin"        ),
+    TICK_CENTRAL          ("tickcentral",       "com.github.terminatornl.tickcentral.TickCentral"  ),
+    MEKCEU                ("mekanism",          "mekanism.common.concurrent.TaskExecutor"          ) {
         @Override
         public boolean loaded() {
             if (!MEK.loaded()) {
@@ -28,7 +30,7 @@ public enum Mods {
             return super.loaded();
         }
     },
-    NCO(                  "nuclearcraft") {
+    NCO                   ("nuclearcraft"       ) {
         @Override
         public boolean loaded() {
             if (!super.loaded()) {
@@ -36,7 +38,7 @@ public enum Mods {
             }
             return this.loaded = Loader.instance().getIndexedModList().get(modID).getVersion().contains("2o");
         }
-    }
+    },
     ;
 
     final String modID;
