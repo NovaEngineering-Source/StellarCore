@@ -125,6 +125,25 @@ public class Performance {
         public boolean wipeModelCache = true;
 
         @Config.Comment({
+                "Predefined blacklist entries shipped by StellarCore.",
+                "These entries are merged with ParallelModelLoaderBlackList.",
+                "Remove them only if you are sure the loader is thread-safe in your modpack."
+        })
+        @Config.RequiresMcRestart
+        @Config.Name("ParallelModelLoaderBlackListPredefined")
+        public String[] parallelModelLoaderBlackListPredefined = {
+                // Immersive Engineering (0.12-98) custom loaders
+                "blusunrize.immersiveengineering.client.models.obj.IEOBJLoader",
+                "blusunrize.immersiveengineering.client.models.multilayer.MultiLayerLoader",
+                "blusunrize.immersiveengineering.client.models.smart.ConnLoader",
+                "blusunrize.immersiveengineering.client.models.smart.FeedthroughLoader",
+                "blusunrize.immersiveengineering.client.models.ModelConfigurableSides$Loader",
+                // Electroblob's Wizardry (4.3.14) custom loader
+                "electroblob.wizardry.client.model.ModelLoaderBookshelf",
+        };
+
+        @Config.Comment({
+                "Additional blacklist entries. Merged with ParallelModelLoaderBlackListPredefined.",
                 "Defining which ModelLoader cannot be safely asynchronized to allow StellarCore to load models",
                 "using a synchronous approach, usually requires no modification to it."
         })
