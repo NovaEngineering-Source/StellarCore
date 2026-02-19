@@ -24,6 +24,7 @@ public class MixinElectricItemManager {
     private void redirectChargeSetDamage(final ItemStack stack, final int damage, final boolean displayOnly) {
         if (!StellarCoreConfig.FEATURES.ic2.electricItemNonDurability) {
             DamageHandler.setDamage(stack, damage, displayOnly);
+            return;
         }
         if (DamageHandler.getDamage(stack) != 0) {
             // Always no damage
@@ -43,6 +44,7 @@ public class MixinElectricItemManager {
     private void redirectDischargeSetDamage(final ItemStack stack, final int damage, final boolean displayOnly) {
         if (!StellarCoreConfig.FEATURES.ic2.electricItemNonDurability) {
             DamageHandler.setDamage(stack, damage, displayOnly);
+            return;
         }
         if (DamageHandler.getDamage(stack) != 0) {
             // Always no damage
