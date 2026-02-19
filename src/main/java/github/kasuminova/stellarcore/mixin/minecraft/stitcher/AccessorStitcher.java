@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.stitcher;
 import net.minecraft.client.renderer.texture.Stitcher;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Stitcher.class)
 public interface AccessorStitcher {
@@ -12,5 +13,8 @@ public interface AccessorStitcher {
 
     @Accessor
     int getMaxTileDimension();
+
+    @Invoker("allocateSlot")
+    boolean invokeAllocateSlot(Stitcher.Holder holder);
 
 }

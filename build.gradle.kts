@@ -7,7 +7,7 @@ plugins {
     id("maven-publish")
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
     id("eclipse")
-    id("com.gtnewhorizons.retrofuturagradle") version "1.3.19"
+    id("com.gtnewhorizons.retrofuturagradle") version "1.3.27"
 }
 
 // Project properties
@@ -295,6 +295,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:special-mobs-59968:3320102"))
     compileOnly(rfg.deobf("curse.maven:railcraft-51195:3853491"))
     compileOnly(rfg.deobf("curse.maven:deep-blood-evolution-836009:4690550"))
+    compileOnly(rfg.deobf("curse.maven:tatw-263980:2585616"))
 }
 
 // IDE Settings

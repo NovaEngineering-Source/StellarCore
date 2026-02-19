@@ -1,10 +1,10 @@
 pluginManagement {
     repositories {
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
         maven {
             // RetroFuturaGradle
             name = "GTNH Maven"
-            url = uri("http://jenkins.usrv.eu:8081/nexus/content/groups/public/")
-            isAllowInsecureProtocol = true
+            url = uri("https://nexus.gtnewhorizons.com/repository/public/")
             mavenContent {
                 includeGroup("com.gtnewhorizons")
                 includeGroup("com.gtnewhorizons.retrofuturagradle")

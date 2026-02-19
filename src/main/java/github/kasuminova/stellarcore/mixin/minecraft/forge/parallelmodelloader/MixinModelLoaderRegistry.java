@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 @SuppressWarnings({"StaticVariableMayNotBeInitialized", "SynchronizeOnNonFinalField"})
 @Mixin(value = ModelLoaderRegistry.class, remap = false)
@@ -34,6 +35,12 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
 
     @Unique
     private static final ThreadLocal<Deque<ResourceLocation>> stellar_core$LOADING_MODELS = ThreadLocal.withInitial(ArrayDeque::new);
+
+    @Unique
+    private static final AtomicInteger stellar_core$ACTIVE_MODEL_LOADS = new AtomicInteger();
+
+    @Unique
+    private static final Object stellar_core$TEXTURE_COLLECT_LOCK = new Object();
 
     @Unique
     private static Map<ResourceLocation, IModel> stellar_core$cache = new NonBlockingHashMap<>();
@@ -45,7 +52,10 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     private static Set<ResourceLocation> stellar_core$textures = new NonBlockingHashSet<>();
 
     @Unique
-    private static boolean stellar_core$concurrent = false;
+    private static volatile boolean stellar_core$concurrent = false;
+
+    @Unique
+    private static final ThreadLocal<Boolean> stellar_core$COLLECTING_TEXTURES = ThreadLocal.withInitial(() -> false);
 
     @Final
     @Shadow
@@ -106,6 +116,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             }
         }
         stellar_core$LOADING_MODELS.get().addLast(location);
+        stellar_core$ACTIVE_MODEL_LOADS.incrementAndGet();
         try {
             synchronized (stellar_core$aliases) {
                 ResourceLocation aliased = stellar_core$aliases.get(location);
@@ -172,12 +183,18 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                     stellar_core$textures.addAll(model.getTextures());
                 }
             } else {
-                stellar_core$textures.addAll(model.getTextures());
+                // In concurrent mode we defer texture collection to getTextures(), where it is performed
+                // in a single-threaded pass over the cached models. This avoids concurrently calling
+                // IModel#getTextures() on potentially non-thread-safe model implementations.
             }
         } finally {
-            ResourceLocation popLoc = stellar_core$LOADING_MODELS.get().removeLast();
-            if (popLoc != location) {
-                throw new IllegalStateException("Corrupted loading model stack: " + popLoc + " != " + location);
+            try {
+                ResourceLocation popLoc = stellar_core$LOADING_MODELS.get().removeLast();
+                if (popLoc != location) {
+                    throw new IllegalStateException("Corrupted loading model stack: " + popLoc + " != " + location);
+                }
+            } finally {
+                stellar_core$ACTIVE_MODEL_LOADS.decrementAndGet();
             }
         }
 
@@ -227,7 +244,74 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
      */
     @Overwrite
     static Iterable<ResourceLocation> getTextures() {
+        if (stellar_core$concurrent && !stellar_core$COLLECTING_TEXTURES.get()) {
+            // Never attempt to collect textures from within a model loading call. Some model
+            // implementations may call getTextures() during loading; collecting here could
+            // re-introduce concurrent IModel#getTextures() execution.
+            if (!stellar_core$LOADING_MODELS.get().isEmpty()) {
+                return stellar_core$textures;
+            }
+
+            // Best-effort: ensure all concurrent getModel() calls have finished before we take
+            // a texture snapshot for stitching. Prevents missing stitched sprites when other
+            // threads are still resolving models.
+            stellar_core$awaitNoActiveModelLoads();
+
+            synchronized (stellar_core$TEXTURE_COLLECT_LOCK) {
+                stellar_core$COLLECTING_TEXTURES.set(true);
+                try {
+                    stellar_core$collectTexturesFromCachedModels();
+                } finally {
+                    stellar_core$COLLECTING_TEXTURES.set(false);
+                }
+            }
+        }
         return stellar_core$textures;
+    }
+
+    @Unique
+    private static void stellar_core$awaitNoActiveModelLoads() {
+        int active = stellar_core$ACTIVE_MODEL_LOADS.get();
+        if (active <= 0) {
+            return;
+        }
+
+        final long deadlineNanos = System.nanoTime() + 60_000_000_000L; // 60s
+        while ((active = stellar_core$ACTIVE_MODEL_LOADS.get()) > 0 && System.nanoTime() < deadlineNanos) {
+            LockSupport.parkNanos(1_000_000L); // 1ms
+        }
+
+        if (active > 0) {
+            StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] Timed out waiting for {} active model loads before collecting textures; stitching may miss sprites.", active);
+        }
+    }
+
+    @Unique
+    private static void stellar_core$collectTexturesFromCachedModels() {
+        Set<IModel> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        final int maxIterations = 10;
+        for (int iteration = 0; iteration < maxIterations; iteration++) {
+            int sizeBefore = stellar_core$cache.size();
+
+            for (IModel model : new ArrayList<>(stellar_core$cache.values())) {
+                if (model == null || !visited.add(model)) {
+                    continue;
+                }
+                try {
+                    stellar_core$textures.addAll(model.getTextures());
+                } catch (Throwable ignored) {
+                    // If a model misbehaves, keep going; stitching can still fall back to missing sprites.
+                }
+            }
+
+            int sizeAfter = stellar_core$cache.size();
+            if (sizeAfter == sizeBefore) {
+                return;
+            }
+        }
+
+        StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] Texture collection exceeded {} iterations; proceeding with best-effort results.", maxIterations);
     }
 
     @Redirect(method = "addAlias", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
@@ -252,7 +336,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         if (stellar_core$concurrent) {
             return stellar_core$textures.addAll(es);
         } else {
-            synchronized (stellar_core$aliases) {
+            synchronized (stellar_core$textures) {
                 return stellar_core$textures.addAll(es);
             }
         }
@@ -265,7 +349,9 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         }
         stellar_core$cache = new ConcurrentHashMap<>(stellar_core$cache);
         stellar_core$aliases = new ConcurrentHashMap<>(stellar_core$aliases);
+        Set<ResourceLocation> oldTextures = stellar_core$textures;
         stellar_core$textures = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        stellar_core$textures.addAll(oldTextures);
         stellar_core$concurrent = true;
     }
 

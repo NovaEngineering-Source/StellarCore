@@ -102,7 +102,7 @@ public class NonBlockingIdentityHashMap<TypeK, TypeV>
   }
 
   // --- Setup to use Unsafe
-  private static final long _kvs_offset = fieldOffset(NonBlockingHashMap.class, "_kvs");
+  private static final long _kvs_offset = fieldOffset(NonBlockingIdentityHashMap.class, "_kvs");
 
   private final boolean CAS_kvs( final Object[] oldkvs, final Object[] newkvs ) {
     return UNSAFE.compareAndSwapObject(this, _kvs_offset, oldkvs, newkvs );

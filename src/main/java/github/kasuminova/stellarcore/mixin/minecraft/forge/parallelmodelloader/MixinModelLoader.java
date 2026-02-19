@@ -11,16 +11,18 @@ import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
+import net.minecraft.client.renderer.block.statemap.IStateMapper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.spongepowered.asm.mixin.*;
@@ -58,7 +60,7 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Final
     @Mutable
     @Shadow(remap = false)
-    private Map<ModelBlockDefinition, IModel> loadingExceptions;
+    private Map<ResourceLocation, Exception> loadingExceptions;
 
     @Unique
     private boolean stellar_core$concurrent = true;
@@ -141,16 +143,19 @@ public abstract class MixinModelLoader extends ModelBakery {
             synchronized (blockBar) {
                 blockBar.step(block.getRegistryName().toString());
             }
-            Map<IBlockState, ModelResourceLocation> map = ((AccessorBlockStateMapper) mapper).getBlockStateMap();
-            Object modelRL = map.get(block);
-            if (modelRL != null) {
-                synchronized (modelRL) {
-                    Set<ResourceLocation> locations = mapper.getBlockstateLocations(block);
-                    locations.parallelStream().forEach(location -> loadBlock(mapper, block, location));
+
+            IStateMapper stateMapper = ((AccessorBlockStateMapper) mapper).stellar_core$getBlockStateMap().get(block);
+            if (stateMapper != null) {
+                synchronized (stateMapper) {
+                    for (ResourceLocation location : mapper.getBlockstateLocations(block)) {
+                        loadBlock(mapper, block, location);
+                    }
                 }
-            } else {
-                Set<ResourceLocation> locations = mapper.getBlockstateLocations(block);
-                locations.parallelStream().forEach(location -> loadBlock(mapper, block, location));
+                return;
+            }
+
+            for (ResourceLocation location : mapper.getBlockstateLocations(block)) {
+                loadBlock(mapper, block, location);
             }
         });
 
@@ -179,62 +184,62 @@ public abstract class MixinModelLoader extends ModelBakery {
         stellar_core$concurrent = false;
     }
 
-//    // TODO required to fix
-//    @Redirect(
-//            method = "loadItemModels",
-//            at = @At(
-//                    value = "INVOKE",
-//                    target = "Ljava/util/List;iterator()Ljava/util/Iterator;",
-//                    ordinal = 0
-//            )
-//    )
-//    private Iterator<Object> stellar_core$injectLoadItemModels(
-//            List<Item> items,
-//            @Local(name = "itemBar") ProgressManager.ProgressBar itemBar) {
-////        if (!stellar_core$reflectInitialized) {
-////        }
-//        stellar_core$initializeReflect();
-//
-//        long startTime = System.currentTimeMillis();
-//
-//        items.parallelStream().forEach(item -> {
-//            synchronized (itemBar) {
-//                itemBar.step(item.getRegistryName().toString());
-//            }
-//
-//            getVariantNames(item).forEach(s -> {
-////            getVariantNames(item).parallelStream().forEach(s -> {
-//                ResourceLocation file = getItemLocation(s);
-//                ModelResourceLocation memory = getInventoryVariant(s);
-//                IModel model = getMissingModel();
-//                Exception exception = null;
-//                try {
-//                    model = ModelLoaderRegistry.getModel(memory);
-//                } catch (Exception blockstateException) {
-//                    try {
-//                        model = ModelLoaderRegistry.getModel(file);
-//                        stellar_core$addAlias(memory, file);
-//                    } catch (Exception normalException) {
-//                        exception = stellar_core$createItemLoadingException("Could not load item model either from the normal location " + file + " or from the blockstate", normalException, blockstateException);
-//                    }
-//                }
-//                if (exception != null) {
-//                    if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
-//                        synchronized (loadingExceptions) {
-//                            storeException(memory, exception);
-//                        }
-//                    }
-//                    model = stellar_core$getMissingModel(memory, exception);
-//                }
-//                stateModels.put(memory, model);
-//            });
-//        });
-//
-//        stellar_core$toDefault();
-//
-//        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
-//        return Collections.emptyIterator();
-//    }
+    @Redirect(
+            method = "loadItemModels",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Ljava/util/List;iterator()Ljava/util/Iterator;",
+                    ordinal = 0
+            )
+    )
+    private Iterator<Object> stellar_core$injectLoadItemModels(
+            final List<Item> items,
+            @Local(name = "itemBar") final ProgressManager.ProgressBar itemBar) {
+        stellar_core$toConcurrent();
+        stellar_core$ensureReflectInitialized();
+
+        final IModel missingModel = ModelLoaderRegistry.getMissingModel();
+
+        long startTime = System.currentTimeMillis();
+
+        items.parallelStream().forEach(item -> {
+            synchronized (itemBar) {
+                itemBar.step(item.getRegistryName().toString());
+            }
+
+            for (String s : getVariantNames(item)) {
+                ResourceLocation file = getItemLocation(s);
+                ModelResourceLocation memory = ModelLoader.getInventoryVariant(s);
+                IModel model = missingModel;
+                Exception exception = null;
+                try {
+                    model = ModelLoaderRegistry.getModel(memory);
+                } catch (Exception blockstateException) {
+                    try {
+                        model = ModelLoaderRegistry.getModel(file);
+                        stellar_core$addAlias(memory, file);
+                    } catch (Exception normalException) {
+                        exception = stellar_core$createItemLoadingException(
+                                "Could not load item model either from the normal location " + file + " or from the blockstate",
+                                normalException,
+                                blockstateException
+                        );
+                    }
+                }
+                if (exception != null) {
+                    if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
+                        loadingExceptions.put(memory, exception);
+                    }
+                    model = stellar_core$getMissingModel(memory, exception);
+                }
+                stateModels.put(memory, model);
+            }
+        });
+
+        stellar_core$toDefault();
+        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
+        return Collections.emptyIterator();
+    }
 
     // Reflection. So many magic fields...
 
@@ -250,6 +255,9 @@ public abstract class MixinModelLoader extends ModelBakery {
     private static MethodHandle stellar_core$addAlias = null;
     @Unique
     private static MethodHandle stellar_core$getMissingModel = null;
+
+    @Unique
+    private static volatile boolean stellar_core$reflectInitialized = false;
 
     @Unique
     private static Exception stellar_core$createItemLoadingException(final String message, final Exception normalException, final Exception blockstateException) {
@@ -275,6 +283,20 @@ public abstract class MixinModelLoader extends ModelBakery {
             return (IModel) stellar_core$getMissingModel.invoke(location, cause);
         } catch (Throwable e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Unique
+    private static void stellar_core$ensureReflectInitialized() {
+        if (stellar_core$reflectInitialized) {
+            return;
+        }
+        synchronized (MixinModelLoader.class) {
+            if (stellar_core$reflectInitialized) {
+                return;
+            }
+            stellar_core$initializeReflect();
+            stellar_core$reflectInitialized = true;
         }
     }
 

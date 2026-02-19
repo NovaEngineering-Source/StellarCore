@@ -1,6 +1,6 @@
 package github.kasuminova.stellarcore.client.texture;
 
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+
 import github.kasuminova.stellarcore.common.util.LargeNBTUtils;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.minecraft.stitcher.AccessorStitcher;
@@ -8,6 +8,7 @@ import github.kasuminova.stellarcore.mixin.util.AccessorStitcherHolder;
 import github.kasuminova.stellarcore.mixin.util.AccessorStitcherSlot;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.client.renderer.texture.Stitcher;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -22,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +47,10 @@ public class StitcherCache {
     private Future<Void> readTask;
 
     private NBTTagCompound readTag = null;
+
+    private volatile Set<String> cachedSpriteNamesFromFile = null;
+
+    private List<Stitcher.Holder> extraHolders = null;
 
     private int width = 0;
     private int height = 0;
@@ -71,6 +77,14 @@ public class StitcherCache {
         cache = new StitcherCache(name, cacheFor);
         CREATED_STITCHER_CACHE.put(cacheFor, cache);
         return cache;
+    }
+
+    public static boolean hasCacheFor(final TextureMap textureMap) {
+        return CREATED_STITCHER_CACHE.containsKey(textureMap);
+    }
+
+    public static StitcherCache getCacheFor(final TextureMap textureMap) {
+        return CREATED_STITCHER_CACHE.get(textureMap);
     }
 
     public static StitcherCache getActiveCache() {
@@ -115,6 +129,7 @@ public class StitcherCache {
             readTag = LargeNBTUtils.readCompressed(fis);
             fis.close();
             this.cacheState = State.TAG_READY;
+            this.cachedSpriteNamesFromFile = null;
             StellarLog.LOG.info("[StellarCore-StitcherCache] Successfully read stitcher cache file from `{}`.", cacheFile.getAbsolutePath());
         } catch (Throwable e) {
             if (fis != null) {
@@ -126,6 +141,34 @@ public class StitcherCache {
             this.cacheState = State.UNAVAILABLE;
             StellarLog.LOG.warn("[StellarCore-StitcherCache] Failed to read stitcher cache file, it may be broken.", e);
         }
+    }
+
+    /**
+     * Best-effort: returns sprite names from the on-disk cache file tag (if ready).
+     *
+     * <p>Used to stabilize stitching inputs across runs when mods register sprites nondeterministically.
+     */
+    public Set<String> getCachedSpriteNamesFromFile() {
+        checkReadTaskState();
+
+        if (cacheState != State.TAG_READY || readTag == null) {
+            return Collections.emptySet();
+        }
+
+        Set<String> cached = this.cachedSpriteNamesFromFile;
+        if (cached != null) {
+            return cached;
+        }
+
+        NBTTagList holdersTagList = readTag.getTagList("holders", Constants.NBT.TAG_COMPOUND);
+        ObjectOpenHashSet<String> spriteNames = new ObjectOpenHashSet<>(holdersTagList.tagCount());
+        for (int i = 0; i < holdersTagList.tagCount(); i++) {
+            NBTTagCompound holderTag = holdersTagList.getCompoundTagAt(i);
+            spriteNames.add(holderTag.getString("sprite"));
+        }
+
+        this.cachedSpriteNamesFromFile = spriteNames;
+        return spriteNames;
     }
 
     public void parseTag(final Stitcher stitcher, final Set<Stitcher.Holder> targetHolders) {
@@ -145,31 +188,41 @@ public class StitcherCache {
     }
 
     public boolean holdersEquals(Set<Stitcher.Holder> targetHolders) {
-        if (targetHolders.size() != this.holders.size()) {
-            StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holders size not equals ({} ≠ {}).", targetHolders.size(), this.holders.size());
-            return false;
-        }
-        Map<String, Stitcher.Holder> holders = new Object2ObjectOpenHashMap<>(this.holders);
-        for (final Stitcher.Holder holder : targetHolders) {
-            Stitcher.Holder cachedHolder = holders.get(holder.getAtlasSprite().getIconName());
-            if (cachedHolder == null || !holderEquals(cachedHolder, holder)) {
-                if (cachedHolder == null) {
-                    StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not found in cache.", holder.getAtlasSprite().getIconName());
-                } else {
-                    StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not equals.", holder.getAtlasSprite().getIconName());
-                }
+        this.extraHolders = null;
+
+        Map<String, Stitcher.Holder> cachedMap = new Object2ObjectOpenHashMap<>(this.holders);
+        List<Stitcher.Holder> extras = new ArrayList<>();
+
+        for (final Stitcher.Holder target : targetHolders) {
+            String spriteName = target.getAtlasSprite().getIconName();
+            Stitcher.Holder cached = cachedMap.remove(spriteName);
+            if (cached == null) {
+                // Runtime has a sprite that the cache doesn't — record as extra.
+                extras.add(target);
+            } else if (!holderEquals(cached, target)) {
+                StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, holder `{}` not equals.", spriteName);
                 return false;
             }
-            holders.remove(holder.getAtlasSprite().getIconName());
         }
-        if (!holders.isEmpty()) {
-            StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} holders not found in runtime.", holders.size());
-            if (StellarCoreConfig.DEBUG.enableDebugLog) {
-                holders.keySet().forEach(holderName -> StellarLog.LOG.warn("[StellarCore-StitcherCache] Holder `{}` not found in runtime.", holderName));
-            }
+
+        if (!cachedMap.isEmpty()) {
+            // Cache has sprites that runtime doesn't — cache is stale.
+            StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} cached holders not found in runtime.", cachedMap.size());
             return false;
         }
+
+        if (!extras.isEmpty()) {
+            // Runtime is a strict superset of cache — partial match.
+            // These extra holders will be allocated into the cached layout.
+            this.extraHolders = extras;
+            StellarLog.LOG.info("[StellarCore-StitcherCache] Cache is a partial match: {} extra sprites in runtime (nondeterministic registration); will allocate incrementally.", extras.size());
+        }
+
         return true;
+    }
+
+    public List<Stitcher.Holder> getExtraHolders() {
+        return extraHolders;
     }
 
     public void cache(Set<Stitcher.Holder> holders, List<Stitcher.Slot> slots, int width, int height) {
@@ -186,6 +239,8 @@ public class StitcherCache {
         this.holders.clear();
         this.slots.clear();
         this.readTag = null;
+        this.cachedSpriteNamesFromFile = null;
+        this.extraHolders = null;
         this.width = 0;
         this.height = 0;
         this.cacheState = State.UNKNOWN;

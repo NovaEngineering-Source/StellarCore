@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.stitcher;
 import github.kasuminova.stellarcore.client.texture.StitcherCache;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraft.client.renderer.texture.Stitcher;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -48,8 +49,32 @@ public abstract class MixinStitcher {
         cache.parseTag((Stitcher) (Object) this, setStitchHolders);
         StitcherCache.State cacheState = cache.getCacheState();
         if (cacheState == StitcherCache.State.AVAILABLE) {
-            stellar_core$applyCache(cache);
-            StellarLog.LOG.info("[StellarCore-MixinStitcher] Stitched {} texture sprites, cache state: {}, took {}ms.", setStitchHolders.size(), cacheState, System.currentTimeMillis() - stellar_core$startTime);
+            // Retrieve extras BEFORE applyCache (which may clear state).
+            List<Stitcher.Holder> extras = cache.getExtraHolders();
+            int extraCount = extras == null ? 0 : extras.size();
+
+            // Apply cached slot layout and atlas dimensions.
+            this.stitchSlots.clear();
+            this.stitchSlots.addAll(cache.getSlots());
+            this.currentWidth = cache.getWidth();
+            this.currentHeight = cache.getHeight();
+
+            // Allocate any extra sprites that exist in runtime but not in cache
+            // (e.g. mods that randomly register different sprites each launch).
+            if (extraCount > 0) {
+                for (Stitcher.Holder extra : extras) {
+                    ((AccessorStitcher) this).invokeAllocateSlot(extra);
+                }
+                // Re-round atlas dimensions to power of 2 after allocation.
+                this.currentWidth = MathHelper.smallestEncompassingPowerOfTwo(this.currentWidth);
+                this.currentHeight = MathHelper.smallestEncompassingPowerOfTwo(this.currentHeight);
+            }
+
+            // Write updated cache (including extras) for next launch.
+            stellar_core$storeCache(cache);
+
+            StellarLog.LOG.info("[StellarCore-MixinStitcher] Stitched {} texture sprites (cached + {} extra), cache state: {}, took {}ms.",
+                    setStitchHolders.size(), extraCount, cacheState, System.currentTimeMillis() - stellar_core$startTime);
             ci.cancel();
         } else {
             cache.clear();
@@ -67,33 +92,17 @@ public abstract class MixinStitcher {
     }
 
     @Unique
-    private void stellar_core$applyCache(StitcherCache cache) {
-        this.stitchSlots.clear();
-        this.stitchSlots.addAll(cache.getSlots());
-        this.currentWidth = cache.getWidth();
-        this.currentHeight = cache.getHeight();
-        stellar_core$storeCache(cache);
-    }
-
-    @Unique
     private void stellar_core$storeCache(final StitcherCache cache) {
-        synchronized (cache) {
-            if (cache.getCacheState() == StitcherCache.State.AVAILABLE) {
+        CompletableFuture.runAsync(() -> {
+            synchronized (cache) {
+                long startTime = System.currentTimeMillis();
+                StellarLog.LOG.info("[StellarCore-MixinStitcher] Storing stitcher cache...");
+                cache.cache(setStitchHolders, stitchSlots, currentWidth, currentHeight);
+                cache.writeToFile();
                 cache.clear();
-                StellarLog.LOG.info("[StellarCore-MixinStitcher] Stitching cache is already available, skipped storing...");
-                return;
+                StellarLog.LOG.info("[StellarCore-MixinStitcher] Stored stitcher cache, took {}ms.", System.currentTimeMillis() - startTime);
             }
-            CompletableFuture.runAsync(() -> {
-                synchronized (cache) {
-                    long startTime = System.currentTimeMillis();
-                    StellarLog.LOG.info("[StellarCore-MixinStitcher] Storing stitcher cache...");
-                    cache.cache(setStitchHolders, stitchSlots, currentWidth, currentHeight);
-                    cache.writeToFile();
-                    cache.clear();
-                    StellarLog.LOG.info("[StellarCore-MixinStitcher] Stored stitcher cache, took {}ms.", System.currentTimeMillis() - startTime);
-                }
-            });
-        }
+        });
         StitcherCache.setActiveMap(null);
     }
 
