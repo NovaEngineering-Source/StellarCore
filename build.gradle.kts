@@ -132,22 +132,24 @@ repositories {
         dirs("lib")
     }
     maven {
-        url = uri("https://maven.aliyun.com/nexus/content/groups/public/")
-    }
-    maven {
-        url = uri("https://maven.aliyun.com/nexus/content/repositories/jcenter")
+        url = uri("https://maven.aliyun.com/repository/public")
     }
     maven {
         url = uri("https://maven.cleanroommc.com")
     }
     maven {
-        url = uri("https://cfa2.cursemaven.com")
+        url = uri("https://maven.minecraftforge.net/")
     }
     maven {
+        name = "SpongePowered Maven"
+        url = uri("https://repo.spongepowered.org/maven")
+    }
+    maven {
+        name = "CurseMaven"
         url = uri("https://cursemaven.com")
-    }
-    maven {
-        url = uri("https://maven.blamejared.com/")
+        content {
+            includeGroup("curse.maven")
+        }
     }
     maven {
         url = uri("https://maven.tterrag.com") // AutoSave, AutoConfig
@@ -168,9 +170,9 @@ repositories {
     }
     maven {
         name = "GTNH Maven"
-        url = uri("http://jenkins.usrv.eu:8081/nexus/content/groups/public/")
-        isAllowInsecureProtocol = true
+        url = uri("https://nexus.gtnewhorizons.com/repository/public/")
     }
+    mavenCentral()
 }
 
 dependencies {
