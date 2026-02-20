@@ -287,6 +287,14 @@ public class Performance {
         public boolean resourceExistStateCache = true;
 
         @Config.Comment({
+                "(Client Performance | Experimental) Pre-scan directory-based resource packs to build an existence index,",
+                "reducing Windows/NTFS File.exists/isFile overhead during model/texture loading.",
+                "Only effective when ResourceExistStateCache is enabled."
+        })
+        @Config.Name("DirectoryResourcePackIndex")
+        public boolean directoryResourcePackIndex = true;
+
+        @Config.Comment({
                 "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments.",
                 "Note: Possibly affecting the random logic of the original game."
         })

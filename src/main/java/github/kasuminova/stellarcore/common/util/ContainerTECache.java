@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.common.util;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingIdentityHashMap;
 import net.minecraft.inventory.Container;
 import net.minecraft.tileentity.TileEntity;
 
@@ -12,8 +11,8 @@ import java.util.stream.Collectors;
 
 public class ContainerTECache {
 
-    private static final Map<Class<? extends Container>, Function<Container, List<TileEntity>>> CACHE = new NonBlockingIdentityHashMap<>();
-    private static final Map<Class<?>, Map<Class<?>, List<Field>>> CLASS_FILED_TYPE_CACHE = new NonBlockingIdentityHashMap<>();
+    private static final Map<Class<? extends Container>, Function<Container, List<TileEntity>>> CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<Class<?>, Map<Class<?>, List<Field>>> CLASS_FILED_TYPE_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
 
     public static List<TileEntity> getTileEntityList(final Container container) {
         Function<Container, List<TileEntity>> func = CACHE.get(container.getClass());
@@ -66,7 +65,7 @@ public class ContainerTECache {
     }
 
     private static List<Field> scanTileEntityFieldRecursive(Class<?> aClass, Class<?> target) {
-        Map<Class<?>, List<Field>> cachedFieldMap = CLASS_FILED_TYPE_CACHE.computeIfAbsent(aClass, v -> new NonBlockingIdentityHashMap<>());
+        Map<Class<?>, List<Field>> cachedFieldMap = CLASS_FILED_TYPE_CACHE.computeIfAbsent(aClass, v -> new java.util.concurrent.ConcurrentHashMap<>());
         List<Field> fieldCache = cachedFieldMap.get(target);
         if (fieldCache != null) {
             return fieldCache;

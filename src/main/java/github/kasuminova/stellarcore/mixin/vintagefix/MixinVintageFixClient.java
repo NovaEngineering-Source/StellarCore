@@ -28,7 +28,11 @@ public class MixinVintageFixClient {
         }
 
         String emissiveSuffix = stellar_core$getEmissiveSuffix();
+        final Set<String> defaultResourceDomains = Minecraft.getMinecraft().defaultResourcePack.getResourceDomains();
         allTextures.parallelStream().forEach(texture -> {
+            if (!defaultResourceDomains.contains(texture.getNamespace())) {
+                return;
+            }
             ResourceLocation resourceLocation = stellar_core$getResourceLocation(texture, map);
             Minecraft.getMinecraft().defaultResourcePack.resourceExists(resourceLocation);
             if (emissiveSuffix == null || emissiveSuffix.isEmpty()) {

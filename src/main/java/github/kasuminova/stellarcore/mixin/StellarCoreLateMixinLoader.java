@@ -55,12 +55,13 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_legendarytooltips.json",      "legendarytooltips");
         addModdedMixinCFG("mixins.stellar_core_libnine.json",                "libnine", () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addModdedMixinCFG("mixins.stellar_core_mek_top.json",          new String[]{"mekanism", "theoneprobe"}, () -> StellarCoreConfig.FEATURES.mekanism.topSupport);
-        addMixinCFG(      "mixins.stellar_core_mekanism.json",                      () -> Mods.MEK.loaded() && !Mods.MEKCEU.loaded());
+        addMixinCFG      ("mixins.stellar_core_mekanism.json",                      () -> Mods.MEK.loaded() && !Mods.MEKCEU.loaded());
         addModdedMixinCFG("mixins.stellar_core_mets.json",                   "mets");
         addModdedMixinCFG("mixins.stellar_core_modularrouters.json",         "modularrouters");
-        addMixinCFG(      "mixins.stellar_core_nco.json",                           Mods.NCO::loaded);
+        addMixinCFG      ("mixins.stellar_core_nco.json",                           Mods.NCO::loaded);
         addModdedMixinCFG("mixins.stellar_core_psi.json",                    "psi");
         addModdedMixinCFG("mixins.stellar_core_rgb_chat.json",               "jianghun");
+        addModdedMixinCFG("mixins.stellar_core_resourceloader.json",         "resourceloader");
         addModdedMixinCFG("mixins.stellar_core_scalingguis.json",            "scalingguis");
         addModdedMixinCFG("mixins.stellar_core_specialmobs.json",            "specialmobs");
         addModdedMixinCFG("mixins.stellar_core_sync.json",                   "sync");

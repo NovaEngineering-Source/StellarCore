@@ -8,11 +8,12 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
     id("eclipse")
     id("com.gtnewhorizons.retrofuturagradle") version "1.3.34"
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.5.23"
+version = "1.6.0"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -90,6 +91,18 @@ tasks.compileTestJava.configure {
     }
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    // Ensure JMH compilation uses the same target/runtime constraints.
+    // (compileJmhJava is contributed by me.champeau.jmh)
+    sourceCompatibility = "17"
+    options.release = 8
+    options.encoding = "UTF-8"
+
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 tasks.javadoc.configure {
     // No need for JavaDoc.
     actions = Collections.emptyList()
@@ -128,9 +141,6 @@ listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).for
 
 // Dependencies
 repositories {
-    flatDir {
-        dirs("lib")
-    }
     maven {
         url = uri("https://maven.aliyun.com/repository/public")
     }
@@ -162,6 +172,10 @@ repositories {
         url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
     }
     maven {
+        // CraftTweaker
+        url = uri("https://maven.blamejared.com/")
+    }
+    maven {
         name = "OvermindDL1 Maven"
         url = uri("https://gregtech.overminddl1.com/")
         mavenContent {
@@ -178,8 +192,11 @@ repositories {
 dependencies {
     annotationProcessor("com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
     compileOnly("com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
+    // JMH compile task also runs javac; ensure Jabel plugin + runtime deps are available there too.
+    add("jmhAnnotationProcessor", "com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
     // workaround for https://github.com/bsideup/jabel/issues/174
     annotationProcessor("net.java.dev.jna:jna-platform:5.13.0")
+    add("jmhAnnotationProcessor", "net.java.dev.jna:jna-platform:5.13.0")
     // Allow jdk.unsupported classes like sun.misc.Unsafe, workaround for JDK-8206937 and fixes Forge crashes in tests.
     patchedMinecraft("me.eigenraven.java8unsupported:java-8-unsupported-shim:1.0.0")
     // allow Jabel to work in tests
@@ -204,7 +221,8 @@ dependencies {
 
     // Mod Dependencies
     implementation("com.cleanroommc:configanytime:2.0")
-    compileOnly("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
+    //compileOnly("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.20.711")    compileOnly("CraftTweaker2:ZenScript:4.1.20.711")
+    compileOnly("CraftTweaker2:CraftTweaker2-API:4.1.20.711")
     compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:5375642"))
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:5210315"))
     compileOnly(rfg.deobf("curse.maven:jei-utilities-616190:4630499"))
@@ -298,6 +316,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:railcraft-51195:3853491"))
     compileOnly(rfg.deobf("curse.maven:deep-blood-evolution-836009:4690550"))
     compileOnly(rfg.deobf("curse.maven:tatw-263980:2585616"))
+    compileOnly(rfg.deobf("curse.maven:resource-loader-226447:2477566"))
+    compileOnly(rfg.deobf("curse.maven:base-246996:3440963"))
 }
 
 // IDE Settings
@@ -348,4 +368,27 @@ idea {
 
 tasks.processIdeaSettings.configure {
     dependsOn(tasks.injectTags)
+}
+
+// Allow narrowing JMH runs from command line, e.g.:
+//   ./gradlew jmh -PjmhInclude=ParallelModelLoader
+// (value can be a full regex supported by JMH)
+jmh {
+    val include = (project.findProperty("jmhInclude") as? String)?.trim().orEmpty()
+    if (include.isNotEmpty()) {
+        includes.set(listOf(include))
+    }
+
+    // Enable JMH profilers from command line, e.g.:
+    //   ./gradlew jmh -PjmhInclude=... -PjmhProfilers=gc
+    //   ./gradlew jmh -PjmhProfilers=gc,stack
+    val profilersProp = (project.findProperty("jmhProfilers") as? String)?.trim().orEmpty()
+    if (profilersProp.isNotEmpty()) {
+        profilersProp.split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .forEach { profiler ->
+                profilers.add(profiler)
+            }
+    }
 }

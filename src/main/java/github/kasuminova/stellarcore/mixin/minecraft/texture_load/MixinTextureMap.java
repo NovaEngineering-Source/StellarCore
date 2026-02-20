@@ -4,8 +4,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
-import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingIdentityHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.renderer.texture.*;
@@ -65,8 +63,8 @@ public abstract class MixinTextureMap {
     )
     private void injectLoadSpritesAfter(final IResourceManager resourceManager, final ITextureMapPopulator iconCreatorIn, final CallbackInfo ci) {
         SpriteBufferedImageCache.INSTANCE.clear();
-        stellar_core$cachedTextures = Collections.newSetFromMap(new NonBlockingIdentityHashMap<>());
-        stellar_core$cachedLocations = new NonBlockingHashSet<>();
+        stellar_core$cachedTextures = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        stellar_core$cachedLocations = java.util.concurrent.ConcurrentHashMap.newKeySet();
         Future<Integer> detectMaxMipmapLevelTask = stellar_core$initializeOptifineTask(resourceManager);
         mapRegisteredSprites.values().parallelStream().forEach((sprite -> {
             ResourceLocation location = getResourceLocation(sprite);

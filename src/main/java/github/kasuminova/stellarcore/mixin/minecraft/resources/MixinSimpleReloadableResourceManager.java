@@ -1,6 +1,9 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
+import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
 import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreAbstractResourcePackAccessor;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
@@ -19,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.io.File;
 
 @SuppressWarnings("MethodMayBeStatic")
 @Mixin(SimpleReloadableResourceManager.class)
@@ -43,10 +47,38 @@ public class MixinSimpleReloadableResourceManager {
     @Inject(method = "reloadResources", at = @At("HEAD"))
     private void injectReloadResourcePack(final List<IResourcePack> resourcesPacksList, final CallbackInfo ci) {
         ResourceExistingCache.clear();
+        if (StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
+            DirectoryPathIndex.clear();
+        }
         resourcesPacksList.stream()
                 .filter(StellarCoreResourcePack.class::isInstance)
                 .map(StellarCoreResourcePack.class::cast)
                 .forEach(ResourceExistingCache::addResourcePack);
+
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
+            return;
+        }
+
+        for (IResourcePack pack : resourcesPacksList) {
+            if (!(pack instanceof StellarCoreAbstractResourcePackAccessor)) {
+                continue;
+            }
+            final File root = ((StellarCoreAbstractResourcePackAccessor) pack).stellar_core$getResourcePackFile();
+            if (root == null || !root.isDirectory()) {
+                continue;
+            }
+            final File assetsDir = new File(root, "assets");
+            final File[] namespaceDirs = assetsDir.listFiles();
+            if (namespaceDirs == null || namespaceDirs.length == 0) {
+                continue;
+            }
+            for (File namespaceDir : namespaceDirs) {
+                if (namespaceDir == null || !namespaceDir.isDirectory()) {
+                    continue;
+                }
+                DirectoryPathIndex.prewarmAsync(namespaceDir);
+            }
+        }
     }
 
 }
