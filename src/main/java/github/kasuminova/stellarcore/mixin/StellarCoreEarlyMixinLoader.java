@@ -14,6 +14,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 
+import static github.kasuminova.stellarcore.mixin.util.ModLoaderEarly.isClassPresent;
+
 @SuppressWarnings("unused")
 public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
@@ -48,6 +50,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_resourcelocation.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalization && !StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalizationAsync);
         addMixinCFG("mixins.stellar_core_minecraft_resourcelocation_async.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalization && StellarCoreConfig.PERFORMANCE.vanilla.resourceLocationCanonicalizationAsync);
         addMixinCFG("mixins.stellar_core_minecraft_resourcepack.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache);
+        addMixinCFG("mixins.stellar_core_minecraft_resourcepack_frp.json",       () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache && StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex && !isClassPresent("org.embeddedt.vintagefix.VintageFix"));
         addMixinCFG("mixins.stellar_core_minecraft_world.json",                  () -> StellarCoreConfig.PERFORMANCE.vanilla.capturedBlockSnapshots);
         addMixinCFG("mixins.stellar_core_minecraft_world_load.json",             () -> StellarCoreConfig.FEATURES.vanilla.handleClientWorldLoad);
         addMixinCFG("mixins.stellar_core_minecraft_world_pos_judgement.json",    () -> StellarCoreConfig.PERFORMANCE.vanilla.worldBlockPosJudgement);

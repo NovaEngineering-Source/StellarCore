@@ -1,52 +1,32 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
-import github.kasuminova.stellarcore.mixin.util.StellarCoreAbstractResourcePackAccessor;
+import com.llamalad7.mixinextras.sugar.Local;
+import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import net.minecraft.client.resources.AbstractResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-import javax.annotation.Nullable;
 import java.io.File;
 
 @Mixin(FolderResourcePack.class)
-public class MixinFolderResourcePack {
+public abstract class MixinFolderResourcePack extends AbstractResourcePack {
 
-    @Inject(method = "getFile", at = @At("HEAD"), cancellable = true)
-    private void stellar_core$getFileFast(@Nullable final String name, final CallbackInfoReturnable<File> cir) {
-        if (name == null || name.isEmpty() || stellar_core$isInvalidName(name)) {
-            cir.setReturnValue(null);
-            return;
-        }
-
-        final File root = ((StellarCoreAbstractResourcePackAccessor) (Object) this).stellar_core$getResourcePackFile();
-        final File file = new File(root, name);
-        cir.setReturnValue(file.isFile() ? file : null);
+    public MixinFolderResourcePack(File resourcePackFileIn) {
+        super(resourcePackFileIn);
     }
 
-    @Unique
-    private static boolean stellar_core$isInvalidName(final String name) {
-        final char first = name.charAt(0);
-        if (first == '/' || first == '\\') {
-            return true;
+    @Redirect(
+        method = "getFile",
+        at = @At(value = "INVOKE", target = "Ljava/io/File;isFile()Z")
+    )
+    private boolean stellar_core$isIndexedFile(File file, @Local(argsOnly = true) String path) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
+            return file.isFile();
         }
-
-        // Windows drive letter path.
-        if (name.length() >= 2 && name.charAt(1) == ':' && Character.isLetter(name.charAt(0))) {
-            return true;
-        }
-
-        // Keep path semantics consistent with ResourceLocation (which uses '/').
-        if (name.indexOf('\\') >= 0) {
-            return true;
-        }
-
-        // Prevent path traversal without expensive canonicalization.
-        if (name.indexOf("..") < 0) {
-            return false;
-        }
-        return name.equals("..") || name.startsWith("../") || name.endsWith("/..") || name.contains("/../");
+        return DirectoryPathIndex.contains(this.resourcePackFile, path, file);
     }
+
 }

@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.resource.ClasspathAssetIndex;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreMutableResourceManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBakery;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Collections;
 import java.util.Set;
 
 @Mixin(ModelLoader.class)
@@ -26,18 +28,15 @@ public class MixinModelLoader extends ModelBakery {
         super(null, null, null);
     }
 
-    @Inject(
-            method = "setupModelRegistry",
-            at = @At("HEAD")
-    )
+    @Inject(method = "setupModelRegistry", at = @At("HEAD"))
     private void stellar_core$ensureClasspathIndexReady(final CallbackInfoReturnable<IRegistry<ModelResourceLocation, IBakedModel>> cir) {
-        if (!FMLClientHandler.instance().hasOptifine()) {
-            return;
+        if (this.resourceManager instanceof StellarCoreMutableResourceManager) {
+            ((StellarCoreMutableResourceManager) this.resourceManager)
+                .stellar_core$refreshMutableResourcePackNamespaces();
         }
-
-        // OptiFine may query emissive resources during registerSprite/checkEmissive,
-        // which happens before the later loadSprites INVOKE injection.
-        ClasspathAssetIndex.prewarm(java.util.Collections.singleton("minecraft"));
+        if (FMLClientHandler.instance().hasOptifine()) {
+            ClasspathAssetIndex.prewarm(Collections.singleton("minecraft"));
+        }
     }
 
     @Inject(

@@ -1,70 +1,155 @@
 package github.kasuminova.stellarcore.client.resource;
 
+import com.github.bsideup.jabel.Desugar;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
+import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * A minimal existence index for directory trees.
+ * Positive-only index for mutable directory resources.
  *
- * <p>This is mainly used to avoid calling {@link File#exists()} / {@link File#isFile()} repeatedly
- * on Windows/NTFS during model/texture loading.
+ * <p>Indexed hits avoid filesystem calls. Every miss still checks the live filesystem, so an
+ * asynchronous scan can never turn a newly created resource into a persistent false negative.</p>
  */
 public final class DirectoryPathIndex {
 
     private static final boolean CASE_INSENSITIVE = isWindows();
-
-    private static final ConcurrentHashMap<String, Index> INDEXES = new ConcurrentHashMap<>();
-
+    private static final NonBlockingHashMap<String, Index> INDEXES = new NonBlockingHashMap<>();
+    private static final AtomicLong GENERATION = new AtomicLong();
     private static final int MAX_SCAN_THREADS = 4;
-    private static volatile int executorThreads = 0;
+
     private static volatile ExecutorService executor;
 
     private DirectoryPathIndex() {
     }
 
     public static void clear() {
+        GENERATION.incrementAndGet();
         INDEXES.clear();
     }
 
     public static void prewarmAsync(@Nullable final File rootDirectory) {
-        if (rootDirectory == null) {
-            return;
+        if (rootDirectory != null) {
+            currentIndex(rootDirectory).ensureInitializedAsync();
         }
-        INDEXES.computeIfAbsent(normalizeKey(rootDirectory), key -> new Index(rootDirectory)).ensureInitializedAsync();
     }
 
-    /**
-     * Non-blocking existence check.
-     *
-     * @return {@code Boolean.TRUE}/{@code Boolean.FALSE} if the index is ready;
-     * {@code null} if the index is not initialized yet.
-     */
-    @Nullable
-    public static Boolean tryContains(@Nullable final File rootDirectory, @Nullable final String relativePath) {
-        if (rootDirectory == null || relativePath == null || relativePath.isEmpty()) {
-            return Boolean.FALSE;
+    public static boolean contains(@Nullable final File rootDirectory, @Nullable final String relativePath) {
+        return contains(rootDirectory, relativePath,
+            rootDirectory == null || relativePath == null ? null : new File(rootDirectory, relativePath));
+    }
+
+    public static boolean contains(@Nullable final File rootDirectory,
+                                   @Nullable final String relativePath,
+                                   @Nullable final File candidateFile) {
+        if (rootDirectory == null || candidateFile == null || !isSafeRelativePath(relativePath)) {
+            return false;
         }
+
+        final String normalizedPath = normalizePath(relativePath);
+        while (true) {
+            final Index index = currentIndex(rootDirectory);
+            if (index.contains(normalizedPath)) {
+                if (index.isCurrent()) {
+                    return true;
+                }
+                continue;
+            }
+            if (!index.isCurrent()) {
+                continue;
+            }
+
+            index.ensureInitializedAsync();
+            if (!candidateFile.isFile()) {
+                return false;
+            }
+            if (index.addIfCurrent(normalizedPath)) {
+                if (StellarLog.LOG.isDebugEnabled()) {
+                    StellarLog.LOG.debug(
+                        "[StellarCore-DirectoryPathIndex] Live filesystem check added an indexed resource. root={}, path={}",
+                        rootDirectory.getAbsolutePath(), normalizedPath
+                    );
+                }
+                return true;
+            }
+        }
+    }
+
+    private static boolean isSafeRelativePath(@Nullable final String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        final char first = path.charAt(0);
+        if (first == '/' || first == '\\') {
+            return false;
+        }
+        if (path.length() >= 2 && path.charAt(1) == ':' && Character.isLetter(path.charAt(0))) {
+            return false;
+        }
+        if (path.indexOf('\\') >= 0) {
+            return false;
+        }
+        if (path.indexOf("..") < 0) {
+            return true;
+        }
+        return !path.equals("..")
+            && !path.startsWith("../")
+            && !path.endsWith("/..")
+            && !path.contains("/../");
+    }
+
+    static boolean isIndexed(final File rootDirectory, final String relativePath) {
         final Index index = INDEXES.get(normalizeKey(rootDirectory));
-        if (index == null) {
-            return null;
-        }
-        return index.tryContains(relativePath);
+        return index != null
+            && index.generation == GENERATION.get()
+            && index.contains(normalizePath(relativePath));
     }
 
-    private static Executor executor() {
+    static void awaitInitialization(final File rootDirectory, final long timeout, final TimeUnit unit) throws Exception {
+        final Index index = currentIndex(rootDirectory);
+        index.ensureInitializedAsync();
+        final CompletableFuture<Void> future = index.initFuture;
+        if (future == null) {
+            throw new IllegalStateException("Directory index scan did not start for " + rootDirectory.getAbsolutePath());
+        }
+        future.get(timeout, unit);
+    }
+
+    private static Index currentIndex(final File rootDirectory) {
+        final String key = normalizeKey(rootDirectory);
+        while (true) {
+            final long generation = GENERATION.get();
+            final Index existing = INDEXES.get(key);
+            if (existing != null && existing.generation == generation) {
+                return existing;
+            }
+            final Index created = new Index(rootDirectory, generation);
+            final Index previous = INDEXES.putIfAbsent(key, created);
+            final Index index = previous == null ? created : previous;
+            if (index.isCurrent()) {
+                return index;
+            }
+            INDEXES.remove(key, index);
+        }
+    }
+
+    private static ExecutorService executor() {
         ExecutorService current = executor;
         if (current != null) {
             return current;
@@ -74,146 +159,129 @@ public final class DirectoryPathIndex {
             if (current != null) {
                 return current;
             }
-            final int concurrency = StellarEnvironment.getConcurrency();
-            final int threads = Math.max(1, Math.min(MAX_SCAN_THREADS, concurrency));
-            executorThreads = threads;
-            final AtomicInteger threadId = new AtomicInteger(0);
-            final ThreadFactory factory = runnable -> {
+            final int threads = Math.max(1, Math.min(MAX_SCAN_THREADS, StellarEnvironment.getConcurrency()));
+            final AtomicInteger threadId = new AtomicInteger();
+            final ThreadFactory threadFactory = runnable -> {
                 final Thread thread = new Thread(runnable);
                 thread.setName("StellarCore-DirectoryPathIndex-" + threadId.getAndIncrement());
                 thread.setDaemon(true);
                 return thread;
             };
-            current = Executors.newFixedThreadPool(threads, factory);
+            current = Executors.newFixedThreadPool(threads, threadFactory);
             executor = current;
             return current;
         }
     }
 
-    private static int executorThreads() {
-        if (executorThreads <= 0) {
-            executor();
-        }
-        return Math.max(1, executorThreads);
-    }
-
-    private static final class Index {
-        private final File root;
-
-        private volatile boolean initialized = false;
-        private volatile CompletableFuture<Void> initFuture;
-        private volatile Set<String> paths = Collections.emptySet();
-
-        private Index(final File root) {
-            this.root = root;
-        }
-
-        @Nullable
-        private Boolean tryContains(final String relativePath) {
-            if (!initialized) {
-                ensureInitializedAsync();
-                return null;
-            }
-            return paths.contains(normalizePath(relativePath)) ? Boolean.TRUE : Boolean.FALSE;
-        }
-
-        private void ensureInitializedAsync() {
-            if (initialized) {
-                return;
-            }
-            final CompletableFuture<Void> current = initFuture;
-            if (current != null) {
-                return;
-            }
-            synchronized (this) {
-                if (initialized || initFuture != null) {
-                    return;
-                }
-                initFuture = CompletableFuture.runAsync(() -> {
-                    try {
-                        init();
-                    } catch (Throwable ignored) {
-                        paths = Collections.emptySet();
-                    } finally {
-                        initialized = true;
-                    }
-                }, DirectoryPathIndex.executor());
-            }
-        }
-
-        private void init() {
-            final Set<String> found = scan(root);
-            this.paths = found.isEmpty() ? Collections.emptySet() : Collections.unmodifiableSet(found);
-        }
-
-        private Set<String> scan(final File rootDir) {
-            if (rootDir == null) {
-                return Collections.emptySet();
-            }
-
-            final java.util.HashSet<String> found = new java.util.HashSet<>();
-            final ArrayDeque<DirFrame> stack = new ArrayDeque<>();
-            stack.push(new DirFrame(rootDir, ""));
-
-            while (!stack.isEmpty()) {
-                final DirFrame frame = stack.pop();
-                final File dir = frame.dir;
-                final String prefix = frame.prefix;
-                final File[] children = dir.listFiles();
-                if (children == null || children.length == 0) {
-                    continue;
-                }
-                for (File child : children) {
-                    if (child == null) {
-                        continue;
-                    }
-                    final String name = child.getName();
-                    if (name == null || name.isEmpty()) {
-                        continue;
-                    }
-                    if (child.isDirectory()) {
-                        stack.push(new DirFrame(child, prefix + name + "/"));
-                        continue;
-                    }
-                    found.add(normalizePath(prefix + name));
-                }
-            }
-
-            return found;
-        }
-
-        private static final class DirFrame {
-            private final File dir;
-            private final String prefix;
-
-            private DirFrame(final File dir, final String prefix) {
-                this.dir = dir;
-                this.prefix = prefix;
-            }
-        }
-    }
-
     private static String normalizeKey(final File directory) {
-        String key = directory.getAbsolutePath();
-        if (key.indexOf('\\') >= 0) {
-            key = key.replace('\\', '/');
-        }
-        return CASE_INSENSITIVE ? key.toLowerCase(Locale.ROOT) : key;
+        return normalize(directory.getAbsolutePath());
     }
 
     private static String normalizePath(final String path) {
-        String normalized = path;
-        if (normalized.indexOf('\\') >= 0) {
-            normalized = normalized.replace('\\', '/');
-        }
-        while (!normalized.isEmpty() && normalized.charAt(0) == '/') {
-            normalized = normalized.substring(1);
-        }
+        return normalize(path);
+    }
+
+    private static String normalize(final String value) {
+        final String normalized = value.indexOf('\\') >= 0 ? value.replace('\\', '/') : value;
         return CASE_INSENSITIVE ? normalized.toLowerCase(Locale.ROOT) : normalized;
     }
 
     private static boolean isWindows() {
-        final String os = System.getProperty("os.name");
-        return os != null && os.toLowerCase(Locale.ROOT).contains("win");
+        final String osName = System.getProperty("os.name", "");
+        return osName.toLowerCase(Locale.ROOT).contains("win");
+    }
+
+    private static final class Index {
+        private final File root;
+        private final long generation;
+        private final Set<String> paths = new NonBlockingHashSet<>();
+
+        private volatile boolean initializationStarted;
+        private volatile CompletableFuture<Void> initFuture;
+
+        private Index(final File root, final long generation) {
+            this.root = root;
+            this.generation = generation;
+        }
+
+        private boolean contains(final String path) {
+            return paths.contains(path);
+        }
+
+        private boolean addIfCurrent(final String path) {
+            if (!isCurrent()) {
+                return false;
+            }
+            paths.add(path);
+            return isCurrent();
+        }
+
+        private boolean isCurrent() {
+            return generation == GENERATION.get();
+        }
+
+        private void ensureInitializedAsync() {
+            if (initializationStarted || !isCurrent()) {
+                return;
+            }
+            synchronized (this) {
+                if (initializationStarted || !isCurrent()) {
+                    return;
+                }
+                initializationStarted = true;
+                initFuture = CompletableFuture.runAsync(this::initialize, DirectoryPathIndex.executor());
+            }
+        }
+
+        private void initialize() {
+            try {
+                scan();
+            } catch (Throwable throwable) {
+                StellarLog.LOG.error(
+                    "[StellarCore-DirectoryPathIndex] Failed to scan directory index. root={}",
+                    root.getAbsolutePath(), throwable
+                );
+                if (throwable instanceof Error) {
+                    throw (Error) throwable;
+                }
+                throw new CompletionException(throwable);
+            }
+        }
+
+        private void scan() throws IOException {
+            if (!isCurrent() || !root.exists()) {
+                return;
+            }
+            if (!root.isDirectory()) {
+                throw new IOException("Directory index root is not a directory: " + root.getAbsolutePath());
+            }
+
+            final ArrayDeque<DirectoryFrame> directories = new ArrayDeque<>();
+            directories.push(new DirectoryFrame(root, ""));
+            while (!directories.isEmpty()) {
+                if (!isCurrent()) {
+                    return;
+                }
+                final DirectoryFrame frame = directories.pop();
+                final File[] children = frame.directory.listFiles();
+                if (children == null) {
+                    throw new IOException("Unable to list directory: " + frame.directory.getAbsolutePath());
+                }
+                for (File child : children) {
+                    if (!isCurrent()) {
+                        return;
+                    }
+                    if (child.isDirectory()) {
+                        directories.push(new DirectoryFrame(child, frame.prefix + child.getName() + "/"));
+                    } else if (child.isFile()) {
+                        paths.add(normalizePath(frame.prefix + child.getName()));
+                    }
+                }
+            }
+        }
+    }
+
+    @Desugar
+    private record DirectoryFrame(File directory, String prefix) {
     }
 }

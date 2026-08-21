@@ -173,6 +173,8 @@ public class Performance {
                 "blusunrize.immersiveengineering.client.models.ModelConfigurableSides$Loader",
                 // Electroblob's Wizardry (4.3.14) custom loader
                 "electroblob.wizardry.client.model.ModelLoaderBookshelf",
+            // ConnectedTexturesMod 1.12 uses a HashMap and HashSet while loading models.
+            "team.chisel.ctm.client.model.parsing.ModelLoaderCTM",
         };
 
         @Config.Comment({
@@ -346,6 +348,7 @@ public class Performance {
                 "reducing Windows/NTFS File.exists/isFile overhead during model/texture loading.",
                 "Only effective when ResourceExistStateCache is enabled."
         })
+        @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.directoryResourcePackIndex")
         @Config.Name("DirectoryResourcePackIndex")
         public boolean directoryResourcePackIndex = true;

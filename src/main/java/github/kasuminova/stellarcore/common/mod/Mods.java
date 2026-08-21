@@ -16,6 +16,7 @@ public enum Mods {
     LIB_NINE     ("libnine"           ),
     CUBIC_CHUNKS ("cubicchunks"       ),
     GC           ("galacticraftcore"  ),
+    FN("fluxnetworks"),
 
     MMCE                  ("modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
     CENSORED_ASM          ("loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"         ),

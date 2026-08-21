@@ -1,7 +1,9 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.client.resource.ClasspathAssetIndex;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraft.client.resources.ResourceIndex;
 import net.minecraft.util.ResourceLocation;
@@ -14,16 +16,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(DefaultResourcePack.class)
 public abstract class MixinDefaultResourcePack implements StellarCoreResourcePack {
 
     @Unique
-    private static final java.util.Set<String> STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS = java.util.Collections.singleton("minecraft");
+    private static final Set<String> STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS = Collections.singleton("minecraft");
 
     @Shadow
     @Nullable
@@ -37,7 +40,7 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
     public abstract Set<String> getResourceDomains();
 
     @Unique
-    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new ConcurrentHashMap<>();
+    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new NonBlockingHashMap<>();
 
     @Unique
     private boolean stellar_core$cacheEnabled = false;
@@ -52,40 +55,36 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
             cir.setReturnValue(false);
             return;
         }
-
-        if (stellar_core$cacheEnabled) {
-            final Boolean cached = stellar_core$resourceExistsCache.get(location);
-            if (cached != null) {
-                cir.setReturnValue(cached);
-                return;
-            }
-
-            final boolean computed = stellar_core$resourceExists0(location);
-            final Boolean existing = stellar_core$resourceExistsCache.putIfAbsent(location, computed);
-            cir.setReturnValue(existing != null ? existing : computed);
+        if (!stellar_core$cacheEnabled) {
+            cir.setReturnValue(stellar_core$resourceExistsUncached(location));
+            return;
+        }
+        final Boolean cached = stellar_core$resourceExistsCache.get(location);
+        if (cached != null) {
+            cir.setReturnValue(cached);
             return;
         }
 
-        // Even when caching is disabled, still prefer ResourceIndex/ClasspathAssetIndex to avoid expensive
-        // Class#getResource fallbacks when the index is already ready.
-        cir.setReturnValue(stellar_core$resourceExists0(location));
+        final boolean exists = stellar_core$resourceExistsUncached(location);
+        final Boolean previous = stellar_core$resourceExistsCache.putIfAbsent(location, exists);
+        cir.setReturnValue(previous == null ? exists : previous);
     }
 
     @Unique
-    private boolean stellar_core$resourceExists0(final ResourceLocation location) {
+    private boolean stellar_core$resourceExistsUncached(final ResourceLocation location) {
         if (this.resourceIndex.isFileExisting(location)) {
             return true;
         }
 
-        final Set<String> resourceDomains = getResourceDomains();
         final String namespace = location.getNamespace();
-        if (namespace != null && !namespace.isEmpty() && resourceDomains.contains(namespace)) {
+        if (namespace != null && getResourceDomains().contains(namespace)) {
             final Boolean indexed = ClasspathAssetIndex.tryContains(location);
-            if (indexed != null) {
-                return indexed;
+            if (Boolean.TRUE.equals(indexed)) {
+                return true;
             }
-            // Ensure background init has started, but do not block this call.
-            ClasspathAssetIndex.prewarmAsync(java.util.Collections.singleton(namespace));
+            if (indexed == null) {
+                ClasspathAssetIndex.prewarmAsync(Collections.singleton(namespace));
+            }
         }
 
         final InputStream stream = this.getResourceStream(location);
@@ -94,7 +93,8 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
         }
         try {
             stream.close();
-        } catch (Exception ignored) {
+        } catch (IOException exception) {
+            StellarLog.LOG.warn("Failed to close resource existence probe stream: {}", location, exception);
         }
         return true;
     }
@@ -108,8 +108,6 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
     @Override
     public void stellar_core$enableCache() {
         stellar_core$cacheEnabled = true;
-        // Pre-index classpath assets for the hot namespace to avoid repeated classpath scans.
-        // Other namespaces will be prewarmed on-demand.
         ClasspathAssetIndex.prewarmAsync(STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS);
     }
 

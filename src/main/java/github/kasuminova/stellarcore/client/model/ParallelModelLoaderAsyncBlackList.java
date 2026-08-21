@@ -7,6 +7,10 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 
 public class ParallelModelLoaderAsyncBlackList extends ClassSet {
+    private static final String[] REQUIRED_BLACK_LIST = {
+        "team.chisel.ctm.client.model.parsing.ModelLoaderCTM"
+    };
+
     public static final ParallelModelLoaderAsyncBlackList INSTANCE = new ParallelModelLoaderAsyncBlackList();
 
     @Override
@@ -30,7 +34,7 @@ public class ParallelModelLoaderAsyncBlackList extends ClassSet {
         Stream<String> userStream = userBlackList == null ? Stream.empty() : Arrays.stream(userBlackList);
         Stream<String> predefinedStream = predefinedBlackList == null ? Stream.empty() : Arrays.stream(predefinedBlackList);
 
-        Stream.concat(userStream, predefinedStream)
+        Stream.concat(Arrays.stream(REQUIRED_BLACK_LIST), Stream.concat(userStream, predefinedStream))
                 .filter(className -> className != null && !className.isEmpty())
                 .distinct()
                 .forEach(className -> findClass(className).ifPresent(this::add));
