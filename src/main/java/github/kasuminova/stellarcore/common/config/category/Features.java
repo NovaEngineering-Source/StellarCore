@@ -90,11 +90,6 @@ public class Features {
     @Config.Name("MoreElectricTools")
     public final MoreElectricTools moreElectricTools = new MoreElectricTools();
 
-
-    @Config.LangKey("stellar_core.config.features.draconicEvolution")
-    @Config.Name("DraconicEvolution")
-    public final DraconicEvolution draconicEvolution = new DraconicEvolution();
-
     public static class Vanilla {
 
         @Config.Comment("(Server) Allows CriterionProgress to be serialized in multiple threads.")
@@ -321,15 +316,6 @@ public class Features {
         @Config.LangKey("stellar_core.config.features.moreElectricTools.removeEfficientEnergyCostEnchantment")
         @Config.Name("RemoveEfficientEnergyCostEnchantment")
         public boolean disableEfficientEnergyCost = false;
-
-    }
-
-    public static class DraconicEvolution {
-
-        @Config.Comment("This option modifies the way Chaos Islands are generated")
-        @Config.LangKey("stellar_core.config.features.draconicEvolution.chaosIslandChunks")
-        @Config.Name("ChaosIslandChunks")
-        public boolean ChaosIslandChunks = true;
 
     }
 
