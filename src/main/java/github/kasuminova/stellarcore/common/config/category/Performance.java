@@ -4,87 +4,115 @@ import net.minecraftforge.common.config.Config;
 
 public class Performance {
 
+    @Config.LangKey("stellar_core.config.performance.vanilla")
     @Config.Name("Vanilla")
     public final Vanilla vanilla = new Vanilla();
 
+    @Config.LangKey("stellar_core.config.performance.forge")
     @Config.Name("Forge")
     public final Forge forge = new Forge();
 
+    @Config.LangKey("stellar_core.config.performance.astralSorcery")
     @Config.Name("AstralSorcery")
     public final AstralSorcery astralSorcery = new AstralSorcery();
 
+    @Config.LangKey("stellar_core.config.performance.avaritia")
     @Config.Name("Avaritia")
     public final Avaritia avaritia = new Avaritia();
 
+    @Config.LangKey("stellar_core.config.performance.biomesOPlenty")
     @Config.Name("BiomesOPlenty")
     public final BiomesOPlenty biomesOPlenty = new BiomesOPlenty();
 
+    @Config.LangKey("stellar_core.config.performance.enderUtilities")
     @Config.Name("EnderUtilities")
     public final EnderUtilities enderUtilities = new EnderUtilities();
 
+    @Config.LangKey("stellar_core.config.performance.extraBotany")
     @Config.Name("ExtraBotany")
     public final ExtraBotany extraBotany = new ExtraBotany();
 
+    @Config.LangKey("stellar_core.config.performance.bloodMagic")
     @Config.Name("BloodMagic")
     public final BloodMagic bloodMagic = new BloodMagic();
 
+    @Config.LangKey("stellar_core.config.performance.botania")
     @Config.Name("Botania")
     public final Botania botania = new Botania();
 
+    @Config.LangKey("stellar_core.config.performance.chisel")
     @Config.Name("Chisel")
     public final Chisel chisel = new Chisel();
 
+    @Config.LangKey("stellar_core.config.performance.ctm")
     @Config.Name("CTM")
     public final CTM ctm = new CTM();
 
+    @Config.LangKey("stellar_core.config.performance.cucumber")
     @Config.Name("Cucumber")
     public final Cucumber cucumber = new Cucumber();
 
+    @Config.LangKey("stellar_core.config.performance.customLoadingScreen")
     @Config.Name("CustomLoadingScreen")
     public final CustomLoadingScreen customLoadingScreen = new CustomLoadingScreen();
 
+    @Config.LangKey("stellar_core.config.performance.ebWizardry")
     @Config.Name("EBWizardry")
     public final EBWizardry ebWizardry = new EBWizardry();
 
+    @Config.LangKey("stellar_core.config.performance.enderCore")
     @Config.Name("EnderCore")
     public final EnderCore enderCore = new EnderCore();
 
+    @Config.LangKey("stellar_core.config.performance.enderIO")
     @Config.Name("EnderIO")
     public final EnderIO enderIO = new EnderIO();
 
+    @Config.LangKey("stellar_core.config.performance.enderIOConduits")
     @Config.Name("EnderIOConduits")
     public final EnderIOConduits enderIOConduits = new EnderIOConduits();
 
+    @Config.LangKey("stellar_core.config.performance.fluxNetworks")
     @Config.Name("FluxNetworks")
     public final FluxNetworks fluxNetworks = new FluxNetworks();
 
+    @Config.LangKey("stellar_core.config.performance.ftbLib")
     @Config.Name("FTBLib")
     public final FTBLib ftbLib = new FTBLib();
 
+    @Config.LangKey("stellar_core.config.performance.ftbQuests")
     @Config.Name("FTBQuests")
     public final FTBQuests ftbQuests = new FTBQuests();
 
+    @Config.LangKey("stellar_core.config.performance.industrialCraft2")
     @Config.Name("IndustrialCraft2")
     public final IndustrialCraft2 industrialCraft2 = new IndustrialCraft2();
 
+    @Config.LangKey("stellar_core.config.performance.inGameInfoXML")
     @Config.Name("InGameInfoXML")
     public final InGameInfoXML inGameInfoXML = new InGameInfoXML();
 
+    @Config.LangKey("stellar_core.config.performance.immersiveEngineering")
     @Config.Name("ImmersiveEngineering")
     public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
 
+    @Config.LangKey("stellar_core.config.performance.libNine")
     @Config.Name("LibNine")
     public final LibNine libNine = new LibNine();
 
+    @Config.LangKey("stellar_core.config.performance.mekanism")
     @Config.Name("Mekanism")
     public final Mekanism mekanism = new Mekanism();
 
+    @Config.LangKey("stellar_core.config.performance.nuclearCraftOverhauled")
     @Config.Name("NuclearCraftOverhauled")
     public final NuclearCraftOverhauled nuclearCraftOverhauled = new NuclearCraftOverhauled();
 
+    @Config.LangKey("stellar_core.config.performance.tConstruct")
     @Config.Name("TConstruct")
     public final TConstruct tConstruct = new TConstruct();
 
+    @Config.LangKey("stellar_core.config.performance.touhouLittleMaid")
     @Config.Name("TouhouLittleMaid")
     public final TouhouLittleMaid tlm = new TouhouLittleMaid();
 
@@ -96,11 +124,13 @@ public class Performance {
                 "May perform strangely with some HUD Mods."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.hudCaching")
         @Config.Name("HudCaching")
         public boolean hudCaching = false;
 
         @Config.Comment("Select a restricted HUD FPS that is only valid when HudCaching is enabled.")
         @Config.RangeInt(min = 5, max = 240)
+        @Config.LangKey("stellar_core.config.performance.vanilla.hudCachingFPSLimit")
         @Config.Name("HudCachingFPSLimit")
         public int hudCachingFPSLimit = 20;
 
@@ -111,6 +141,7 @@ public class Performance {
                 "Contrary to VintageFix's DynamicResource functionality and therefore incompatible, you can only choose one."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.parallelModelLoader")
         @Config.Name("ParallelModelLoader")
         public boolean parallelModelLoader = true;
 
@@ -121,6 +152,7 @@ public class Performance {
                 "If you installed FoamFix, FoamFix does the same thing but StellarCore is faster, you may need to turn off the `wipeModelCache` option in foamfix.cfg."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.wipeModelCache")
         @Config.Name("WipeModelCache")
         public boolean wipeModelCache = true;
 
@@ -130,6 +162,7 @@ public class Performance {
                 "Remove them only if you are sure the loader is thread-safe in your modpack."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.parallelModelLoaderBlackListPredefined")
         @Config.Name("ParallelModelLoaderBlackListPredefined")
         public String[] parallelModelLoaderBlackListPredefined = {
                 // Immersive Engineering (0.12-98) custom loaders
@@ -148,6 +181,7 @@ public class Performance {
                 "using a synchronous approach, usually requires no modification to it."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.parallelModelLoaderBlackList")
         @Config.Name("ParallelModelLoaderBlackList")
         public String[] parallelModelLoaderBlackList = {"slimeknights.tconstruct.library.client.model.ModifierModelLoader"};
 
@@ -156,16 +190,19 @@ public class Performance {
                 "If you get a crash when installing with VintageFix, turn this feature off, or turn off the mixins.texturemap option for VintageFix."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.parallelTextureLoad")
         @Config.Name("ParallelTextureLoad")
         public boolean parallelTextureLoad = false;
 
         @Config.Comment("(Client Performance) Improve the Map data structures of StateMapperBase to make them faster (~30%).")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.stateMapperBaseImprovements")
         @Config.Name("StateMapperBaseImprovements")
         public boolean stateMapperBase = true;
 
         @Config.Comment("(Server Performance) Modified the data structure of capturedBlockSnapshots to a LinkedList to help improve insertion and deletion performance.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.capturedBlockSnapshotsImprovements")
         @Config.Name("CapturedBlockSnapshotsImprovements")
         public boolean capturedBlockSnapshots = false;
 
@@ -174,51 +211,61 @@ public class Performance {
                 "Conflicts with UniversalTweaks - 'Tile Entity Map' options and StellarCore maybe overrides them."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.chunkTileEntityMapImprovements")
         @Config.Name("ChunkTileEntityMapImprovements")
         public boolean chunkTEMap = false;
 
         @Config.Comment("(Client/Server Performance | Experimental) Cache the TileEntity state of the IBlockState in a chunk to improve performance.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.chunkTileEntityCache")
         @Config.Name("ChunkTileEntityCache")
         public boolean chunkTECache = false;
 
         @Config.Comment("(Client/Server Performance) Improving Chunk Performance with Improved Data Structures.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.chunkTileEntityQueueImprovements")
         @Config.Name("ChunkTileEntityQueueImprovements")
         public boolean chunkTEQueue = true;
 
         @Config.Comment("(Server Performance) Improving the performance of ClassInheritanceMultiMap (up to ~40%).")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.classInheritanceMultiMapImprovements")
         @Config.Name("ClassInheritanceMultiMapImprovements")
         public boolean classMultiMap = true;
 
         @Config.Comment("(Server Performance) Improving EntityTracker Performance with Improved Data Structures.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.entityTrackerImprovements")
         @Config.Name("EntityTrackerImprovements")
         public boolean entitytracker = true;
 
         @Config.Comment("(Server Performance) Include Y distance checks when tracking entities.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.entityTrackerIncludeY")
         @Config.Name("EntityTrackerIncludeY")
         public boolean entitytrackerIncludeY = false;
 
         @Config.Comment("(Server Performance) Improving WorldServer#getPendingBlockUpdates Performance with Improved Data Structures.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.worldServerGetPendingBlockUpdatesImprovements")
         @Config.Name("WorldServerGetPendingBlockUpdatesImprovements")
         public boolean worldServerGetPendingBlockUpdates = true;
 
         @Config.Comment("(Client Performance) Improving PropertyEnum#hashCode Performance with hashCode cache.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.propertyEnumHashCodeCache")
         @Config.Name("PropertyEnumHashCodeCache")
         public boolean propertyEnumHashCodeCache = true;
 
         @Config.Comment("(Client/Server Performance) Optimize BoundingBox intersect check.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.boundingBoxIntersectCheck")
         @Config.Name("BoundingBoxIntersectCheck")
         public boolean boundingBoxIntersectCheck = true;
 
         @Config.Comment("(Server Performance) Improving BlockStateContainer$BlockStateImplementation#hashCode Performance with hashCode cache.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.blockStateImplementationHashCodeCache")
         @Config.Name("BlockStateImplementationHashCodeCache")
         public boolean blockStateImplementationHashCodeCache = true;
 
@@ -228,6 +275,7 @@ public class Performance {
                 "Known to conflict with CensoredASM's `optimizeNBTTagCompoundBackingMap` and `nbtBackingMapStringCanonicalization` option.",
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.nbtTagImprovements")
         @Config.Name("NBTTagImprovements")
         public boolean nbtTag = true;
 
@@ -238,6 +286,7 @@ public class Performance {
                 "Incompatible with old version of Quark (< r1.6-189), which modifies the bytecode of the NBTTag class too early.",
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.nbtPrimitiveConstantsPool")
         @Config.Name("NBTPrimitiveConstantsPool")
         public boolean nbtPrimitiveConstantsPool = true;
 
@@ -247,16 +296,19 @@ public class Performance {
                 "Deprecated: unstable, use at your own risk."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.asyncItemStackCapabilityInit")
         @Config.Name("AsyncItemStackCapabilityInit")
         public boolean asyncItemStackCapabilityInit = false;
 
         @Config.Comment("(Client/Server Performance | Experimental) Replaces the internal default ArrayList of NonNullList with an ObjectArrayList (may not work).")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.nonNullListImprovements")
         @Config.Name("NonNullListImprovements")
         public boolean nonNullList = true;
 
         @Config.Comment("(Client Performance) As the configuration name says, use at your own risk.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.noGLError")
         @Config.Name("NoGLError")
         public boolean noGlError = false;
 
@@ -265,6 +317,7 @@ public class Performance {
                 "low FPS conditions, but potentially leads to rendering delays."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.alwaysDeferChunkUpdates")
         @Config.Name("AlwaysDeferChunkUpdates")
         public boolean alwaysDeferChunkUpdates = false;
 
@@ -275,6 +328,7 @@ public class Performance {
                 "Not compatible with VintageFix's DynamicResource, but should work well with VintageFix's TurboStitcher."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.stitcherCache")
         @Config.Name("StitcherCache")
         public boolean stitcherCache = false;
 
@@ -283,6 +337,7 @@ public class Performance {
                 "improve the speed of model loading, if you encounter the game can not be loaded or display anomaly, turn off this option."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.resourceExistStateCache")
         @Config.Name("ResourceExistStateCache")
         public boolean resourceExistStateCache = true;
 
@@ -291,6 +346,7 @@ public class Performance {
                 "reducing Windows/NTFS File.exists/isFile overhead during model/texture loading.",
                 "Only effective when ResourceExistStateCache is enabled."
         })
+        @Config.LangKey("stellar_core.config.performance.vanilla.directoryResourcePackIndex")
         @Config.Name("DirectoryResourcePackIndex")
         public boolean directoryResourcePackIndex = true;
 
@@ -299,16 +355,19 @@ public class Performance {
                 "Note: Possibly affecting the random logic of the original game."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.parallelRandomBlockTicker")
         @Config.Name("ParallelRandomBlockTicker")
         public boolean parallelRandomBlockTicker = false;
 
         @Config.Comment("(Client/Server Performance) Improved `World#isValid` / `World#isOutsideBuildHeight` judgement performance, minor performance improvements.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.worldBlockPosJudgement")
         @Config.Name("WorldBlockPosJudgement")
         public boolean worldBlockPosJudgement = true;
 
         @Config.RequiresMcRestart
         @Config.Comment("(Client Performance) Improved BlockPart data structure, improve memory usage with a more efficient map.")
+        @Config.LangKey("stellar_core.config.performance.vanilla.blockPartDataStructureImprovements")
         @Config.Name("BlockPartDataStructureImprovements")
         public boolean blockPartDataStructure = true;
 
@@ -318,6 +377,7 @@ public class Performance {
                 "This feature requires CensoredASM mod.",
                 "Known to be incompatible with DynamicTrees."
         })
+        @Config.LangKey("stellar_core.config.performance.vanilla.modelBlockStringCanonicalization")
         @Config.Name("ModelBlockStringCanonicalization")
         public boolean modelBlockStringCanonicalization = false;
 
@@ -326,6 +386,7 @@ public class Performance {
                 "Works in most cases, but may cause rendering issues with models in some mods."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.bakedQuadVertexDataCanonicalization")
         @Config.Name("BakedQuadVertexDataCanonicalization")
         public boolean bakedQuadVertexDataCanonicalization = false;
 
@@ -334,11 +395,13 @@ public class Performance {
                 "Works in most cases, but may cause rendering issues with models in some mods."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.simpleBakedModelCanonicalization")
         @Config.Name("SimpleBakedModelCanonicalization")
         public boolean simpleBakedModelCanonicalization = false;
 
         @Config.Comment("(Client Performance) Deduplicate BlockFaceUV `uvs` array to optimise memory usage.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.blockFaceUVsCanonicalization")
         @Config.Name("BlockFaceUVsCanonicalization")
         public boolean blockFaceUVsCanonicalization = true;
 
@@ -349,6 +412,7 @@ public class Performance {
                 "Note: This feature may have a large impact on load times."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.resourceLocationCanonicalization")
         @Config.Name("ResourceLocationCanonicalization")
         public boolean resourceLocationCanonicalization = true;
 
@@ -358,6 +422,7 @@ public class Performance {
                 "and the memory returns to normal after loading is complete."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.resourceLocationCanonicalizationAsync")
         @Config.Name("ResourceLocationCanonicalizationAsync")
         public boolean resourceLocationCanonicalizationAsync = false;
 
@@ -370,15 +435,18 @@ public class Performance {
                 "helping to improve the computer freezing problem at game startup, but potentially causing the game to take longer to load."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.asmDataTableCPUUsageImprovements")
         @Config.Name("ASMDataTableCPUUsageImprovements")
         public boolean asmDataTable = false;
 
         @Config.Comment("(Client/Server Performance) Improved performance of ASMModParser in parsing bytecode, improved startup speed (~1 ~ 5 seconds).")
+        @Config.LangKey("stellar_core.config.performance.forge.asmModParserImprovements")
         @Config.Name("ASMModParserImprovements")
         public boolean asmModParser = true;
 
         @Config.Comment("(Client/Server Performance) ChunkManager optimisation, improves performance in more player environments.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.chunkManager")
         @Config.Name("ChunkManager")
         public boolean chunkManager = true;
 
@@ -387,6 +455,7 @@ public class Performance {
                 "Works in most cases, but may cause rendering issues with models in some mods."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.unpackedBakedQuadDataCanonicalization")
         @Config.Name("UnpackedBakedQuadDataCanonicalization")
         public boolean unpackedBakedQuadDataCanonicalization = false;
 
@@ -399,6 +468,7 @@ public class Performance {
         @Config.SlidingOption
         @Config.RequiresMcRestart
         @Config.RangeInt(min = 1, max = 3)
+        @Config.LangKey("stellar_core.config.performance.forge.unpackedBakedQuadDataCanonicalizationLevel")
         @Config.Name("UnpackedBakedQuadDataCanonicalizationLevel")
         public int unpackedBakedQuadDataCanonicalizationLevel = 1;
 
@@ -407,11 +477,13 @@ public class Performance {
                 "Works in most cases, but may cause rendering issues with models in some mods."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization")
         @Config.Name("UnpackedBakedQuadVertexDataCanonicalization")
         public boolean unpackedBakedQuadVertexDataCanonicalization = false;
 
         @Config.Comment("When writing to Capability's NBT, if the returned NBT is empty, no content is written, which may help improve performance.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT")
         @Config.Name("DeallocateEmptyCapabilityNBT")
         public boolean deallocateEmptyCapabilityNBT = true;
 
@@ -420,6 +492,7 @@ public class Performance {
     public static class AstralSorcery {
 
         @Config.Comment("(Server Performance) Add optional updates to the block to improve network bandwidth usage.")
+        @Config.LangKey("stellar_core.config.performance.astralSorcery.tileNetworkSkyboundImprovements")
         @Config.Name("TileNetworkSkyboundImprovements")
         public boolean tileNetworkSkybound = true;
 
@@ -428,10 +501,12 @@ public class Performance {
     public static class Avaritia {
 
         @Config.Comment("(Server Performance) Removing some unnecessary Server to Client synchronization helps ease network bandwidth usage.")
+        @Config.LangKey("stellar_core.config.performance.avaritia.tileBaseImprovements")
         @Config.Name("TileBaseImprovements")
         public boolean tileBase = true;
 
         @Config.Comment("(Client / Server Performance) Speed up recipe loading with parallel loading.")
+        @Config.LangKey("stellar_core.config.performance.avaritia.avaritiaRecipeManagerImprovements")
         @Config.Name("AvaritiaRecipeManagerImprovements")
         public boolean avaritiaRecipeManager = true;
 
@@ -440,6 +515,7 @@ public class Performance {
     public static class BiomesOPlenty {
 
         @Config.Comment("(Client/Server Performance) Block them from doing network operations in the main thread.")
+        @Config.LangKey("stellar_core.config.performance.biomesOPlenty.trailManagerAsync")
         @Config.Name("TrailManagerAsync")
         public boolean trailManager = true;
 
@@ -448,6 +524,7 @@ public class Performance {
     public static class Cucumber {
 
         @Config.Comment("(Client/Server Performance) Block them from doing network operations in the main thread.")
+        @Config.LangKey("stellar_core.config.performance.cucumber.vanillaPacketDispatcherImprovements")
         @Config.Name("VanillaPacketDispatcherImprovements")
         public boolean vanillaPacketDispatcher = false;
 
@@ -455,6 +532,7 @@ public class Performance {
                 "When a block is updated, how many players within range can receive its update?",
                 "Only works if VanillaPacketDispatcherImprovements is enabled, and only works on mods that use the Cucumber lib."
         })
+        @Config.LangKey("stellar_core.config.performance.cucumber.tileEntityUpdateRange")
         @Config.Name("TileEntityUpdateRange")
         public float tileEntityUpdateRange = 16F;
 
@@ -463,6 +541,7 @@ public class Performance {
     public static class EnderUtilities {
 
         @Config.Comment("(Server Performance) Improvements to the way UtilItemModular loads items to slightly improve performance.")
+        @Config.LangKey("stellar_core.config.performance.enderUtilities.utilItemModularImprovements")
         @Config.Name("UtilItemModularImprovements")
         public boolean utilItemModular = true;
 
@@ -471,6 +550,7 @@ public class Performance {
     public static class ExtraBotany {
 
         @Config.Comment("(Client/Server Performance) Block them from doing network operations in the main thread.")
+        @Config.LangKey("stellar_core.config.performance.extraBotany.persistentVariableHandlerAsync")
         @Config.Name("PersistentVariableHandlerAsync")
         public boolean persistentVariableHandler = true;
 
@@ -479,6 +559,7 @@ public class Performance {
     public static class BloodMagic {
 
         @Config.Comment("(Server Performance) Removing some unnecessary Server to Client synchronization helps ease network bandwidth usage.")
+        @Config.LangKey("stellar_core.config.performance.bloodMagic.bloodAltarImprovements")
         @Config.Name("BloodAltarImprovements")
         public boolean bloodAltar = true;
 
@@ -487,6 +568,7 @@ public class Performance {
     public static class Botania {
 
         @Config.Comment("(Server Performance) A feature with some side effects to make sparks use less performance through dynamic Tick acceleration.")
+        @Config.LangKey("stellar_core.config.performance.botania.sparkEntityImprovements")
         @Config.Name("SparkEntityImprovements")
         public boolean sparkImprovements = false;
 
@@ -504,6 +586,7 @@ public class Performance {
                 "Only works if SparkEntityImprovements is enabled."
         })
         @Config.RangeInt(min = 2, max = 60)
+        @Config.LangKey("stellar_core.config.performance.botania.sparkMaxWorkDelay")
         @Config.Name("SparkMaxWorkDelay")
         public int sparkMaxWorkDelay = 20;
 
@@ -515,6 +598,7 @@ public class Performance {
                 "(Server Performance) A feature with some side effects that improves the performance of Auto Chisel's recipe search",
                 "and makes the interval between searches for recipes increase."
         })
+        @Config.LangKey("stellar_core.config.performance.chisel.autoChiselImprovements")
         @Config.Name("AutoChiselImprovements")
         public boolean autoChiselImprovements = true;
 
@@ -523,6 +607,7 @@ public class Performance {
                 "Only works if AutoChiselImprovements is enabled."
         })
         @Config.RangeInt(min = 20, max = 100)
+        @Config.LangKey("stellar_core.config.performance.chisel.autoChiselMaxWorkDelay")
         @Config.Name("AutoChiselMaxWorkDelay")
         public int autoChiselMaxWorkDelay = 100;
 
@@ -535,6 +620,7 @@ public class Performance {
                 "usually with few conflict issues. If enabling this feature causes a problem, please report it immediately."
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.ctm.textureMetadataHandlerImprovements")
         @Config.Name("TextureMetadataHandlerImprovements")
         public boolean textureMetadataHandler = false;
 
@@ -544,11 +630,13 @@ public class Performance {
 
         @Config.Comment("(Client Performance) Clean up their mapping after the game has finished loading to improve memory usage.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.customLoadingScreen.textureCleanup")
         @Config.Name("TextureCleanup")
         public boolean splashProgress = true;
 
         @Config.Comment("(Recommend) (Client Performance) We'll never know why we have to wait an extra (20*5)ms for each module loaded.")
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.customLoadingScreen.modLoadingListenerImprovements")
         @Config.Name("ModLoadingListenerImprovements")
         public boolean modLoadingListener = true;
 
@@ -561,6 +649,7 @@ public class Performance {
                 "Incompatible with TickCentral mod, alternative optimisations are used when installing with this mod.",
         })
         @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.ebWizardry.dispenserCastingDataImprovements")
         @Config.Name("DispenserCastingDataImprovements")
         public boolean dispenserCastingData = false;
 
@@ -572,6 +661,7 @@ public class Performance {
                 "(Server Performance) Improve the speed of matching materials such as items using caching and special data structures",
                 "to improve the performance of EnderIO Machines overall, with a slight increase in memory usage."
         })
+        @Config.LangKey("stellar_core.config.performance.enderCore.thingsImprovements")
         @Config.Name("ThingsImprovements")
         public boolean things = true;
 
@@ -579,6 +669,7 @@ public class Performance {
                 "(Server Performance) Improve the speed of matching materials such as items using caching and special data structures",
                 "to improve the performance of EnderIO Machines overall, with a slight increase in memory usage."
         })
+        @Config.LangKey("stellar_core.config.performance.enderCore.oreThingImprovements")
         @Config.Name("OreThingImprovements")
         public boolean oreThing = true;
 
@@ -587,18 +678,22 @@ public class Performance {
     public static class EnderIO {
 
         @Config.Comment("(Server Performance) Removing some unnecessary parts to improve performance, may affect the use of the Profiler.")
+        @Config.LangKey("stellar_core.config.performance.enderIO.itemToolsImprovements")
         @Config.Name("ItemToolsImprovements")
         public boolean itemTools = true;
 
         @Config.Comment("(Server Performance) Remove some unnecessary judgments to improve performance (may have side effects).")
+        @Config.LangKey("stellar_core.config.performance.enderIO.tileEntityBaseImprovements")
         @Config.Name("TileEntityBaseImprovements")
         public boolean tileEntityBase = true;
 
         @Config.Comment("(Server Performance) Improve recipe search speed with caching.")
+        @Config.LangKey("stellar_core.config.performance.enderIO.recipeImprovements")
         @Config.Name("RecipeImprovements")
         public boolean recipe = true;
 
         @Config.Comment("(Server Performance) Improve the performance of item determination in FarmerStation using caching (mainly related to the canPlant() method).")
+        @Config.LangKey("stellar_core.config.performance.enderIO.farmerImprovements")
         @Config.Name("FarmerImprovements")
         public boolean commune = true;
 
@@ -607,22 +702,27 @@ public class Performance {
     public static class EnderIOConduits {
 
         @Config.Comment("(Server Performance) Removing some unnecessary parts to improve performance, may affect the use of the Profiler.")
+        @Config.LangKey("stellar_core.config.performance.enderIOConduits.abstractConduitImprovements")
         @Config.Name("AbstractConduitImprovements")
         public boolean abstractConduit = true;
 
         @Config.Comment("(Server Performance) Removing some unnecessary parts to improve performance, may affect the use of the Profiler.")
+        @Config.LangKey("stellar_core.config.performance.enderIOConduits.tileConduitBundleImprovements")
         @Config.Name("TileConduitBundleImprovements")
         public boolean tileConduitBundle = true;
 
         @Config.Comment("(Server Performance) Improved the hashCode() method of NetworkTankKey, which can improve the performance of the EnderIO Conduit Network.")
+        @Config.LangKey("stellar_core.config.performance.enderIOConduits.networkTankKeyHashCodeCache")
         @Config.Name("NetworkTankKeyHashCodeCache")
         public boolean networkTankKeyHashCodeCache = true;
 
         @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
+        @Config.LangKey("stellar_core.config.performance.enderIOConduits.enderLiquidConduitNetworkTankMap")
         @Config.Name("EnderLiquidConduitNetworkTankMap")
         public boolean enderLiquidConduitNetworkTankMap = true;
 
         @Config.Comment("(Server Performance | Experimental) Rewriting the eio conduit energy network computation logic to improve performance using multithreading.")
+        @Config.LangKey("stellar_core.config.performance.enderIOConduits.networkPowerManagerImprovements")
         @Config.Name("NetworkPowerManagerImprovements")
         public boolean networkPowerManager = true;
 
@@ -631,10 +731,12 @@ public class Performance {
     public static class FluxNetworks {
 
         @Config.Comment("(Server Performance | Experimental) Rewriting the flux network calculation logic to improve performance using multithreading.")
+        @Config.LangKey("stellar_core.config.performance.fluxNetworks.parallelNetworkCalculation")
         @Config.Name("ParallelNetworkCalculation")
         public boolean parallelNetworkCalculation = false;
 
         @Config.Comment("(Server Performance) Removing the secondary judgement of energy transfer may help improve performance.")
+        @Config.LangKey("stellar_core.config.performance.fluxNetworks.connectionTransferImprovements")
         @Config.Name("ConnectionTransferImprovements")
         public boolean connectionTransfer = true;
 
@@ -643,6 +745,7 @@ public class Performance {
     public static class FTBLib {
 
         @Config.Comment("(Server Performance) Improved some of the judgments so that it doesn't consume a lot of time sending network packets.")
+        @Config.LangKey("stellar_core.config.performance.ftbLib.invUtilsForceUpdateImprovements")
         @Config.Name("InvUtilsForceUpdateImprovements")
         public boolean invUtilForceUpdate = true;
 
@@ -651,6 +754,7 @@ public class Performance {
     public static class FTBQuests {
 
         @Config.Comment("(Server Performance) Improved performance of item quest checking (but may result in longer intervals between quest checks).")
+        @Config.LangKey("stellar_core.config.performance.ftbQuests.questInventoryListenerImprovements")
         @Config.Name("QuestInventoryListenerImprovements")
         public boolean questInventoryListener = false;
 
@@ -660,6 +764,7 @@ public class Performance {
 
         @Config.RequiresMcRestart
         @Config.Comment("(Server Performance | Experimental) Rewriting the ic2 energy network computation logic to improve performance using multithreading.")
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.energyCalculatorLegImprovements")
         @Config.Name("EnergyCalculatorLegImprovements")
         public boolean energyCalculatorLeg = true;
 
@@ -670,6 +775,7 @@ public class Performance {
                 "FULL_ASYNC: Fully parallel. May crash with mods that are not thread-safe (e.g. Galacticraft).",
                 "SEMI_ASYNC: Fallback parallel. Avoids calling external energy tiles' methods off-thread, improving compatibility at the cost of performance."
         })
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.energyCalculatorLegParallelMode")
         @Config.Name("EnergyCalculatorLegParallelMode")
         public EnergyCalculatorLegParallelMode energyCalculatorLegParallelMode = EnergyCalculatorLegParallelMode.AUTO;
 
@@ -680,10 +786,12 @@ public class Performance {
         }
 
         @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.gridDataImprovements")
         @Config.Name("GridDataImprovements")
         public boolean energyCalculatorLegGridData = true;
 
         @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.energyNetLocalImprovements")
         @Config.Name("EnergyNetLocalImprovements")
         public boolean energyNetLocal = true;
 
@@ -692,10 +800,12 @@ public class Performance {
 //        public boolean getIoAndSubTile = true;
 
         @Config.Comment("(Server Performance) Improved some data structures, slight performance improvements.")
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.gridImprovements")
         @Config.Name("GridImprovements")
         public boolean grid = true;
 
         @Config.Comment("(Server Performance) Allows you to adjust the working speed of the Ejector / Pulling Module.")
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.itemUpgradeModuleImprovements")
         @Config.Name("ItemUpgradeModuleImprovements")
         public boolean itemUpgradeModule = false;
 
@@ -703,6 +813,7 @@ public class Performance {
                 "Work speed of Ejector / Pulling Module.",
                 "Only works if ItemUpgradeModuleImprovements is enabled."
         })
+        @Config.LangKey("stellar_core.config.performance.industrialCraft2.itemUpgradeModuleWorkDelay")
         @Config.Name("ItemUpgradeModuleWorkDelay")
         public int itemUpgradeModuleWorkDelay = 5;
 
@@ -714,9 +825,11 @@ public class Performance {
                 "(Client Performance) Limit the rendering FPS of InGameInfoXML to significantly improve performance (similar to HUDCaching),",
                 "may not be compatible with older devices."
         })
+        @Config.LangKey("stellar_core.config.performance.inGameInfoXML.hudFramebuffer")
         @Config.Name("HUDFramebuffer")
         public boolean hudFrameBuffer = false;
 
+        @Config.LangKey("stellar_core.config.performance.inGameInfoXML.hudfps")
         @Config.Name("HUDFPS")
         @Config.Comment("Select a restricted HUD FPS that is only valid when HUDFramebuffer is enabled.")
         @Config.RangeInt(min = 5, max = 60)
@@ -730,6 +843,7 @@ public class Performance {
                 "(Server Performance) Blocking the IE Mechanical Block from triggering a full block update when transferring energy may improve performance.",
                 "But if strange block states appear try turning off this option."
         })
+        @Config.LangKey("stellar_core.config.performance.immersiveEngineering.energyTransferNoUpdate")
         @Config.Name("EnergyTransferNoUpdate")
         public boolean energyTransferNoUpdate = true;
 
@@ -741,6 +855,7 @@ public class Performance {
                 "(Client Performance) Cache the result of L9Models#isOfType to improve game loading speed.",
                 "This feature requires Vanilla#ResourceExistStateCache option."
         })
+        @Config.LangKey("stellar_core.config.performance.libNine.l9ModelsIsOfTypeCache")
         @Config.Name("L9ModelsIsOfTypeCache")
         public boolean l9ModelsIsOfTypeCache = true;
 
@@ -752,6 +867,7 @@ public class Performance {
                 "(Server Performance) Performance improvements on data structures.",
                 "MEKCEu already includes this feature, so installing MEKCEu will automatically disable it."
         })
+        @Config.LangKey("stellar_core.config.performance.mekanism.pipeUtilsImprovements")
         @Config.Name("PipeUtilsImprovements")
         public boolean pipeUtils = true;
 
@@ -759,6 +875,7 @@ public class Performance {
                 "(Server Performance) Performance improvements on data structures.",
                 "MEKCEu already includes this feature, so installing MEKCEu will automatically disable it."
         })
+        @Config.LangKey("stellar_core.config.performance.mekanism.energyNetworkImprovements")
         @Config.Name("EnergyNetworkImprovements")
         public boolean energyNetwork = true;
 
@@ -766,6 +883,7 @@ public class Performance {
                 "(Server Performance) Performance improvements on data structures.",
                 "MEKCEu already includes this feature, so installing MEKCEu will automatically disable it."
         })
+        @Config.LangKey("stellar_core.config.performance.mekanism.frequencyImprovements")
         @Config.Name("FrequencyImprovements")
         public boolean frequency = true;
 
@@ -777,6 +895,7 @@ public class Performance {
                 "(Server Performance) Improvements search performance of basic recipes.",
                 "Requires disable processor.smart_processor_input option at nuclearcraft.cfg."
         })
+        @Config.LangKey("stellar_core.config.performance.nuclearCraftOverhauled.basicRecipeSearchImprovements")
         @Config.Name("BasicRecipeSearchImprovements")
         public boolean basicRecipeImprovements = true;
 
@@ -785,23 +904,28 @@ public class Performance {
     public static class TConstruct {
 
         @Config.Comment("(Server Performance) Improvements in the search performance of Melting recipes.")
+        @Config.LangKey("stellar_core.config.performance.tConstruct.meltingRecipeSearchImprovements")
         @Config.Name("MeltingRecipeSearchImprovements")
         public boolean meltingRecipeSearch = true;
 
         @Config.Comment("(Server Performance) Improvements in the search performance of Table Casing recipes.")
+        @Config.LangKey("stellar_core.config.performance.tConstruct.tableCastingRecipeSearchImprovements")
         @Config.Name("TableCastingRecipeSearchImprovements")
         public boolean tableCastingSearch = true;
 
         @Config.Comment("(Server Performance) Improvements in the search performance of Basin Casing recipes.")
+        @Config.LangKey("stellar_core.config.performance.tConstruct.basinCastingRecipeSearchImprovements")
         @Config.Name("BasinCastingRecipeSearchImprovements")
         public boolean basinCastingSearch = true;
 
         @Config.Comment("(Server Performance) Improvements in the search performance of Smeltery Alloy Casing recipes.")
+        @Config.LangKey("stellar_core.config.performance.tConstruct.tileSmelteryAlloyRecipeSearchImprovements")
         @Config.Name("TileSmelteryAlloyRecipeSearchImprovements")
         public boolean tileSmelteryAlloyRecipeSearch = true;
 
         @Config.Comment("(Server Performance) Smeltery What is the maximum number of recipes that can be completed per tick?")
         @Config.RangeInt(min = 1, max = 100)
+        @Config.LangKey("stellar_core.config.performance.tConstruct.tileSmelteryMaxAlloyRecipePerTick")
         @Config.Name("TileSmelteryMaxAlloyRecipePerTick")
         public int tileSmelteryMaxAlloyRecipePerTick = 5;
 

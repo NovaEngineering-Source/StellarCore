@@ -20,15 +20,19 @@ import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 @Config(modid = StellarCore.MOD_ID, name = StellarCore.MOD_ID)
 public class StellarCoreConfig {
 
+    @Config.LangKey("stellar_core.config.debug")
     @Config.Name("Debug")
     public static final Debug DEBUG = new Debug();
 
+    @Config.LangKey("stellar_core.config.bugFixes")
     @Config.Name("BugFixes")
     public static final BugFixes BUG_FIXES = new BugFixes();
 
+    @Config.LangKey("stellar_core.config.performance")
     @Config.Name("Performance")
     public static final Performance PERFORMANCE = new Performance();
 
+    @Config.LangKey("stellar_core.config.features")
     @Config.Name("Features")
     public static final Features FEATURES = new Features();
 
