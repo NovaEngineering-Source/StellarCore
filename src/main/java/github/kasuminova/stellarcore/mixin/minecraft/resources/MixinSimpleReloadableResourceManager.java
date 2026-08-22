@@ -51,9 +51,9 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     private Set<String> setResourceDomains;
 
     @Unique
-    private final MutableResourcePackBindings stellar_core$bindings = new MutableResourcePackBindings();
+    private MutableResourcePackBindings stellar_core$bindings = new MutableResourcePackBindings();
     @Unique
-    private final ThreadLocal<Set<String>> stellar_core$loadingPackDomains = new ThreadLocal<>();
+    private ThreadLocal<Set<String>> stellar_core$loadingPackDomains = new ThreadLocal<>();
     @Final
     @Shadow
     private MetadataSerializer rmMetadataSerializer;
@@ -64,6 +64,8 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     private void stellar_core$init(final MetadataSerializer rmMetadataSerializerIn, final CallbackInfo ci) {
         this.domainResourceManagers = new NonBlockingHashMap<>();
         this.setResourceDomains = new NonBlockingHashSet<>();
+        this.stellar_core$bindings = new MutableResourcePackBindings();
+        this.stellar_core$loadingPackDomains = new ThreadLocal<>();
     }
 
     @Inject(method = "clearResources", at = @At("RETURN"))
