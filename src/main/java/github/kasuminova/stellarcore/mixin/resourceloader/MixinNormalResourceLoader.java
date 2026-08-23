@@ -31,7 +31,7 @@ public class MixinNormalResourceLoader implements StellarCoreResourcePack {
     @Unique
     private boolean stellar_core$cacheEnabled;
 
-    @Inject(method = {"resourceExists", "func_110589_b"}, at = @At("HEAD"), cancellable = true)
+    @Inject(method = "resourceExists", at = @At("HEAD"), remap = true, cancellable = true)
     private void stellar_core$usePositiveCache(@Nullable final ResourceLocation location,
                                                final CallbackInfoReturnable<Boolean> cir) {
         if (stellar_core$cacheEnabled && location != null
@@ -40,7 +40,7 @@ public class MixinNormalResourceLoader implements StellarCoreResourcePack {
         }
     }
 
-    @Inject(method = {"resourceExists", "func_110589_b"}, at = @At("RETURN"))
+    @Inject(method = "resourceExists", at = @At("RETURN"), remap = true)
     private void stellar_core$rememberExisting(@Nullable final ResourceLocation location,
                                                final CallbackInfoReturnable<Boolean> cir) {
         if (stellar_core$cacheEnabled && location != null && cir.getReturnValueZ()) {

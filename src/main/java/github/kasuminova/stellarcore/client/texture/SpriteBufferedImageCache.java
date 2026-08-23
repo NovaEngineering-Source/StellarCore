@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.client.texture;
 
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.IResource;
 import org.apache.commons.io.IOUtils;
@@ -11,9 +12,9 @@ public class SpriteBufferedImageCache {
 
     public static final SpriteBufferedImageCache INSTANCE = new SpriteBufferedImageCache();
 
-    private final Map<TextureAtlasSprite, BufferedImage> cache = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<TextureAtlasSprite, int[]> rgbCache = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<TextureAtlasSprite, IResource> resourceCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<TextureAtlasSprite, BufferedImage> cache = new NonBlockingHashMap<>();
+    private final Map<TextureAtlasSprite, int[]> rgbCache = new NonBlockingHashMap<>();
+    private final Map<TextureAtlasSprite, IResource> resourceCache = new NonBlockingHashMap<>();
 
     public BufferedImage getImage(TextureAtlasSprite sprite) {
         return cache.get(sprite);

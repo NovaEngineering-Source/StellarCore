@@ -53,8 +53,11 @@ public final class MutableResourcePackBindings {
     }
 
     private static boolean isMutable(final IResourcePack pack) {
-        return pack instanceof StellarCoreResourcePack
-            && ((StellarCoreResourcePack) pack).stellar_core$isMutableResourcePack();
+        // Packs outside StellarCore's mixins (e.g. Resource-Loader's NormalResourceLoader) may
+        // expose dynamically generated domains; treat them as mutable so their domains
+        // participate in namespace refresh and late discovery.
+        return !(pack instanceof StellarCoreResourcePack)
+            || ((StellarCoreResourcePack) pack).stellar_core$isMutableResourcePack();
     }
 
     private static Set<String> immutableCopy(final Set<String> namespaces) {

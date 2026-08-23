@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collection;
 import java.util.Map;
 
-@SuppressWarnings({"MethodMayBeStatic", "SynchronizeOnNonFinalField", "FieldAccessedSynchronizedAndUnsynchronized"})
+@SuppressWarnings({"MethodMayBeStatic", "FieldAccessedSynchronizedAndUnsynchronized"})
 @Mixin(ModelBakery.class)
 public abstract class MixinModelBakery {
 

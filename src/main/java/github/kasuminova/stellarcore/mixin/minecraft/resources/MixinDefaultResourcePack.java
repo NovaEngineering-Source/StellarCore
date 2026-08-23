@@ -56,7 +56,8 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
             return;
         }
         if (!stellar_core$cacheEnabled) {
-            cir.setReturnValue(stellar_core$resourceExistsUncached(location));
+            final Boolean probed = stellar_core$probeResourceExists(location);
+            cir.setReturnValue(probed == null ? Boolean.FALSE : probed);
             return;
         }
         final Boolean cached = stellar_core$resourceExistsCache.get(location);
@@ -65,22 +66,28 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
             return;
         }
 
-        final boolean exists = stellar_core$resourceExistsUncached(location);
-        final Boolean previous = stellar_core$resourceExistsCache.putIfAbsent(location, exists);
-        cir.setReturnValue(previous == null ? exists : previous);
+        final Boolean probed = stellar_core$probeResourceExists(location);
+        if (probed == null) {
+            cir.setReturnValue(false);
+            return;
+        }
+        final Boolean previous = stellar_core$resourceExistsCache.putIfAbsent(location, probed);
+        cir.setReturnValue(previous == null ? probed : previous);
     }
 
     @Unique
-    private boolean stellar_core$resourceExistsUncached(final ResourceLocation location) {
+    @Nullable
+    private Boolean stellar_core$probeResourceExists(final ResourceLocation location) {
         if (this.resourceIndex.isFileExisting(location)) {
-            return true;
+            return Boolean.TRUE;
         }
 
+        Boolean indexed = null;
         final String namespace = location.getNamespace();
         if (namespace != null && getResourceDomains().contains(namespace)) {
-            final Boolean indexed = ClasspathAssetIndex.tryContains(location);
+            indexed = ClasspathAssetIndex.tryContains(location);
             if (Boolean.TRUE.equals(indexed)) {
-                return true;
+                return Boolean.TRUE;
             }
             if (indexed == null) {
                 ClasspathAssetIndex.prewarmAsync(Collections.singleton(namespace));
@@ -89,14 +96,14 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
 
         final InputStream stream = this.getResourceStream(location);
         if (stream == null) {
-            return false;
+            return indexed != null ? Boolean.FALSE : null;
         }
         try {
             stream.close();
         } catch (IOException exception) {
             StellarLog.LOG.warn("Failed to close resource existence probe stream: {}", location, exception);
         }
-        return true;
+        return Boolean.TRUE;
     }
 
     @Unique

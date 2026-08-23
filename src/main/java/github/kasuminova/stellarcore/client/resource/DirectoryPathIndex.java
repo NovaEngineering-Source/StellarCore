@@ -17,7 +17,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -45,7 +44,7 @@ public final class DirectoryPathIndex {
     }
 
     public static void prewarmAsync(@Nullable final File rootDirectory) {
-        if (rootDirectory != null) {
+        if (rootDirectory != null && rootDirectory.isDirectory()) {
             currentIndex(rootDirectory).ensureInitializedAsync();
         }
     }
@@ -60,6 +59,11 @@ public final class DirectoryPathIndex {
                                    @Nullable final File candidateFile) {
         if (rootDirectory == null || candidateFile == null || !isSafeRelativePath(relativePath)) {
             return false;
+        }
+        if (!rootDirectory.isDirectory()) {
+            // Root is not a directory (e.g. a pack.mcmeta file); no index can exist,
+            // fall back to the live filesystem check only.
+            return candidateFile.isFile();
         }
 
         final String normalizedPath = normalizePath(relativePath);
@@ -105,30 +109,13 @@ public final class DirectoryPathIndex {
         if (path.indexOf('\\') >= 0) {
             return false;
         }
-        if (path.indexOf("..") < 0) {
+        if (!path.contains("..")) {
             return true;
         }
         return !path.equals("..")
             && !path.startsWith("../")
             && !path.endsWith("/..")
             && !path.contains("/../");
-    }
-
-    static boolean isIndexed(final File rootDirectory, final String relativePath) {
-        final Index index = INDEXES.get(normalizeKey(rootDirectory));
-        return index != null
-            && index.generation == GENERATION.get()
-            && index.contains(normalizePath(relativePath));
-    }
-
-    static void awaitInitialization(final File rootDirectory, final long timeout, final TimeUnit unit) throws Exception {
-        final Index index = currentIndex(rootDirectory);
-        index.ensureInitializedAsync();
-        final CompletableFuture<Void> future = index.initFuture;
-        if (future == null) {
-            throw new IllegalStateException("Directory index scan did not start for " + rootDirectory.getAbsolutePath());
-        }
-        future.get(timeout, unit);
     }
 
     private static Index currentIndex(final File rootDirectory) {
@@ -197,7 +184,6 @@ public final class DirectoryPathIndex {
         private final Set<String> paths = new NonBlockingHashSet<>();
 
         private volatile boolean initializationStarted;
-        private volatile CompletableFuture<Void> initFuture;
 
         private Index(final File root, final long generation) {
             this.root = root;
@@ -229,7 +215,7 @@ public final class DirectoryPathIndex {
                     return;
                 }
                 initializationStarted = true;
-                initFuture = CompletableFuture.runAsync(this::initialize, DirectoryPathIndex.executor());
+                CompletableFuture.runAsync(this::initialize, DirectoryPathIndex.executor());
             }
         }
 

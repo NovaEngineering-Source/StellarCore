@@ -5,7 +5,6 @@ import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.integration.railcraft.RCModelBaker;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import github.kasuminova.stellarcore.common.util.ClassUtils;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
@@ -23,6 +22,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.client.model.ModelLoaderRegistryR;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.spongepowered.asm.mixin.*;
@@ -33,12 +33,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodType;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
-@SuppressWarnings({"SynchronizeOnNonFinalField", "MethodMayBeStatic"})
+@SuppressWarnings("MethodMayBeStatic")
 @Mixin(ModelLoader.class)
 public abstract class MixinModelLoader extends ModelBakery {
 
@@ -71,35 +69,35 @@ public abstract class MixinModelLoader extends ModelBakery {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
-    private void injectInit(final IResourceManager resourceManagerIn, final TextureMap textureMapIn, final BlockModelShapes blockModelShapesIn, final CallbackInfo ci) {
-        stateModels = new ConcurrentHashMap<>();
-        multipartDefinitions = new ConcurrentHashMap<>();
-        multipartModels = new ConcurrentHashMap<>();
-        loadingExceptions = new ConcurrentHashMap<>();
+    private void injectInit(final IResourceManager manager, final TextureMap map, final BlockModelShapes shapes, final CallbackInfo ci) {
+        stateModels = new NonBlockingHashMap<>();
+        multipartDefinitions = new NonBlockingHashMap<>();
+        multipartModels = new NonBlockingHashMap<>();
+        loadingExceptions = new NonBlockingHashMap<>();
     }
 
     @Shadow(remap = false)
     protected abstract IModel getMissingModel();
 
     @Redirect(method = "setupModelRegistry",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/google/common/collect/HashMultimap;keySet()Ljava/util/Set;",
-                    ordinal = 1,
-                    remap = false
-            )
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/google/common/collect/HashMultimap;keySet()Ljava/util/Set;",
+            ordinal = 1,
+            remap = false
+        )
     )
-    private Set stellar_core$injectSetupModelRegistry(
-            final HashMultimap<IModel, ModelResourceLocation> instance,
-            @Local(name = "bakedModels") Map<IModel, IBakedModel> bakedModels,
-            @Local(name = "models") HashMultimap<IModel, ModelResourceLocation> models,
-            @Local(name = "bakeBar") ProgressManager.ProgressBar bakeBar,
-            @Local(name = "missingBaked") IBakedModel missingBaked) {
+    private Set<IModel> stellar_core$injectSetupModelRegistry(
+        final HashMultimap<IModel, ModelResourceLocation> instance,
+        @Local(name = "bakedModels") Map<IModel, IBakedModel> bakedModels,
+        @Local(name = "models") HashMultimap<IModel, ModelResourceLocation> models,
+        @Local(name = "bakeBar") ProgressManager.ProgressBar bakeBar,
+        @Local(name = "missingBaked") IBakedModel missingBaked) {
         long startTime = System.currentTimeMillis();
 
         Map<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
         DefaultTextureGetter textureGetter = new DefaultTextureGetter();
-        models.keySet().stream().parallel().forEach((model) -> {
+        models.keySet().parallelStream().forEach((model) -> {
             Set<ModelResourceLocation> locations = models.get(model);
             String modelLocations = "[" + Joiner.on(", ").join(locations) + "]";
             synchronized (bakeBar) {
@@ -133,15 +131,15 @@ public abstract class MixinModelLoader extends ModelBakery {
 
     @Redirect(method = "loadBlocks", at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"))
     private Iterator<Object> stellar_core$injectLoadBlocks(
-            List<Block> blocks,
-            @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
-            @Local(name = "mapper") BlockStateMapper mapper) {
+        List<Block> blocks,
+        @Local(name = "blockBar") ProgressManager.ProgressBar blockBar,
+        @Local(name = "mapper") BlockStateMapper mapper) {
         long startTime = System.currentTimeMillis();
         stellar_core$toConcurrent();
 
         blocks.parallelStream().forEach(block -> {
             synchronized (blockBar) {
-                blockBar.step(block.getRegistryName().toString());
+                blockBar.step(Objects.requireNonNull(block.getRegistryName()).toString());
             }
 
             IStateMapper stateMapper = ((AccessorBlockStateMapper) mapper).stellar_core$getBlockStateMap().get(block);
@@ -167,10 +165,10 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Unique
     private void stellar_core$toConcurrent() {
         if (!stellar_core$concurrent) {
-            stateModels = new ConcurrentHashMap<>(stateModels);
-            multipartDefinitions = new ConcurrentHashMap<>(multipartDefinitions);
-            multipartModels = new ConcurrentHashMap<>(multipartModels);
-            loadingExceptions = new ConcurrentHashMap<>(loadingExceptions);
+            stateModels = new NonBlockingHashMap<>(stateModels);
+            multipartDefinitions = new NonBlockingHashMap<>(multipartDefinitions);
+            multipartModels = new NonBlockingHashMap<>(multipartModels);
+            loadingExceptions = new NonBlockingHashMap<>(loadingExceptions);
             stellar_core$concurrent = true;
         }
     }
@@ -185,16 +183,16 @@ public abstract class MixinModelLoader extends ModelBakery {
     }
 
     @Redirect(
-            method = "loadItemModels",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Ljava/util/List;iterator()Ljava/util/Iterator;",
-                    ordinal = 0
-            )
+        method = "loadItemModels",
+        at = @At(
+            value = "INVOKE",
+            target = "Ljava/util/List;iterator()Ljava/util/Iterator;",
+            ordinal = 0
+        )
     )
     private Iterator<Object> stellar_core$injectLoadItemModels(
-            final List<Item> items,
-            @Local(name = "itemBar") final ProgressManager.ProgressBar itemBar) {
+        final List<Item> items,
+        @Local(name = "itemBar") final ProgressManager.ProgressBar itemBar) {
         stellar_core$toConcurrent();
         stellar_core$ensureReflectInitialized();
 
@@ -204,7 +202,7 @@ public abstract class MixinModelLoader extends ModelBakery {
 
         items.parallelStream().forEach(item -> {
             synchronized (itemBar) {
-                itemBar.step(item.getRegistryName().toString());
+                itemBar.step(Objects.requireNonNull(item.getRegistryName()).toString());
             }
 
             for (String s : getVariantNames(item)) {
@@ -217,12 +215,12 @@ public abstract class MixinModelLoader extends ModelBakery {
                 } catch (Exception blockstateException) {
                     try {
                         model = ModelLoaderRegistry.getModel(file);
-                        stellar_core$addAlias(memory, file);
+                        ModelLoaderRegistryR.addAlias(memory, file);
                     } catch (Exception normalException) {
                         exception = stellar_core$createItemLoadingException(
-                                "Could not load item model either from the normal location " + file + " or from the blockstate",
-                                normalException,
-                                blockstateException
+                            "Could not load item model either from the normal location " + file + " or from the blockstate",
+                            normalException,
+                            blockstateException
                         );
                     }
                 }
@@ -230,7 +228,7 @@ public abstract class MixinModelLoader extends ModelBakery {
                     if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
                         loadingExceptions.put(memory, exception);
                     }
-                    model = stellar_core$getMissingModel(memory, exception);
+                    model = ModelLoaderRegistryR.getMissingModel(memory, exception);
                 }
                 stateModels.put(memory, model);
             }
@@ -244,43 +242,15 @@ public abstract class MixinModelLoader extends ModelBakery {
     // Reflection. So many magic fields...
 
     @Unique
-    private static Class<?> stellar_core$ItemLoadingException = null;
-    @Unique
-    private static Constructor<?> stellar_core$ItemLoadingExceptionConstructor = null;
-
-    @Unique
-    private static Class<?> stellar_core$ModelLoaderRegistry = null;
-
-    @Unique
-    private static MethodHandle stellar_core$addAlias = null;
-    @Unique
-    private static MethodHandle stellar_core$getMissingModel = null;
+    private static MethodHandle stellar_core$ItemLoadingExceptionConstructor = null;
 
     @Unique
     private static volatile boolean stellar_core$reflectInitialized = false;
 
     @Unique
-    private static Exception stellar_core$createItemLoadingException(final String message, final Exception normalException, final Exception blockstateException) {
+    private static ModelLoaderRegistry.LoaderException stellar_core$createItemLoadingException(final String message, final Exception normalException, final Exception blockstateException) {
         try {
-            return (Exception) stellar_core$ItemLoadingExceptionConstructor.newInstance(message, normalException, blockstateException);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Unique
-    private static void stellar_core$addAlias(ResourceLocation from, ResourceLocation to) {
-        try {
-            stellar_core$addAlias.invoke(from, to);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Unique
-    private static IModel stellar_core$getMissingModel(ResourceLocation location, Throwable cause) {
-        try {
-            return (IModel) stellar_core$getMissingModel.invoke(location, cause);
+            return (ModelLoaderRegistry.LoaderException) stellar_core$ItemLoadingExceptionConstructor.invoke(message, normalException, blockstateException);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -303,16 +273,8 @@ public abstract class MixinModelLoader extends ModelBakery {
     @Unique
     private static void stellar_core$initializeReflect() {
         try {
-            stellar_core$ItemLoadingException = Class.forName("net.minecraftforge.client.model.ModelLoader$ItemLoadingException");
-            stellar_core$ItemLoadingExceptionConstructor = stellar_core$ItemLoadingException.getConstructor(String.class, Exception.class, Exception.class);
-            stellar_core$ModelLoaderRegistry = Class.forName("net.minecraftforge.client.model.ModelLoaderRegistry");
-            Method addAlias = stellar_core$ModelLoaderRegistry.getDeclaredMethod("addAlias", ResourceLocation.class, ResourceLocation.class);
-            addAlias.setAccessible(true);
-            stellar_core$addAlias = MethodHandles.lookup().unreflect(addAlias);
-            stellar_core$ModelLoaderRegistry = Class.forName("net.minecraftforge.client.model.ModelLoaderRegistry");
-            Method getMissingModel = stellar_core$ModelLoaderRegistry.getDeclaredMethod("getMissingModel", ResourceLocation.class, Throwable.class);
-            getMissingModel.setAccessible(true);
-            stellar_core$getMissingModel = MethodHandles.lookup().unreflect(getMissingModel);
+            Class<?> ile = Class.forName("net.minecraftforge.client.model.ModelLoader$ItemLoadingException");
+            stellar_core$ItemLoadingExceptionConstructor = MethodHandles.lookup().findConstructor(ile, MethodType.methodType(void.class, String.class, Exception.class, Exception.class));
         } catch (Throwable e) {
             // Always throws exception because it cannot be failure.
             throw new RuntimeException("[StellarCore-ParallelModelLoader] Caught a fatal exception, please report to mod author!", e);

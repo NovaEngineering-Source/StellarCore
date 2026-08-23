@@ -36,7 +36,6 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 
@@ -370,10 +369,10 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         if (stellar_core$concurrent) {
             return;
         }
-        stellar_core$cache = new ConcurrentHashMap<>(stellar_core$cache);
-        stellar_core$aliases = new ConcurrentHashMap<>(stellar_core$aliases);
+        stellar_core$cache = new NonBlockingHashMap<>(stellar_core$cache);
+        stellar_core$aliases = new NonBlockingHashMap<>(stellar_core$aliases);
         Set<ResourceLocation> oldTextures = stellar_core$textures;
-        stellar_core$textures = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        stellar_core$textures = new NonBlockingHashSet<>();
         stellar_core$textures.addAll(oldTextures);
         stellar_core$concurrent = true;
     }

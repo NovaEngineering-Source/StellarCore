@@ -1,12 +1,12 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
-import github.kasuminova.stellarcore.client.resource.ResourceExistenceCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreAbstractResourcePackAccessor;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
-import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import net.minecraft.client.resources.AbstractResourcePack;
+import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
-import java.util.Map;
+import java.util.Set;
 
 @Mixin(AbstractResourcePack.class)
 public abstract class MixinAbstractResourcePack implements StellarCoreResourcePack, StellarCoreAbstractResourcePackAccessor {
@@ -35,7 +35,7 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
     }
 
     @Unique
-    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new NonBlockingHashMap<>();
+    private final Set<ResourceLocation> stellar_core$resourceExistsCache = new NonBlockingHashSet<>();
 
     @Unique
     private boolean stellar_core$cacheEnabled = false;
@@ -45,7 +45,9 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
 
     /**
      * @author Kasumi_Nova
-     * @reason Cache
+     * @reason Cache. Only positive results are cached: a probe failing inside the concurrent
+     * lazy ZipFile initialization of FileResourcePack must not poison later lookups, misses
+     * are simply re-probed on the next call.
      */
     @Inject(method = "resourceExists", at = @At("HEAD"), cancellable = true)
     public void injectResourceExists(final ResourceLocation location, final CallbackInfoReturnable<Boolean> cir) {
@@ -56,17 +58,16 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
             cir.setReturnValue(false);
             return;
         }
-        final Boolean cached = stellar_core$resourceExistsCache.get(location);
-        if (cached != null) {
-            cir.setReturnValue(cached);
+        if (stellar_core$resourceExistsCache.contains(location)) {
+            cir.setReturnValue(true);
             return;
         }
 
         final boolean exists = this.hasResourceName(locationToName(location));
-        cir.setReturnValue(stellar_core$isDirectoryPack()
-            ? ResourceExistenceCache.rememberMutable(stellar_core$resourceExistsCache, location, exists)
-            : ResourceExistenceCache.rememberImmutable(stellar_core$resourceExistsCache, location, exists)
-        );
+        if (exists) {
+            stellar_core$resourceExistsCache.add(location);
+        }
+        cir.setReturnValue(exists);
     }
 
     @Unique
@@ -75,7 +76,10 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
         if (kind != 0) {
             return kind == 1;
         }
-        final boolean directory = this.resourcePackFile != null && this.resourcePackFile.isDirectory();
+        // A FolderResourcePack is directory-backed even when its root file points elsewhere
+        // (e.g. a pack.mcmeta file); it must stay mutable so new files are never missed.
+        final boolean directory = (this.resourcePackFile != null && this.resourcePackFile.isDirectory())
+            || FolderResourcePack.class.isInstance(this);
         stellar_core$packFileKind = (byte) (directory ? 1 : 2);
         return directory;
     }
@@ -92,10 +96,15 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
     @Override
     public void stellar_core$enableCache() {
         stellar_core$cacheEnabled = true;
-        if (StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex
-            && stellar_core$isDirectoryPack()) {
-            DirectoryPathIndex.prewarmAsync(this.resourcePackFile);
+        if (stellar_core$isDirectoryPack()) {
+            if (StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
+                DirectoryPathIndex.prewarmAsync(this.resourcePackFile);
+            }
+            return;
         }
+        // Force FileResourcePack's lazy ZipFile open on the single reload thread,
+        // closing the concurrent-initialization race window on the worker threads.
+        this.hasResourceName("pack.mcmeta");
     }
 
     @Override

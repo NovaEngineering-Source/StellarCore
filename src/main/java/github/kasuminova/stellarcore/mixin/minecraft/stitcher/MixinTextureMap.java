@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.stitcher;
 import github.kasuminova.stellarcore.client.texture.StitcherCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.renderer.texture.ITextureMapPopulator;
@@ -19,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(TextureMap.class)
 public class MixinTextureMap {
@@ -42,7 +42,7 @@ public class MixinTextureMap {
         // threads. Vanilla uses HashMap which is not thread-safe and can randomly drop entries.
         // Use a concurrent map to keep sprite registration deterministic.
         if (StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad) {
-            this.mapRegisteredSprites = new ConcurrentHashMap<>();
+            this.mapRegisteredSprites = new NonBlockingHashMap<>();
         } else {
             this.mapRegisteredSprites = new Object2ObjectOpenHashMap<>();
         }
