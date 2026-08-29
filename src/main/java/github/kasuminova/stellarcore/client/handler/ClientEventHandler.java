@@ -33,6 +33,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import static github.kasuminova.stellarcore.mixin.util.ModLoaderEarly.isClassPresent;
+
 @SuppressWarnings("MethodMayBeStatic")
 public class ClientEventHandler {
     public static final ClientEventHandler INSTANCE = new ClientEventHandler();
@@ -168,7 +170,8 @@ public class ClientEventHandler {
 
     @Optional.Method(modid = "journeymap")
     private static void callJourneyMapPlayerRadarManagerWorldChanged() {
-        if (!StellarCoreConfig.BUG_FIXES.journeyMap.playerRadar) {
+        if (!StellarCoreConfig.BUG_FIXES.journeyMap.playerRadar
+        || !isClassPresent("journeymap.common.feature.PlayerRadarManager")) {
             return;
         }
         PlayerRadarManager.getInstance().clearNetworkPlayers();
@@ -182,6 +185,7 @@ public class ClientEventHandler {
         try {
             Field triggeredBioticsRemote = ItemBioticSensor.class.getDeclaredField("triggeredBioticsRemote");
             triggeredBioticsRemote.setAccessible(true);
+            //noinspection unchecked
             ((Map<EntityPlayer, List<EntityLivingBase>>) triggeredBioticsRemote.get(null)).clear();
         } catch (Throwable e) {
             StellarLog.LOG.warn("Failed to clear triggeredBioticsRemote in ItemBioticSensor.", e);

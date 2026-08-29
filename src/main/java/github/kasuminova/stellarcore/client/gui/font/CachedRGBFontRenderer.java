@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
@@ -27,6 +28,7 @@ public class CachedRGBFontRenderer extends FontRenderer {
     public static void overrideFontRenderer() {
         Minecraft mc = Minecraft.getMinecraft();
         CachedRGBFontRenderer renderer = new CachedRGBFontRenderer(mc.gameSettings, new ResourceLocation("textures/font/ascii.png"), mc.renderEngine, false);
+        ((SimpleReloadableResourceManager) mc.getResourceManager()).registerReloadListener(renderer);
 
         mc.fontRenderer = renderer;
         if (mc.gameSettings.language != null) {

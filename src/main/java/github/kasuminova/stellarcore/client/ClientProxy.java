@@ -11,21 +11,21 @@ import github.kasuminova.stellarcore.common.CommonProxy;
 import github.kasuminova.stellarcore.common.command.CommandStellarCoreClient;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
-import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 
+import java.util.Collections;
+import java.util.Set;
+
 public class ClientProxy extends CommonProxy {
 
-    private static final java.util.Set<String> STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS = java.util.Collections.singleton("minecraft");
+    private static final Set<String> STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS = Collections.singleton("minecraft");
 
     @Override
     public void construction() {
         super.construction();
 
         if (StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache) {
-            // Kick off classpath index building as early as possible.
-            // Only prewarm the hot namespace by default to avoid scanning the entire classpath twice.
             ClasspathAssetIndex.prewarmAsync(STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS);
         }
 
@@ -38,7 +38,6 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(ClientEventHandler.INSTANCE);
 
         if (StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache) {
-            // Kick off classpath index building early to avoid stalling the main thread during resource reload.
             ClasspathAssetIndex.prewarmAsync(STELLAR_CORE$DEFAULT_RESOURCE_DOMAINS);
         }
 

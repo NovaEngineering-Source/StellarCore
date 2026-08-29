@@ -17,14 +17,25 @@ import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
@@ -182,10 +193,11 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                 synchronized (stellar_core$textures) {
                     stellar_core$textures.addAll(model.getTextures());
                 }
-            } else {
-                // In concurrent mode we defer texture collection to getTextures(), where it is performed
-                // in a single-threaded pass over the cached models. This avoids concurrently calling
-                // IModel#getTextures() on potentially non-thread-safe model implementations.
+            } else if (model.asVanillaModel().isPresent()) {
+                // Forge's VanillaModelWrapper resolves parent links and builtin/generated here.
+                // Custom model implementations stay deferred because their getTextures() methods
+                // are not required to be safe on the model-loading workers.
+                stellar_core$textures.addAll(model.getTextures());
             }
         } finally {
             try {
@@ -294,14 +306,25 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         for (int iteration = 0; iteration < maxIterations; iteration++) {
             int sizeBefore = stellar_core$cache.size();
 
-            for (IModel model : new ArrayList<>(stellar_core$cache.values())) {
+            for (Map.Entry<ResourceLocation, IModel> entry : new ArrayList<>(stellar_core$cache.entrySet())) {
+                ResourceLocation location = entry.getKey();
+                IModel model = entry.getValue();
                 if (model == null || !visited.add(model)) {
+                    continue;
+                }
+                if (model.asVanillaModel().isPresent()) {
                     continue;
                 }
                 try {
                     stellar_core$textures.addAll(model.getTextures());
-                } catch (Throwable ignored) {
-                    // If a model misbehaves, keep going; stitching can still fall back to missing sprites.
+                } catch (RuntimeException e) {
+                    StellarLog.LOG.error(
+                        "[StellarCore-ParallelModelLoader] Failed to collect deferred model textures location={} modelClass={} thread={}",
+                        location,
+                        model.getClass().getName(),
+                        Thread.currentThread().getName(),
+                        e
+                    );
                 }
             }
 

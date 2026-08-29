@@ -6,7 +6,11 @@ import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.Loader;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 @SuppressWarnings({"unused", "SameParameterValue"})
@@ -34,7 +38,6 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_customstartinggear.json",     "customstartinggear");
         addModdedMixinCFG("mixins.stellar_core_deepmoblearing.json",         "deepmoblearning");
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",      "draconicevolution");
-        addModdedMixinCFG("mixins.stellar_core_draconicevolution_chunk.json","draconicevolution", () -> StellarCoreConfig.FEATURES.draconicEvolution.ChaosIslandChunks);
         addModdedMixinCFG("mixins.stellar_core_ebwizardry.json",             "ebwizardry");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",              "endercore");
         addModdedMixinCFG("mixins.stellar_core_enderio.json",                "enderio");

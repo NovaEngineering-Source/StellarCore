@@ -13,8 +13,8 @@ public class ResourceExistingCache {
     private static final Set<StellarCoreResourcePack> RESOURCE_PACKS = new ReferenceOpenHashSet<>();
 
     public static void addResourcePack(StellarCoreResourcePack resourcePack) {
-        RESOURCE_PACKS.add(resourcePack);
         resourcePack.stellar_core$onReload();
+        RESOURCE_PACKS.add(resourcePack);
     }
 
     public static void clear() {
@@ -31,6 +31,7 @@ public class ResourceExistingCache {
     }
 
     public static void enableCache() {
+        DirectoryPathIndex.clear();
         RESOURCE_PACKS.forEach(StellarCoreResourcePack::stellar_core$enableCache);
         StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache enabled.");
     }

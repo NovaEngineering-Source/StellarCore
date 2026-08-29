@@ -7,13 +7,13 @@ plugins {
     id("maven-publish")
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
     id("eclipse")
-    id("com.gtnewhorizons.retrofuturagradle") version "1.3.34"
+    id("com.gtnewhorizons.retrofuturagradle") version "2.0.2"
     id("me.champeau.jmh") version "0.7.2"
 }
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.6.0"
+version = "1.6.1"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -162,9 +162,6 @@ repositories {
         }
     }
     maven {
-        url = uri("https://maven.tterrag.com") // AutoSave, AutoConfig
-    }
-    maven {
         url = uri("https://repo.spongepowered.org/maven")
     }
     maven {
@@ -205,6 +202,8 @@ dependencies {
         isTransitive = false // We only care about the 1 annotation class
     }
     testCompileOnly("me.eigenraven.java8unsupported:java-8-unsupported-shim:1.0.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
 
     // Mixins
 //    implementation("zone.rong:mixinbooter:7.1")
@@ -368,6 +367,10 @@ idea {
 
 tasks.processIdeaSettings.configure {
     dependsOn(tasks.injectTags)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 // Allow narrowing JMH runs from command line, e.g.:

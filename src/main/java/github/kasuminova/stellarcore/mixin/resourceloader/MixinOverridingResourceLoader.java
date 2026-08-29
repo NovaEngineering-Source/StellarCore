@@ -2,121 +2,98 @@ package github.kasuminova.stellarcore.mixin.resourceloader;
 
 import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import lumien.resourceloader.loader.OverridingResourceLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-@Mixin(value = lumien.resourceloader.loader.OverridingResourceLoader.class, remap = false)
+@Mixin(value = OverridingResourceLoader.class, remap = false)
 public class MixinOverridingResourceLoader implements StellarCoreResourcePack {
 
     @Unique
-    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new ConcurrentHashMap<>();
+    private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new NonBlockingHashMap<>();
 
     @Unique
-    private final Map<String, File> stellar_core$baseDirCache = new ConcurrentHashMap<>();
+    private final Map<String, File> stellar_core$namespaceRoots = new NonBlockingHashMap<>();
 
     @Unique
-    private boolean stellar_core$cacheEnabled = false;
+    private boolean stellar_core$cacheEnabled;
 
     @Inject(method = {"resourceExists", "func_110589_b"}, at = @At("HEAD"), cancellable = true)
-    private void stellar_core$resourceExists(@Nullable final ResourceLocation location, final CallbackInfoReturnable<Boolean> cir) {
-        if (!stellar_core$cacheEnabled || location == null) {
-            return;
+    private void stellar_core$usePositiveCache(@Nullable final ResourceLocation location,
+                                               final CallbackInfoReturnable<Boolean> cir) {
+        if (stellar_core$cacheEnabled && location != null
+            && Boolean.TRUE.equals(stellar_core$resourceExistsCache.get(location))) {
+            cir.setReturnValue(true);
         }
-        cir.setReturnValue(stellar_core$resourceExistsCached(location));
     }
 
-    @Inject(method = {"getInputStream", "func_110590_a"}, at = @At("HEAD"), cancellable = true)
-    private void stellar_core$getInputStream(@Nullable final ResourceLocation location, final CallbackInfoReturnable<InputStream> cir) throws java.io.IOException {
-        if (location == null) {
-            cir.setReturnValue(null);
-            return;
+    @Inject(method = {"resourceExists", "func_110589_b"}, at = @At("RETURN"))
+    private void stellar_core$rememberExisting(@Nullable final ResourceLocation location,
+                                               final CallbackInfoReturnable<Boolean> cir) {
+        if (stellar_core$cacheEnabled && location != null && cir.getReturnValueZ()) {
+            stellar_core$resourceExistsCache.putIfAbsent(location, Boolean.TRUE);
         }
+    }
 
-        final boolean exists = stellar_core$cacheEnabled
-            ? stellar_core$resourceExistsCached(location)
-            : stellar_core$resourceExists0(location);
-        if (!exists) {
-            cir.setReturnValue(null);
-            return;
+    @Redirect(
+        method = {"resourceExists", "func_110589_b"},
+        at = @At(value = "INVOKE", target = "Ljava/io/File;isFile()Z")
+    )
+    private boolean stellar_core$isIndexedFile(final File file, final ResourceLocation location) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache
+            || !StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex
+            || location == null) {
+            return file.isFile();
         }
-
-        final File file = stellar_core$resolve(location);
-        cir.setReturnValue(new FileInputStream(file));
+        final String namespace = location.getNamespace();
+        final File root = stellar_core$getNamespaceRoot(namespace);
+        return DirectoryPathIndex.contains(root, location.getPath(), file);
     }
 
     @Unique
-    private boolean stellar_core$resourceExistsCached(final ResourceLocation location) {
-        final Boolean cached = stellar_core$resourceExistsCache.get(location);
+    private File stellar_core$getNamespaceRoot(final String namespace) {
+        final File cached = stellar_core$namespaceRoots.get(namespace);
         if (cached != null) {
             return cached;
         }
-        final boolean computed = stellar_core$resourceExists0(location);
-        final Boolean existing = stellar_core$resourceExistsCache.putIfAbsent(location, computed);
-        return existing != null ? existing : computed;
+        final File created = new File(Minecraft.getMinecraft().gameDir, "oresources/" + namespace);
+        final File previous = stellar_core$namespaceRoots.putIfAbsent(namespace, created);
+        return previous == null ? created : previous;
     }
 
     @Unique
-    private boolean stellar_core$resourceExists0(final ResourceLocation location) {
-        final String namespace = location.getNamespace();
-        final String path = location.getPath();
-        if (namespace == null || namespace.isEmpty() || path == null || path.isEmpty()) {
-            return false;
-        }
-
-        final File baseDir = stellar_core$baseDirCache.computeIfAbsent(namespace, ns ->
-                new File(Minecraft.getMinecraft().gameDir, "oresources/" + ns)
-        );
-
-        if (StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
-            final Boolean indexed = DirectoryPathIndex.tryContains(baseDir, path);
-            if (indexed != null) {
-                return indexed;
+    private void stellar_core$prewarmNamespaceRoots() {
+        final File resourcesRoot = new File(Minecraft.getMinecraft().gameDir, "oresources");
+        final File[] namespaceRoots = resourcesRoot.listFiles(File::isDirectory);
+        if (namespaceRoots == null) {
+            if (resourcesRoot.isDirectory()) {
+                StellarLog.LOG.error("[StellarCore-DirectoryPathIndex] Failed to list ResourceLoader root: {}",
+                    resourcesRoot.getAbsolutePath());
             }
-            DirectoryPathIndex.prewarmAsync(baseDir);
+            return;
         }
-
-        return new File(baseDir, path).isFile();
-    }
-
-    @Unique
-    private File stellar_core$resolve(final ResourceLocation location) {
-        final String namespace = location.getNamespace();
-        final File baseDir = stellar_core$baseDirCache.computeIfAbsent(namespace, ns ->
-                new File(Minecraft.getMinecraft().gameDir, "oresources/" + ns)
-        );
-        return new File(baseDir, location.getPath());
+        for (File namespaceRoot : namespaceRoots) {
+            final File previous = stellar_core$namespaceRoots.putIfAbsent(namespaceRoot.getName(), namespaceRoot);
+            DirectoryPathIndex.prewarmAsync(previous == null ? namespaceRoot : previous);
+        }
     }
 
     @Override
     public void stellar_core$onReload() {
         stellar_core$resourceExistsCache.clear();
-        if (!StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
-            return;
-        }
-        final File resourcesDir = new File(Minecraft.getMinecraft().gameDir, "oresources");
-        final File[] namespaces = resourcesDir.listFiles();
-        if (namespaces == null || namespaces.length == 0) {
-            return;
-        }
-        for (File namespaceDir : namespaces) {
-            if (namespaceDir == null || !namespaceDir.isDirectory()) {
-                continue;
-            }
-            DirectoryPathIndex.prewarmAsync(namespaceDir);
-        }
     }
 
     @Override
@@ -128,5 +105,13 @@ public class MixinOverridingResourceLoader implements StellarCoreResourcePack {
     @Override
     public void stellar_core$enableCache() {
         stellar_core$cacheEnabled = true;
+        if (StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex) {
+            stellar_core$prewarmNamespaceRoots();
+        }
+    }
+
+    @Override
+    public boolean stellar_core$isMutableResourcePack() {
+        return true;
     }
 }
