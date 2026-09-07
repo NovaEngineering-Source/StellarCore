@@ -1,7 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.client.resource.ClasspathAssetIndex;
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.resources.DefaultResourcePack;
@@ -43,7 +42,7 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
     private final Map<ResourceLocation, Boolean> stellar_core$resourceExistsCache = new NonBlockingHashMap<>();
 
     @Unique
-    private boolean stellar_core$cacheEnabled = false;
+    private volatile boolean stellar_core$cacheEnabled = false;
 
     /**
      * @author Kasumi_Nova
@@ -100,8 +99,7 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
         }
         try {
             stream.close();
-        } catch (IOException exception) {
-            StellarLog.LOG.warn("Failed to close resource existence probe stream: {}", location, exception);
+        } catch (IOException ignored) {
         }
         return Boolean.TRUE;
     }

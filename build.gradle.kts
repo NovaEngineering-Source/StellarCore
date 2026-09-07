@@ -223,6 +223,7 @@ dependencies {
     //compileOnly("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.20.711")    compileOnly("CraftTweaker2:ZenScript:4.1.20.711")
     compileOnly("CraftTweaker2:CraftTweaker2-API:4.1.20.711")
     compileOnly(rfg.deobf("curse.maven:modularmachinery-community-edition-817377:5375642"))
+    implementation(rfg.deobf("curse.maven:geckolib-388172:4020277"))
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:5210315"))
     compileOnly(rfg.deobf("curse.maven:jei-utilities-616190:4630499"))
     implementation(rfg.deobf("curse.maven:the-one-probe-245211:2667280"))

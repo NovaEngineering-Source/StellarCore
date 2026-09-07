@@ -5,13 +5,12 @@ import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
@@ -84,12 +83,6 @@ public final class DirectoryPathIndex {
                 return false;
             }
             if (index.addIfCurrent(normalizedPath)) {
-                if (StellarLog.LOG.isDebugEnabled()) {
-                    StellarLog.LOG.debug(
-                        "[StellarCore-DirectoryPathIndex] Live filesystem check added an indexed resource. root={}, path={}",
-                        rootDirectory.getAbsolutePath(), normalizedPath
-                    );
-                }
                 return true;
             }
         }
@@ -181,7 +174,7 @@ public final class DirectoryPathIndex {
     private static final class Index {
         private final File root;
         private final long generation;
-        private final Set<String> paths = new NonBlockingHashSet<>();
+        private final NonBlockingHashSet<String> paths = new NonBlockingHashSet<>();
 
         private volatile boolean initializationStarted;
 
@@ -242,7 +235,7 @@ public final class DirectoryPathIndex {
                 throw new IOException("Directory index root is not a directory: " + root.getAbsolutePath());
             }
 
-            final ArrayDeque<DirectoryFrame> directories = new ArrayDeque<>();
+            final ObjectArrayList<DirectoryFrame> directories = new ObjectArrayList<>();
             directories.push(new DirectoryFrame(root, ""));
             while (!directories.isEmpty()) {
                 if (!isCurrent()) {

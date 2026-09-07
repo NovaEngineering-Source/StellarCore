@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
+import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
@@ -9,6 +10,7 @@ import github.kasuminova.stellarcore.mixin.util.ConcurrentModelLoaderRegistry;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.resources.IResourceManager;
@@ -28,12 +30,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,13 +41,13 @@ import java.util.concurrent.locks.LockSupport;
 public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderRegistry {
 
     @Unique
-    private static final ThreadLocal<Deque<ResourceLocation>> stellar_core$LOADING_MODELS = ThreadLocal.withInitial(ArrayDeque::new);
+    private static final ThreadLocal<ObjectArrayList<ResourceLocation>> stellar_core$LOADING_MODELS = ThreadLocal.withInitial(ObjectArrayList::new);
+
+    @Unique
+    private static volatile ICustomModelLoader[] stellar_core$loaderArray = new ICustomModelLoader[0];
 
     @Unique
     private static final AtomicInteger stellar_core$ACTIVE_MODEL_LOADS = new AtomicInteger();
-
-    @Unique
-    private static final Object stellar_core$TEXTURE_COLLECT_LOCK = new Object();
 
     @Unique
     private static Map<ResourceLocation, IModel> stellar_core$cache = new NonBlockingHashMap<>();
@@ -63,9 +60,6 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
 
     @Unique
     private static volatile boolean stellar_core$concurrent = false;
-
-    @Unique
-    private static final ThreadLocal<Boolean> stellar_core$COLLECTING_TEXTURES = ThreadLocal.withInitial(() -> false);
 
     @Final
     @Shadow
@@ -100,6 +94,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
 
     @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
     private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
+        stellar_core$loaderArray = loaders.toArray(new ICustomModelLoader[0]);
         Class<? extends ICustomModelLoader> loaderClass = loader.getClass();
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Registered model loader: {}, AsyncBlackListed: {}",
                 loaderClass.getName(),
@@ -120,20 +115,20 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             return;
         }
 
-        for (ResourceLocation loading : stellar_core$LOADING_MODELS.get()) {
+        final ObjectArrayList<ResourceLocation> loadingModels = stellar_core$LOADING_MODELS.get();
+        for (int i = 0; i < loadingModels.size(); i++) {
+            final ResourceLocation loading = loadingModels.get(i);
             if (location.getClass() == loading.getClass() && location.equals(loading)) {
-                throw new ModelLoaderRegistry.LoaderException("circular model dependencies, stack: [" + Joiner.on(", ").join(stellar_core$LOADING_MODELS.get()) + "]");
+                throw new ModelLoaderRegistry.LoaderException("circular model dependencies, stack: [" + Joiner.on(", ").join(loadingModels) + "]");
             }
         }
-        stellar_core$LOADING_MODELS.get().addLast(location);
+        loadingModels.add(location);
         stellar_core$ACTIVE_MODEL_LOADS.incrementAndGet();
         try {
-            synchronized (stellar_core$aliases) {
-                ResourceLocation aliased = stellar_core$aliases.get(location);
-                if (aliased != null) {
-                    cir.setReturnValue(getModel(aliased));
-                    return;
-                }
+            ResourceLocation aliased = stellar_core$aliases.get(location);
+            if (aliased != null) {
+                cir.setReturnValue(getModel(aliased));
+                return;
             }
 
             if (!stellar_core$concurrent) {
@@ -142,7 +137,8 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
 
             ResourceLocation actual = getActualLocation(location);
             ICustomModelLoader accepted = null;
-            for (ICustomModelLoader loader : loaders) {
+            final ICustomModelLoader[] registeredLoaders = stellar_core$loaderArray;
+            for (final ICustomModelLoader loader : registeredLoaders) {
                 try {
                     if (loader.accepts(actual)) {
                         if (accepted != null) {
@@ -171,8 +167,9 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             if (accepted == null) {
                 throw new ModelLoaderRegistry.LoaderException("no suitable loader found for the model " + location + ", skipping");
             }
+            final boolean asyncUnsafe = ParallelModelLoaderAsyncBlackList.INSTANCE.isInSet(accepted.getClass());
             try {
-                if (ParallelModelLoaderAsyncBlackList.INSTANCE.isInSet(accepted.getClass())) {
+                if (asyncUnsafe) {
                     synchronized (accepted) {
                         model = accepted.loadModel(actual);
                     }
@@ -188,19 +185,23 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             if (model == null) {
                 throw new ModelLoaderRegistry.LoaderException(String.format("Loader %s returned null while loading model %s", accepted, location));
             }
+            if (asyncUnsafe) {
+                AsyncUnsafeModels.register(model);
+            }
             if (!stellar_core$concurrent) {
                 synchronized (stellar_core$textures) {
                     stellar_core$textures.addAll(model.getTextures());
                 }
-            } else if (model.asVanillaModel().isPresent()) {
-                // Forge's VanillaModelWrapper resolves parent links and builtin/generated here.
-                // Custom model implementations stay deferred because their getTextures() methods
-                // are not required to be safe on the model-loading workers.
+            } else if (asyncUnsafe) {
+                synchronized (accepted) {
+                    stellar_core$textures.addAll(model.getTextures());
+                }
+            } else {
                 stellar_core$textures.addAll(model.getTextures());
             }
         } finally {
             try {
-                ResourceLocation popLoc = stellar_core$LOADING_MODELS.get().removeLast();
+                ResourceLocation popLoc = loadingModels.pop();
                 if (popLoc != location) {
                     throw new IllegalStateException("Corrupted loading model stack: " + popLoc + " != " + location);
                 }
@@ -240,6 +241,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     public static void clearModelCache(IResourceManager newManager) {
         manager = newManager;
         ModelLoaderRegistryRef.instance = (ConcurrentModelLoaderRegistry) new ModelLoaderRegistry();
+        AsyncUnsafeModels.clear();
         stellar_core$aliases.clear();
         stellar_core$textures.clear();
         stellar_core$cache.clear();
@@ -255,27 +257,8 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
      */
     @Overwrite
     static Iterable<ResourceLocation> getTextures() {
-        if (stellar_core$concurrent && !stellar_core$COLLECTING_TEXTURES.get()) {
-            // Never attempt to collect textures from within a model loading call. Some model
-            // implementations may call getTextures() during loading; collecting here could
-            // re-introduce concurrent IModel#getTextures() execution.
-            if (!stellar_core$LOADING_MODELS.get().isEmpty()) {
-                return stellar_core$textures;
-            }
-
-            // Best-effort: ensure all concurrent getModel() calls have finished before we take
-            // a texture snapshot for stitching. Prevents missing stitched sprites when other
-            // threads are still resolving models.
+        if (stellar_core$concurrent && stellar_core$LOADING_MODELS.get().isEmpty()) {
             stellar_core$awaitNoActiveModelLoads();
-
-            synchronized (stellar_core$TEXTURE_COLLECT_LOCK) {
-                stellar_core$COLLECTING_TEXTURES.set(true);
-                try {
-                    stellar_core$collectTexturesFromCachedModels();
-                } finally {
-                    stellar_core$COLLECTING_TEXTURES.set(false);
-                }
-            }
         }
         return stellar_core$textures;
     }
@@ -293,47 +276,8 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         }
 
         if (active > 0) {
-            StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] Timed out waiting for {} active model loads before collecting textures; stitching may miss sprites.", active);
+            StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] Timed out waiting for {} active model loads; stitching may miss sprites.", active);
         }
-    }
-
-    @Unique
-    private static void stellar_core$collectTexturesFromCachedModels() {
-        Set<IModel> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-
-        final int maxIterations = 10;
-        for (int iteration = 0; iteration < maxIterations; iteration++) {
-            int sizeBefore = stellar_core$cache.size();
-
-            for (Map.Entry<ResourceLocation, IModel> entry : new ArrayList<>(stellar_core$cache.entrySet())) {
-                ResourceLocation location = entry.getKey();
-                IModel model = entry.getValue();
-                if (model == null || !visited.add(model)) {
-                    continue;
-                }
-                if (model.asVanillaModel().isPresent()) {
-                    continue;
-                }
-                try {
-                    stellar_core$textures.addAll(model.getTextures());
-                } catch (RuntimeException e) {
-                    StellarLog.LOG.error(
-                        "[StellarCore-ParallelModelLoader] Failed to collect deferred model textures location={} modelClass={} thread={}",
-                        location,
-                        model.getClass().getName(),
-                        Thread.currentThread().getName(),
-                        e
-                    );
-                }
-            }
-
-            int sizeAfter = stellar_core$cache.size();
-            if (sizeAfter == sizeBefore) {
-                return;
-            }
-        }
-
-        StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] Texture collection exceeded {} iterations; proceeding with best-effort results.", maxIterations);
     }
 
     @Redirect(method = "addAlias", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
@@ -382,7 +326,10 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
      */
     @Override
     public void stellar_core$writeToOriginalMap() {
-        cache.putAll(stellar_core$cache);
+        for (final Map.Entry<ResourceLocation, IModel> entry : stellar_core$cache.entrySet()) {
+            //noinspection UseBulkOperation
+            cache.put(entry.getKey(), entry.getValue());
+        }
     }
 
     @Override
@@ -396,14 +343,25 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Removed {} (Before: {}) model cache, took {}ms.", 
                     removed, cache.size(), System.currentTimeMillis() - startTime
             );
-            stellar_core$cache = new Object2ObjectOpenHashMap<>(stellar_core$cache);
+            stellar_core$cache = stellar_core$copyToDefault(stellar_core$cache);
         } else {
-            stellar_core$cache = new Object2ObjectOpenHashMap<>(cache);
+            stellar_core$cache = stellar_core$copyToDefault(cache);
         }
         cache.clear();
-        stellar_core$aliases = new Object2ObjectOpenHashMap<>(stellar_core$aliases);
+        AsyncUnsafeModels.clear();
+        stellar_core$aliases = stellar_core$copyToDefault(stellar_core$aliases);
         stellar_core$textures = new ObjectOpenHashSet<>();
         stellar_core$concurrent = false;
+    }
+
+    @Unique
+    private static <K, V> Map<K, V> stellar_core$copyToDefault(final Map<K, V> source) {
+        final Map<K, V> copy = new Object2ObjectOpenHashMap<>(source.size());
+        for (final Map.Entry<K, V> entry : source.entrySet()) {
+            //noinspection UseBulkOperation
+            copy.put(entry.getKey(), entry.getValue());
+        }
+        return copy;
     }
 
     @Unique
@@ -430,18 +388,35 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     }
 
     @Unique
+    private static volatile ICustomModelLoader stellar_core$variantLoader = null;
+
+    @Unique
+    private static volatile ICustomModelLoader stellar_core$vanillaLoader = null;
+
+    @Unique
     private static ICustomModelLoader stellar_core$getVariantLoader() {
-        try {
-            return (ICustomModelLoader) Class.forName("net.minecraftforge.client.model.ModelLoader$VariantLoader").getEnumConstants()[0];
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        ICustomModelLoader loader = stellar_core$variantLoader;
+        if (loader == null) {
+            loader = stellar_core$resolveLoader("net.minecraftforge.client.model.ModelLoader$VariantLoader");
+            stellar_core$variantLoader = loader;
         }
+        return loader;
     }
 
     @Unique
     private static ICustomModelLoader stellar_core$getVanillaLoader() {
+        ICustomModelLoader loader = stellar_core$vanillaLoader;
+        if (loader == null) {
+            loader = stellar_core$resolveLoader("net.minecraftforge.client.model.ModelLoader$VanillaLoader");
+            stellar_core$vanillaLoader = loader;
+        }
+        return loader;
+    }
+
+    @Unique
+    private static ICustomModelLoader stellar_core$resolveLoader(final String className) {
         try {
-            return (ICustomModelLoader) Class.forName("net.minecraftforge.client.model.ModelLoader$VanillaLoader").getEnumConstants()[0];
+            return (ICustomModelLoader) Class.forName(className).getEnumConstants()[0];
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -211,6 +211,7 @@ public final class ClasspathAssetIndex {
         private final String namespace;
 
         private volatile boolean initialized = false;
+        private volatile boolean initFailed = false;
         private volatile CompletableFuture<Void> initFuture;
         private volatile Set<String> jarPaths = Collections.emptySet();
         private volatile List<File> directoryRoots = Collections.emptyList();
@@ -268,7 +269,7 @@ public final class ClasspathAssetIndex {
                     }
                 }
             }
-            return Boolean.FALSE;
+            return initFailed ? null : Boolean.FALSE;
         }
 
         private String normalizeQueryPath(final String path) {
@@ -304,6 +305,7 @@ public final class ClasspathAssetIndex {
                     try {
                         init();
                     } catch (Throwable ignored) {
+                        this.initFailed = true;
                         this.jarPaths = Collections.emptySet();
                         this.directoryRoots = Collections.emptyList();
                     } finally {
@@ -329,8 +331,16 @@ public final class ClasspathAssetIndex {
                 if (initialized) {
                     return;
                 }
-                init();
-                initialized = true;
+                try {
+                    init();
+                } catch (Throwable failure) {
+                    this.initFailed = true;
+                    this.jarPaths = Collections.emptySet();
+                    this.directoryRoots = Collections.emptyList();
+                    throw failure;
+                } finally {
+                    initialized = true;
+                }
             }
         }
 
@@ -392,6 +402,7 @@ public final class ClasspathAssetIndex {
                 try {
                     found.addAll(task.join());
                 } catch (Throwable ignored) {
+                    this.initFailed = true;
                 }
             }
             return found;
@@ -418,6 +429,7 @@ public final class ClasspathAssetIndex {
                     }
                 }
             } catch (IOException ignored) {
+                this.initFailed = true;
             }
         }
     }

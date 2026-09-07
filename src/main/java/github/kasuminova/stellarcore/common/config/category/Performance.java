@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.common.config.category;
 
 import net.minecraftforge.common.config.Config;
 
+@SuppressWarnings("CanBeFinal")
 public class Performance {
 
     @Config.LangKey("stellar_core.config.performance.vanilla")
@@ -173,8 +174,6 @@ public class Performance {
                 "blusunrize.immersiveengineering.client.models.ModelConfigurableSides$Loader",
                 // Electroblob's Wizardry (4.3.14) custom loader
                 "electroblob.wizardry.client.model.ModelLoaderBookshelf",
-            // ConnectedTexturesMod 1.12 uses a HashMap and HashSet while loading models.
-            "team.chisel.ctm.client.model.parsing.ModelLoaderCTM",
         };
 
         @Config.Comment({
@@ -185,7 +184,7 @@ public class Performance {
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.parallelModelLoaderBlackList")
         @Config.Name("ParallelModelLoaderBlackList")
-        public String[] parallelModelLoaderBlackList = {"slimeknights.tconstruct.library.client.model.ModifierModelLoader"};
+        public String[] parallelModelLoaderBlackList = {};
 
         @Config.Comment({
                 "(Client Performance | Experimental) An feature that uses parallel loading of texture files, improved game loading speed.",
@@ -352,6 +351,17 @@ public class Performance {
         @Config.LangKey("stellar_core.config.performance.vanilla.directoryResourcePackIndex")
         @Config.Name("DirectoryResourcePackIndex")
         public boolean directoryResourcePackIndex = true;
+
+        @Config.Comment({
+                "(Client Performance | Experimental) Pre-scan archive-based resource packs (mod jars, zipped packs)",
+                "to build a complete entry-name index, so resource lookups no longer contend for the ZipFile monitor",
+                "during model/texture loading.",
+                "Only effective when ResourceExistStateCache is enabled."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.archiveResourcePackIndex")
+        @Config.Name("ArchiveResourcePackIndex")
+        public boolean archiveResourcePackIndex = true;
 
         @Config.Comment({
                 "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments.",
@@ -931,6 +941,18 @@ public class Performance {
         @Config.LangKey("stellar_core.config.performance.tConstruct.tileSmelteryMaxAlloyRecipePerTick")
         @Config.Name("TileSmelteryMaxAlloyRecipePerTick")
         public int tileSmelteryMaxAlloyRecipePerTick = 5;
+
+        @Config.Comment({
+                "(Client Performance) Parallelizes the material texture generation of CustomTextureCreator, and",
+                "precomputes the tool part base texture set to avoid repeated model lookups.",
+                "TConstruct generates one sprite for every (base texture, material) pair inside its own",
+                "TextureStitchEvent.Pre handler, which costs 7-15 seconds in large modpacks.",
+                "Requires ResourceExistStateCache to be enabled, otherwise the parallel path is skipped."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.tConstruct.parallelMaterialTextureGen")
+        @Config.Name("ParallelMaterialTextureGen")
+        public boolean parallelMaterialTextureGen = true;
 
     }
 

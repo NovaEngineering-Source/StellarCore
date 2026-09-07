@@ -62,12 +62,33 @@ public abstract class MixinStitcher {
             // Allocate any extra sprites that exist in runtime but not in cache
             // (e.g. mods that randomly register different sprites each launch).
             if (extraCount > 0) {
-                for (Stitcher.Holder extra : extras) {
-                    ((AccessorStitcher) this).invokeAllocateSlot(extra);
+                final int baseWidth = this.currentWidth;
+                final int baseHeight = this.currentHeight;
+                final boolean[] rotatedSnapshot = new boolean[extraCount];
+                for (int i = 0; i < extraCount; i++) {
+                    rotatedSnapshot[i] = extras.get(i).isRotated();
+                }
+
+                for (int i = 0; i < extraCount; i++) {
+                    ((AccessorStitcher) this).invokeAllocateSlot(extras.get(i));
                 }
                 // Re-round atlas dimensions to power of 2 after allocation.
                 this.currentWidth = MathHelper.smallestEncompassingPowerOfTwo(this.currentWidth);
                 this.currentHeight = MathHelper.smallestEncompassingPowerOfTwo(this.currentHeight);
+
+                if (this.currentWidth != baseWidth || this.currentHeight != baseHeight) {
+                    for (int i = 0; i < extraCount; i++) {
+                        final Stitcher.Holder extra = extras.get(i);
+                        if (extra.isRotated() != rotatedSnapshot[i]) {
+                            extra.rotate();
+                        }
+                    }
+                    this.stitchSlots.clear();
+                    this.currentWidth = 0;
+                    this.currentHeight = 0;
+                    cache.clear();
+                    return;
+                }
             }
 
             // Write updated cache (including extras) for next launch.

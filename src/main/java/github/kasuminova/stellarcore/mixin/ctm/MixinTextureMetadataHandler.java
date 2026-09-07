@@ -36,7 +36,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,75 +66,6 @@ public abstract class MixinTextureMetadataHandler {
     @Nonnull
     @Shadow
     protected abstract IBakedModel wrap(final IModel model, final IBakedModel object) throws IOException;
-
-    @Unique
-    private static Set<ResourceLocation> stellar_core$getTextures(
-        final String operation,
-        final ModelResourceLocation root,
-        final ResourceLocation dependency,
-        final IModel model) {
-        try {
-            return new ObjectOpenHashSet<>(model.getTextures());
-        } catch (RuntimeException | Error e) {
-            stellar_core$logScanFailure(operation, root, dependency, model, e);
-            throw e;
-        }
-    }
-
-    @Unique
-    private static Set<ResourceLocation> stellar_core$getDependencies(
-        final String operation,
-        final ModelResourceLocation root,
-        final ResourceLocation dependency,
-        final IModel model) {
-        try {
-            return new ObjectOpenHashSet<>(model.getDependencies());
-        } catch (RuntimeException | Error e) {
-            stellar_core$logScanFailure(operation, root, dependency, model, e);
-            throw e;
-        }
-    }
-
-    @Unique
-    private static void stellar_core$logScanFailure(
-        final String operation,
-        final ModelResourceLocation root,
-        final ResourceLocation dependency,
-        final IModel model,
-        final Throwable failure) {
-        final String modelClass = model == null ? "<unresolved>" : model.getClass().getName();
-        final String modelIdentity = model == null ? "<unresolved>" : Integer.toHexString(System.identityHashCode(model));
-        String parentLocation = "<not-a-vanilla-model>";
-        String resolvedParent = "<not-a-vanilla-model>";
-
-        if (model != null) {
-            try {
-                Optional<ModelBlock> vanillaModel = model.asVanillaModel();
-                if (vanillaModel.isPresent()) {
-                    ModelBlock modelBlock = vanillaModel.get();
-                    parentLocation = String.valueOf(modelBlock.getParentLocation());
-                    ModelBlock parent = modelBlock.parent;
-                    resolvedParent = parent == null ? "<unresolved>" : parent.toString();
-                }
-            } catch (RuntimeException | Error diagnosticFailure) {
-                parentLocation = "<diagnostics-failed:" + diagnosticFailure.getClass().getName() + ">";
-                resolvedParent = parentLocation;
-            }
-        }
-
-        CTM.logger.error(
-            "[StellarCore-CTM] METADATA_SCAN_FAILURE operation={} root={} dependency={} modelClass={} modelIdentity={} parentLocation={} resolvedParent={} thread={}",
-            operation,
-            root,
-            dependency,
-            modelClass,
-            modelIdentity,
-            parentLocation,
-            resolvedParent,
-            Thread.currentThread().getName(),
-            failure
-        );
-    }
 
     /**
      * @author Kasumi_Nova
@@ -172,19 +102,15 @@ public abstract class MixinTextureMetadataHandler {
                     model = dep == mrl ? rootModel : ModelLoaderRegistry.getModel(dep);
                 } catch (Exception e) {
                     continue;
-                } catch (Error e) {
-                    stellar_core$logScanFailure("resolveDependency", mrl, dep, null, e);
-                    throw e;
                 }
 
-                Set<ResourceLocation> textures = stellar_core$getTextures("getTextures", mrl, dep, model);
+                Set<ResourceLocation> textures = new ObjectOpenHashSet<>(model.getTextures());
                 // FORGE WHY
                 if (vanillaModelWrapperClass.isAssignableFrom(model.getClass())) {
                     ModelBlock parent;
                     try {
                         parent = ((ModelBlock) modelWrapperModel.get(model)).parent;
                     } catch (IllegalAccessException e) {
-                        stellar_core$logScanFailure("readVanillaParent", mrl, dep, model, e);
                         throw new RuntimeException(e);
                     }
                     while (parent != null) {
@@ -197,7 +123,7 @@ public abstract class MixinTextureMetadataHandler {
                     }
                 }
 
-                Set<ResourceLocation> newDependencies = stellar_core$getDependencies("getDependencies", mrl, dep, model);
+                Set<ResourceLocation> newDependencies = new ObjectOpenHashSet<>(model.getDependencies());
 
                 // FORGE WHYYYYY
                 if (multipartModelClass.isAssignableFrom(model.getClass())) {
@@ -205,15 +131,12 @@ public abstract class MixinTextureMetadataHandler {
                     try {
                         partModels = (Map<?, IModel>) multipartPartModels.get(model);
                     } catch (IllegalAccessException e) {
-                        stellar_core$logScanFailure("readMultipartParts", mrl, dep, model, e);
                         throw new RuntimeException(e);
                     }
                     textures = new ObjectOpenHashSet<>();
-                    for (Map.Entry<?, IModel> part : partModels.entrySet()) {
-                        final String partOperation = "multipartPart=" + part.getKey();
-                        final IModel partModel = part.getValue();
-                        textures.addAll(stellar_core$getTextures(partOperation + ".getTextures", mrl, dep, partModel));
-                        newDependencies.addAll(stellar_core$getDependencies(partOperation + ".getDependencies", mrl, dep, partModel));
+                    for (IModel partModel : partModels.values()) {
+                        textures.addAll(partModel.getTextures());
+                        newDependencies.addAll(partModel.getDependencies());
                     }
                 }
 
@@ -244,10 +167,7 @@ public abstract class MixinTextureMetadataHandler {
                     wrappedConcurrent.offer(new Tuple<>(mrl, wrapped));
                     dependencies.clear();
                 } catch (IOException e) {
-                    CTM.logger.error("[StellarCore-CTM] METADATA_SCAN_WRAP_FAILED root={} thread={}", mrl, Thread.currentThread().getName(), e);
-                } catch (RuntimeException | Error e) {
-                    stellar_core$logScanFailure("wrap", mrl, mrl, rootModel, e);
-                    throw e;
+                    CTM.logger.error("[StellarCore-CTM] Could not wrap model {}. Aborting.", mrl, e);
                 }
             }
         });

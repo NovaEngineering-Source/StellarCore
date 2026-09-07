@@ -1,9 +1,10 @@
 {
-    "package": "github.kasuminova.stellarcore.mixin.minecraft.texture",
+    "package": "github.kasuminova.stellarcore.mixin.minecraft.texturemap",
     "refmap": "mixins.stellar_core.refmap.json",
     "target": "@env(DEFAULT)",
     "minVersion": "0.8",
     "compatibilityLevel": "JAVA_8",
+    "priority": 999,
     "client": [
         "MixinTextureMap"
     ]

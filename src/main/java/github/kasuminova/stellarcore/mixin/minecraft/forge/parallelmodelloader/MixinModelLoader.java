@@ -4,9 +4,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.integration.railcraft.RCModelBaker;
+import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreModelBakery;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreProgressBar;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
@@ -14,6 +17,7 @@ import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import net.minecraft.client.renderer.block.statemap.IStateMapper;
+import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
@@ -35,10 +39,12 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings("MethodMayBeStatic")
 @Mixin(ModelLoader.class)
-public abstract class MixinModelLoader extends ModelBakery {
+public abstract class MixinModelLoader extends ModelBakery implements StellarCoreModelBakery {
 
     @Final
     @Mutable
@@ -95,13 +101,21 @@ public abstract class MixinModelLoader extends ModelBakery {
         @Local(name = "missingBaked") IBakedModel missingBaked) {
         long startTime = System.currentTimeMillis();
 
-        Map<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
+        final NonBlockingHashMap<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
         DefaultTextureGetter textureGetter = new DefaultTextureGetter();
+        final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) bakeBar;
+        final ReentrantLock barLock = new ReentrantLock();
+        final AtomicInteger deferredSteps = new AtomicInteger();
         models.keySet().parallelStream().forEach((model) -> {
             Set<ModelResourceLocation> locations = models.get(model);
-            String modelLocations = "[" + Joiner.on(", ").join(locations) + "]";
-            synchronized (bakeBar) {
-                bakeBar.step(modelLocations);
+            if (barLock.tryLock()) {
+                try {
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, "[" + Joiner.on(", ").join(locations) + "]");
+                } finally {
+                    barLock.unlock();
+                }
+            } else {
+                deferredSteps.incrementAndGet();
             }
 
             if (model == getMissingModel()) {
@@ -115,18 +129,32 @@ public abstract class MixinModelLoader extends ModelBakery {
                     bakedModelsConcurrent.put(model, loaded);
                     return;
                 }
-                bakedModelsConcurrent.put(model, model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, textureGetter));
+                bakedModelsConcurrent.put(model, stellar_core$bakeModel(model, textureGetter));
             } catch (Exception e) {
                 if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
-                    FMLLog.log.error("Exception baking model for location(s) {}:", modelLocations, e);
+                    FMLLog.log.error("Exception baking model for location(s) {}:", "[" + Joiner.on(", ").join(locations) + "]", e);
                 }
                 bakedModelsConcurrent.put(model, missingBaked);
             }
         });
+        progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0), bakeBar.getMessage());
 
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
-        bakedModels.putAll(bakedModelsConcurrent);
+        for (final Map.Entry<IModel, IBakedModel> entry : bakedModelsConcurrent.entrySet()) {
+            //noinspection UseBulkOperation
+            bakedModels.put(entry.getKey(), entry.getValue());
+        }
         return Collections.emptySet();
+    }
+
+    @Unique
+    private static IBakedModel stellar_core$bakeModel(final IModel model, final DefaultTextureGetter textureGetter) {
+        if (AsyncUnsafeModels.contains(model)) {
+            synchronized (AsyncUnsafeModels.bakeLock()) {
+                return model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, textureGetter);
+            }
+        }
+        return model.bake(model.getDefaultState(), DefaultVertexFormats.ITEM, textureGetter);
     }
 
     @Redirect(method = "loadBlocks", at = @At(value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;"))
@@ -137,13 +165,22 @@ public abstract class MixinModelLoader extends ModelBakery {
         long startTime = System.currentTimeMillis();
         stellar_core$toConcurrent();
 
+        final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) blockBar;
+        final ReentrantLock barLock = new ReentrantLock();
+        final AtomicInteger deferredSteps = new AtomicInteger();
         blocks.parallelStream().forEach(block -> {
-            synchronized (blockBar) {
-                blockBar.step(Objects.requireNonNull(block.getRegistryName()).toString());
+            if (barLock.tryLock()) {
+                try {
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, Objects.requireNonNull(block.getRegistryName()).toString());
+                } finally {
+                    barLock.unlock();
+                }
+            } else {
+                deferredSteps.incrementAndGet();
             }
 
             IStateMapper stateMapper = ((AccessorBlockStateMapper) mapper).stellar_core$getBlockStateMap().get(block);
-            if (stateMapper != null) {
+            if (stateMapper != null && !(stateMapper instanceof StateMapperBase)) {
                 synchronized (stateMapper) {
                     for (ResourceLocation location : mapper.getBlockstateLocations(block)) {
                         loadBlock(mapper, block, location);
@@ -156,6 +193,7 @@ public abstract class MixinModelLoader extends ModelBakery {
                 loadBlock(mapper, block, location);
             }
         });
+        progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0), blockBar.getMessage());
 
         stellar_core$toDefault();
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
@@ -175,11 +213,21 @@ public abstract class MixinModelLoader extends ModelBakery {
 
     @Unique
     private void stellar_core$toDefault() {
-        stateModels = new Object2ObjectOpenHashMap<>(stateModels);
-        multipartDefinitions = new Object2ObjectOpenHashMap<>(multipartDefinitions);
-        multipartModels = new Object2ObjectOpenHashMap<>(multipartModels);
-        loadingExceptions = new Object2ObjectOpenHashMap<>(loadingExceptions);
+        stateModels = stellar_core$copyToDefault(stateModels);
+        multipartDefinitions = stellar_core$copyToDefault(multipartDefinitions);
+        multipartModels = stellar_core$copyToDefault(multipartModels);
+        loadingExceptions = stellar_core$copyToDefault(loadingExceptions);
         stellar_core$concurrent = false;
+    }
+
+    @Unique
+    private static <K, V> Map<K, V> stellar_core$copyToDefault(final Map<K, V> source) {
+        final Object2ObjectOpenHashMap<K, V> copy = new Object2ObjectOpenHashMap<>(source.size());
+        for (final Map.Entry<K, V> entry : source.entrySet()) {
+            //noinspection UseBulkOperation
+            copy.put(entry.getKey(), entry.getValue());
+        }
+        return copy;
     }
 
     @Redirect(
@@ -200,12 +248,25 @@ public abstract class MixinModelLoader extends ModelBakery {
 
         long startTime = System.currentTimeMillis();
 
+        final NonBlockingHashMap<ModelResourceLocation, String> failedVariants = new NonBlockingHashMap<>();
+
+        final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) itemBar;
+        final ReentrantLock barLock = new ReentrantLock();
+        final AtomicInteger deferredSteps = new AtomicInteger();
         items.parallelStream().forEach(item -> {
-            synchronized (itemBar) {
-                itemBar.step(Objects.requireNonNull(item.getRegistryName()).toString());
+            if (barLock.tryLock()) {
+                try {
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, Objects.requireNonNull(item.getRegistryName()).toString());
+                } finally {
+                    barLock.unlock();
+                }
+            } else {
+                deferredSteps.incrementAndGet();
             }
 
-            for (String s : getVariantNames(item)) {
+            final List<String> variantNames = getVariantNames(item);
+            for (int i = 0; i < variantNames.size(); i++) {
+                final String s = variantNames.get(i);
                 ResourceLocation file = getItemLocation(s);
                 ModelResourceLocation memory = ModelLoader.getInventoryVariant(s);
                 IModel model = missingModel;
@@ -229,14 +290,57 @@ public abstract class MixinModelLoader extends ModelBakery {
                         loadingExceptions.put(memory, exception);
                     }
                     model = ModelLoaderRegistryR.getMissingModel(memory, exception);
+                    failedVariants.put(memory, s);
                 }
                 stateModels.put(memory, model);
             }
         });
+        progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0), itemBar.getMessage());
+
+        stellar_core$retryFailedItemModels(failedVariants);
 
         stellar_core$toDefault();
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} items models, took {}ms.", items.size(), System.currentTimeMillis() - startTime);
         return Collections.emptyIterator();
+    }
+
+    @Unique
+    private void stellar_core$retryFailedItemModels(final NonBlockingHashMap<ModelResourceLocation, String> failedVariants) {
+        if (failedVariants.isEmpty()) {
+            return;
+        }
+
+        int recovered = 0;
+        for (Map.Entry<ModelResourceLocation, String> entry : failedVariants.entrySet()) {
+            final ModelResourceLocation memory = entry.getKey();
+            final ResourceLocation file = getItemLocation(entry.getValue());
+
+            this.stellar_core$invalidateBlockDefinition(memory);
+            this.stellar_core$invalidateBlockDefinition(file);
+
+            IModel model;
+            try {
+                model = ModelLoaderRegistry.getModel(memory);
+            } catch (Exception blockstateException) {
+                try {
+                    model = ModelLoaderRegistry.getModel(file);
+                    ModelLoaderRegistryR.addAlias(memory, file);
+                } catch (Exception normalException) {
+                    continue;
+                }
+            }
+
+            loadingExceptions.remove(memory);
+            stateModels.put(memory, model);
+            recovered++;
+        }
+
+        if (recovered > 0) {
+            StellarLog.LOG.warn(
+                "[StellarCore-ParallelModelLoader] Recovered {} of {} failed item models on serial retry.",
+                recovered, failedVariants.size()
+            );
+        }
     }
 
     // Reflection. So many magic fields...

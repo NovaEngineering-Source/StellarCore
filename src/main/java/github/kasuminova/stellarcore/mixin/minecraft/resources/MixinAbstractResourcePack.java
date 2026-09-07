@@ -1,8 +1,10 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
+import github.kasuminova.stellarcore.client.resource.ZipEntryIndex;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreAbstractResourcePackAccessor;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreFileResourcePackAccessor;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import net.minecraft.client.resources.AbstractResourcePack;
@@ -17,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
-import java.util.Set;
 
 @Mixin(AbstractResourcePack.class)
 public abstract class MixinAbstractResourcePack implements StellarCoreResourcePack, StellarCoreAbstractResourcePackAccessor {
@@ -35,10 +36,10 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
     }
 
     @Unique
-    private final Set<ResourceLocation> stellar_core$resourceExistsCache = new NonBlockingHashSet<>();
+    private final NonBlockingHashSet<ResourceLocation> stellar_core$resourceExistsCache = new NonBlockingHashSet<>();
 
     @Unique
-    private boolean stellar_core$cacheEnabled = false;
+    private volatile boolean stellar_core$cacheEnabled = false;
 
     @Unique
     private byte stellar_core$packFileKind;
@@ -63,7 +64,12 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
             return;
         }
 
-        final boolean exists = this.hasResourceName(locationToName(location));
+        final boolean exists;
+        try {
+            exists = this.hasResourceName(locationToName(location));
+        } catch (Throwable probeFailure) {
+            return;
+        }
         if (exists) {
             stellar_core$resourceExistsCache.add(location);
         }
@@ -105,6 +111,10 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
         // Force FileResourcePack's lazy ZipFile open on the single reload thread,
         // closing the concurrent-initialization race window on the worker threads.
         this.hasResourceName("pack.mcmeta");
+        if (StellarCoreConfig.PERFORMANCE.vanilla.archiveResourcePackIndex
+            && this instanceof StellarCoreFileResourcePackAccessor accessor) {
+            ZipEntryIndex.prewarmAsync(this.resourcePackFile, accessor::stellar_core$getResourcePackZipFile);
+        }
     }
 
     @Override

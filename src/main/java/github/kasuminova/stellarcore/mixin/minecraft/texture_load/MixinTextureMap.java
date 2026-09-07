@@ -14,6 +14,7 @@ import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import org.apache.commons.io.IOUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -73,6 +74,7 @@ public abstract class MixinTextureMap {
             }
 
             IResource resource = null;
+            boolean prefetched = false;
             try {
                 PngSizeInfo pngSizeInfo = PngSizeInfo.makeFromResource(resourceManager.getResource(location));
                 resource = resourceManager.getResource(location);
@@ -83,14 +85,17 @@ public abstract class MixinTextureMap {
                 BufferedImage image = TextureUtil.readBufferedImage(resource.getInputStream());
                 int[] rgb = image.getRGB(0, 0, image.getWidth(), image.getHeight(), new int[image.getWidth() * image.getHeight()], 0, image.getWidth());
                 SpriteBufferedImageCache.INSTANCE.put(sprite, image, rgb);
+                SpriteBufferedImageCache.INSTANCE.put(sprite, resource);
 
                 stellar_core$cachedTextures.add(sprite);
                 stellar_core$cachedLocations.add(location);
+                prefetched = true;
             } catch (Throwable e) {
                 StellarLog.LOG.warn(e);
             } finally {
-                if (resource != null) {
-                    SpriteBufferedImageCache.INSTANCE.put(sprite, resource);
+                if (!prefetched) {
+                    SpriteBufferedImageCache.INSTANCE.remove(sprite);
+                    IOUtils.closeQuietly(resource);
                 }
             }
         }));

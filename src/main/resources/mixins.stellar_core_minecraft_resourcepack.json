@@ -7,6 +7,7 @@
     "client": [
         "MixinAbstractResourcePack",
         "MixinDefaultResourcePack",
+        "MixinFileResourcePack",
         "MixinMinecraft",
         "MixinModelLoader",
         "MixinSimpleReloadableResourceManager",

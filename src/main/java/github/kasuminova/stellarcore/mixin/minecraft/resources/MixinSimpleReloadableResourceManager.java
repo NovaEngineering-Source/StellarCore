@@ -1,16 +1,17 @@
 package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
 import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
+import github.kasuminova.stellarcore.client.resource.ZipEntryIndex;
 import github.kasuminova.stellarcore.common.util.MutableResourcePackBindings;
 import github.kasuminova.stellarcore.common.util.PublishedState;
-import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreMutableResourceManager;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.FallbackResourceManager;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourcePack;
@@ -30,9 +31,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +59,8 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     private MetadataSerializer rmMetadataSerializer;
     @Unique
     private volatile PublishedState stellar_core$publishedState = PublishedState.empty();
+    @Unique
+    private final Set<ResourceLocation> stellar_core$unclaimedResources = new NonBlockingHashSet<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void stellar_core$init(final MetadataSerializer rmMetadataSerializerIn, final CallbackInfo ci) {
@@ -77,25 +79,22 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
             this.domainResourceManagers = emptyManagers;
             this.setResourceDomains = emptyDomains;
             this.stellar_core$publishedState = PublishedState.empty();
+            this.stellar_core$unclaimedResources.clear();
         }
         try {
             ResourceExistingCache.clear();
         } finally {
-            DirectoryPathIndex.clear();
+            try {
+                DirectoryPathIndex.clear();
+            } finally {
+                ZipEntryIndex.clear();
+            }
         }
     }
 
     @Inject(method = "reloadResourcePack", at = @At("HEAD"))
     private void stellar_core$prepareResourcePackReload(final IResourcePack resourcePack, final CallbackInfo ci) {
         this.stellar_core$loadingPackDomains.remove();
-        synchronized (this) {
-            final Map<String, FallbackResourceManager> workingManagers =
-                this.stellar_core$bindings.rebuildFallbackManagers(this.rmMetadataSerializer);
-            this.domainResourceManagers = new NonBlockingHashMap<>(workingManagers);
-            final Set<String> workingDomains = new NonBlockingHashSet<>();
-            workingDomains.addAll(workingManagers.keySet());
-            this.setResourceDomains = workingDomains;
-        }
     }
 
     @Redirect(
@@ -107,9 +106,16 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     )
     private Set<String> stellar_core$captureResourcePackDomains(final IResourcePack pack) {
         final Set<String> domains = pack.getResourceDomains();
-        this.stellar_core$loadingPackDomains.set(
-            ImmutableSet.copyOf(domains)
-        );
+        final Set<String> captured = new ObjectLinkedOpenHashSet<>(domains);
+        this.stellar_core$loadingPackDomains.set(captured);
+        synchronized (this) {
+            final Map<String, FallbackResourceManager> rebuilt =
+                this.stellar_core$bindings.rebuildFallbackManagers(this.rmMetadataSerializer, captured);
+            final Map<String, FallbackResourceManager> workingManagers =
+                new NonBlockingHashMap<>(this.domainResourceManagers);
+            workingManagers.putAll(rebuilt);
+            this.domainResourceManagers = workingManagers;
+        }
         return domains;
     }
 
@@ -129,29 +135,14 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
             }
             this.stellar_core$bindings.commit(bindingsPlan);
             this.stellar_core$publishedState = publishedPlan;
+            stellar_core$invalidateUnclaimed(namespaces);
         }
     }
 
     @Override
     public void stellar_core$refreshMutableResourcePackNamespaces() {
-        final MutableResourcePackBindings.RefreshPlan plan;
-        try {
-            synchronized (this) {
-                plan = this.stellar_core$bindings.refreshMutableNamespaces(this.rmMetadataSerializer);
-                stellar_core$publish(plan);
-            }
-        } catch (RuntimeException | Error failure) {
-            StellarLog.LOG.error(
-                "[StellarCore-ResourceManager] MUTABLE_NAMESPACE_REFRESH_FAILED thread={}",
-                Thread.currentThread().getName(), failure
-            );
-            throw failure;
-        }
-        if (!plan.isEmpty()) {
-            StellarLog.LOG.info(
-                "[StellarCore-ResourceManager] MUTABLE_NAMESPACE_REFRESH_SUCCESS namespaces={} thread={}",
-                plan.namespaces(), Thread.currentThread().getName()
-            );
+        synchronized (this) {
+            stellar_core$publish(this.stellar_core$bindings.refreshMutableNamespaces(this.rmMetadataSerializer));
         }
     }
 
@@ -205,29 +196,31 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     @Unique
     private FallbackResourceManager stellar_core$attachOnMiss(final ResourceLocation location,
                                                               final FallbackResourceManager observed) {
-        final MutableResourcePackBindings.RefreshPlan plan;
-        try {
-            synchronized (this) {
-                plan = this.stellar_core$bindings.discoverResource(this.rmMetadataSerializer, location);
-                if (plan.isEmpty()) {
-                    final FallbackResourceManager current =
-                        this.stellar_core$publishedState.managers().get(location.getNamespace());
-                    return current != observed ? current : null;
-                }
-                stellar_core$publish(plan);
-            }
-        } catch (RuntimeException | Error failure) {
-            StellarLog.LOG.error(
-                "[StellarCore-ResourceManager] LATE_RESOURCE_PACK_ATTACH_FAILED location={} thread={}",
-                location, Thread.currentThread().getName(), failure
-            );
-            throw failure;
+        if (this.stellar_core$unclaimedResources.contains(location)) {
+            return stellar_core$observedOrCurrent(location, observed);
         }
-        StellarLog.LOG.info(
-            "[StellarCore-ResourceManager] LATE_RESOURCE_PACK_ATTACHED location={} namespaces={} thread={}",
-            location, plan.namespaces(), Thread.currentThread().getName()
-        );
-        return plan.replacements().get(location.getNamespace());
+        if (!this.stellar_core$bindings.canDiscover(location)) {
+            this.stellar_core$unclaimedResources.add(location);
+            return stellar_core$observedOrCurrent(location, observed);
+        }
+        synchronized (this) {
+            final MutableResourcePackBindings.RefreshPlan plan =
+                this.stellar_core$bindings.discoverResource(this.rmMetadataSerializer, location);
+            if (plan.isEmpty()) {
+                this.stellar_core$unclaimedResources.add(location);
+                return stellar_core$observedOrCurrent(location, observed);
+            }
+            stellar_core$publish(plan);
+            return plan.replacements().get(location.getNamespace());
+        }
+    }
+
+    @Unique
+    private FallbackResourceManager stellar_core$observedOrCurrent(final ResourceLocation location,
+                                                                   final FallbackResourceManager observed) {
+        final FallbackResourceManager current =
+            this.stellar_core$publishedState.managers().get(location.getNamespace());
+        return current != observed ? current : null;
     }
 
     @Unique
@@ -236,9 +229,10 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
             return;
         }
         final PublishedState current = this.stellar_core$publishedState;
-        final Map<String, FallbackResourceManager> nextManagers = new HashMap<>(current.managers());
+        final Map<String, FallbackResourceManager> nextManagers =
+            new Object2ObjectOpenHashMap<>(current.managers());
         nextManagers.putAll(plan.replacements());
-        final Set<String> nextDomains = new HashSet<>(current.domains());
+        final Set<String> nextDomains = new ObjectOpenHashSet<>(current.domains());
         nextDomains.addAll(plan.namespaces());
         final PublishedState next = new PublishedState(
             Collections.unmodifiableMap(nextManagers), Collections.unmodifiableSet(nextDomains)
@@ -251,13 +245,36 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
         this.domainResourceManagers = nextWorkingManagers;
         this.setResourceDomains = nextWorkingDomains;
         this.stellar_core$publishedState = next;
+        stellar_core$invalidateUnclaimed(plan.namespaces());
+    }
+
+    @Unique
+    private void stellar_core$invalidateUnclaimed(final Set<String> namespaces) {
+        if (namespaces.isEmpty() || this.stellar_core$unclaimedResources.isEmpty()) {
+            return;
+        }
+        final List<ResourceLocation> stale = new ArrayList<>();
+        boolean clean = true;
+        for (final ResourceLocation location : this.stellar_core$unclaimedResources) {
+            if (namespaces.contains(location.getNamespace())) {
+                stale.add(location);
+                continue;
+            }
+            clean = false;
+        }
+        if (clean) {
+            this.stellar_core$unclaimedResources.clear();
+            return;
+        }
+        //noinspection SlowAbstractSetRemoveAll
+        this.stellar_core$unclaimedResources.removeAll(stale);
     }
 
     @Unique
     private PublishedState stellar_core$createPublishedWorkingState() {
         return new PublishedState(
-            ImmutableMap.copyOf(this.domainResourceManagers),
-            ImmutableSet.copyOf(this.setResourceDomains)
+            Collections.unmodifiableMap(new Object2ObjectOpenHashMap<>(this.domainResourceManagers)),
+            Collections.unmodifiableSet(new ObjectOpenHashSet<>(this.setResourceDomains))
         );
     }
 

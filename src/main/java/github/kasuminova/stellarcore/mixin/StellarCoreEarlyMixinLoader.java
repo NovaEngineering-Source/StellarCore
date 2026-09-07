@@ -58,8 +58,8 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_worldserver.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.worldServerGetPendingBlockUpdates);
         addMixinCFG("mixins.stellar_core_minecraft_statemapperbase.json",        () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.stateMapperBase);
         addMixinCFG("mixins.stellar_core_minecraft_stitcher.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
-//        addMixinCFG("mixins.stellar_core_minecraft_texturemap.json",      () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureMapLoad);
         addMixinCFG("mixins.stellar_core_minecraft_texture_load.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad);
+        addMixinCFG("mixins.stellar_core_minecraft_texturemap_concurrent.json",  () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad || StellarCoreConfig.PERFORMANCE.tConstruct.parallelMaterialTextureGen);
         addMixinCFG("mixins.stellar_core_forge.json",                            () -> StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress);
         addMixinCFG("mixins.stellar_core_forge_asmdatatable.json",               () -> StellarCoreConfig.PERFORMANCE.forge.asmDataTable);
         addMixinCFG("mixins.stellar_core_forge_asmmodparser.json",               () -> StellarCoreConfig.PERFORMANCE.forge.asmModParser);

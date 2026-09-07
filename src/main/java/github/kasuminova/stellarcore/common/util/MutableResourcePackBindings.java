@@ -1,25 +1,24 @@
 package github.kasuminova.stellarcore.common.util;
 
 import com.github.bsideup.jabel.Desugar;
-import com.google.common.collect.ImmutableList;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.client.resources.FallbackResourceManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.util.ResourceLocation;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public final class MutableResourcePackBindings {
 
-    private Snapshot snapshot = Snapshot.empty();
+    private volatile Snapshot snapshot = Snapshot.empty();
 
     private static RefreshPlan buildPlan(final Snapshot current,
                                          final Snapshot next,
@@ -35,8 +34,9 @@ public final class MutableResourcePackBindings {
         final Snapshot state,
         final MetadataSerializer serializer,
         final Set<String> namespaceFilter) {
-        final Map<String, FallbackResourceManager> managers = new LinkedHashMap<>();
-        for (Binding binding : state.bindings) {
+        final Object2ObjectOpenHashMap<String, FallbackResourceManager> managers = new Object2ObjectOpenHashMap<>();
+        final Binding[] bindings = state.bindings;
+        for (final Binding binding : bindings) {
             for (String namespace : binding.namespaces) {
                 if (namespaceFilter != null && !namespaceFilter.contains(namespace)) {
                     continue;
@@ -60,17 +60,14 @@ public final class MutableResourcePackBindings {
             || ((StellarCoreResourcePack) pack).stellar_core$isMutableResourcePack();
     }
 
-    private static Set<String> immutableCopy(final Set<String> namespaces) {
-        return Collections.unmodifiableSet(new LinkedHashSet<>(namespaces));
-    }
-
     public void beginFullReload() {
         snapshot = Snapshot.empty();
     }
 
     public RecordPlan prepareRecordPack(final IResourcePack pack, final Set<String> namespaces) {
-        final List<Binding> nextBindings = new ArrayList<>(snapshot.bindings);
-        nextBindings.add(new Binding(pack, namespaces, isMutable(pack)));
+        final Binding[] current = snapshot.bindings;
+        final Binding[] nextBindings = Arrays.copyOf(current, current.length + 1);
+        nextBindings[current.length] = new Binding(pack, namespaces, isMutable(pack));
         return new RecordPlan(new Snapshot(nextBindings));
     }
 
@@ -80,61 +77,83 @@ public final class MutableResourcePackBindings {
 
     public RefreshPlan refreshMutableNamespaces(final MetadataSerializer serializer) {
         final Snapshot current = snapshot;
-        final Map<IResourcePack, Set<String>> currentDomains = new IdentityHashMap<>();
-        final Set<String> affected = new LinkedHashSet<>();
-        for (Binding binding : current.bindings) {
+        final Binding[] bindings = current.bindings;
+        final Reference2ObjectOpenHashMap<IResourcePack, Set<String>> currentDomains =
+            new Reference2ObjectOpenHashMap<>();
+        for (final Binding binding : bindings) {
             if (!binding.mutable || currentDomains.containsKey(binding.pack)) {
                 continue;
             }
-            currentDomains.put(binding.pack, immutableCopy(binding.pack.getResourceDomains()));
+            currentDomains.put(binding.pack, new ObjectLinkedOpenHashSet<>(binding.pack.getResourceDomains()));
         }
 
-        final List<Binding> nextBindings = new ArrayList<>(current.bindings.size());
-        for (Binding binding : current.bindings) {
+        final ObjectLinkedOpenHashSet<String> affected = new ObjectLinkedOpenHashSet<>();
+        final Binding[] nextBindings = new Binding[bindings.length];
+        for (int i = 0; i < bindings.length; i++) {
+            final Binding binding = bindings[i];
             final Set<String> liveDomains = currentDomains.get(binding.pack);
             if (liveDomains == null) {
-                nextBindings.add(binding);
+                nextBindings[i] = binding;
                 continue;
             }
-            final Set<String> discovered = new LinkedHashSet<>(liveDomains);
+            final ObjectLinkedOpenHashSet<String> discovered = new ObjectLinkedOpenHashSet<>(liveDomains);
             discovered.removeAll(binding.namespaces);
             if (discovered.isEmpty()) {
-                nextBindings.add(binding);
+                nextBindings[i] = binding;
                 continue;
             }
-            final Set<String> updated = new LinkedHashSet<>(binding.namespaces);
+            final ObjectLinkedOpenHashSet<String> updated = new ObjectLinkedOpenHashSet<>(binding.namespaces);
             updated.addAll(discovered);
-            nextBindings.add(new Binding(binding.pack, updated, true));
+            nextBindings[i] = new Binding(binding.pack, updated, true);
             affected.addAll(discovered);
         }
         return buildPlan(current, new Snapshot(nextBindings), serializer, affected);
     }
 
+    public boolean canDiscover(final ResourceLocation location) {
+        final Binding[] probes = snapshot.mutableProbes;
+        if (probes.length == 0) {
+            return false;
+        }
+        final String namespace = location.getNamespace();
+        for (final Binding probe : probes) {
+            if (!probe.namespaces.contains(namespace) && probe.pack.resourceExists(location)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public RefreshPlan discoverResource(final MetadataSerializer serializer,
                                         final ResourceLocation location) {
         final Snapshot current = snapshot;
+        final Binding[] bindings = current.bindings;
         final String namespace = location.getNamespace();
-        final Map<IResourcePack, Boolean> discoveries = new IdentityHashMap<>();
-        for (Binding binding : current.bindings) {
-            if (binding.mutable && !binding.namespaces.contains(namespace)
-                && !discoveries.containsKey(binding.pack)) {
-                discoveries.put(binding.pack, binding.pack.resourceExists(location));
+        final Reference2BooleanOpenHashMap<IResourcePack> discoveries = new Reference2BooleanOpenHashMap<>();
+        boolean anyDiscovered = false;
+        for (final Binding binding : bindings) {
+            if (!binding.mutable || binding.namespaces.contains(namespace)
+                || discoveries.containsKey(binding.pack)) {
+                continue;
             }
+            final boolean exists = binding.pack.resourceExists(location);
+            discoveries.put(binding.pack, exists);
+            anyDiscovered |= exists;
         }
-        if (!discoveries.containsValue(Boolean.TRUE)) {
+        if (!anyDiscovered) {
             return RefreshPlan.empty(current);
         }
 
-        final List<Binding> nextBindings = new ArrayList<>(current.bindings.size());
-        for (Binding binding : current.bindings) {
-            if (!Boolean.TRUE.equals(discoveries.get(binding.pack))
-                || binding.namespaces.contains(namespace)) {
-                nextBindings.add(binding);
+        final Binding[] nextBindings = new Binding[bindings.length];
+        for (int i = 0; i < bindings.length; i++) {
+            final Binding binding = bindings[i];
+            if (!discoveries.getBoolean(binding.pack) || binding.namespaces.contains(namespace)) {
+                nextBindings[i] = binding;
                 continue;
             }
-            final Set<String> updated = new LinkedHashSet<>(binding.namespaces);
+            final ObjectLinkedOpenHashSet<String> updated = new ObjectLinkedOpenHashSet<>(binding.namespaces);
             updated.add(namespace);
-            nextBindings.add(new Binding(binding.pack, updated, true));
+            nextBindings[i] = new Binding(binding.pack, updated, true);
         }
         return buildPlan(
             current, new Snapshot(nextBindings), serializer, Collections.singleton(namespace)
@@ -149,16 +168,47 @@ public final class MutableResourcePackBindings {
         return buildFallbackManagers(snapshot, serializer, null);
     }
 
+    public Map<String, FallbackResourceManager> rebuildFallbackManagers(final MetadataSerializer serializer,
+                                                                       final Set<String> namespaceFilter) {
+        return buildFallbackManagers(snapshot, serializer, namespaceFilter);
+    }
+
     @Desugar
     private record Binding(IResourcePack pack, Set<String> namespaces, boolean mutable) {
     }
 
-    @Desugar
-    private record Snapshot(List<Binding> bindings) {
-        private static final Snapshot EMPTY = new Snapshot(Collections.emptyList());
+    private static final class Snapshot {
+        private static final Binding[] NO_BINDINGS = new Binding[0];
+        private static final Snapshot EMPTY = new Snapshot(NO_BINDINGS);
 
-        private Snapshot(final List<Binding> bindings) {
-            this.bindings = ImmutableList.copyOf(bindings);
+        private final Binding[] bindings;
+        private final Binding[] mutableProbes;
+
+        private Snapshot(final Binding[] bindings) {
+            this.bindings = bindings;
+            final Reference2ObjectOpenHashMap<IResourcePack, ObjectLinkedOpenHashSet<String>> shared =
+                new Reference2ObjectOpenHashMap<>();
+            for (final Binding binding : bindings) {
+                if (!binding.mutable) {
+                    continue;
+                }
+                final ObjectLinkedOpenHashSet<String> common = shared.get(binding.pack);
+                if (common == null) {
+                    shared.put(binding.pack, new ObjectLinkedOpenHashSet<>(binding.namespaces));
+                    continue;
+                }
+                common.retainAll(binding.namespaces);
+            }
+            if (shared.isEmpty()) {
+                this.mutableProbes = NO_BINDINGS;
+                return;
+            }
+            final Binding[] probes = new Binding[shared.size()];
+            int index = 0;
+            for (Map.Entry<IResourcePack, ObjectLinkedOpenHashSet<String>> entry : shared.entrySet()) {
+                probes[index++] = new Binding(entry.getKey(), entry.getValue(), true);
+            }
+            this.mutableProbes = probes;
         }
 
         private static Snapshot empty() {
@@ -180,7 +230,9 @@ public final class MutableResourcePackBindings {
 
         private RefreshPlan(final Map<String, FallbackResourceManager> replacements,
                             final Snapshot nextSnapshot) {
-            this.replacements = Collections.unmodifiableMap(new LinkedHashMap<>(replacements));
+            this.replacements = replacements.isEmpty()
+                ? Collections.emptyMap()
+                : Collections.unmodifiableMap(replacements);
             this.nextSnapshot = nextSnapshot;
         }
 

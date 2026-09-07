@@ -37,6 +37,12 @@ public class SpriteBufferedImageCache {
         rgbCache.put(sprite, rgbArr);
     }
 
+    public void remove(TextureAtlasSprite sprite) {
+        cache.remove(sprite);
+        rgbCache.remove(sprite);
+        IOUtils.closeQuietly(resourceCache.remove(sprite));
+    }
+
     public void clear() {
         cache.clear();
         rgbCache.clear();

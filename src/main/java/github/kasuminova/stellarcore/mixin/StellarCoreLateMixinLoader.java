@@ -32,7 +32,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_cfm.json",                    "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",                 "chisel");
         addModdedMixinCFG("mixins.stellar_core_cofhcore.json",               "cofhcore");
-        addModdedMixinCFG("mixins.stellar_core_ctm.json",                    "ctm", () -> StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler);
+        addModdedMixinCFG("mixins.stellar_core_ctm.json",                    "ctm", () -> StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler || StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addModdedMixinCFG("mixins.stellar_core_cucumber.json",               "cucumber");
         addModdedMixinCFG("mixins.stellar_core_customloadingscreen.json",    "customloadingscreen");
         addModdedMixinCFG("mixins.stellar_core_customstartinggear.json",     "customstartinggear");
@@ -48,6 +48,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_fluxnetworks.json",           "fluxnetworks");
         addModdedMixinCFG("mixins.stellar_core_ftblib.json",                 "ftblib");
         addModdedMixinCFG("mixins.stellar_core_ftbquests.json",              "ftbquests");
+        addModdedMixinCFG("mixins.stellar_core_geckolib.json",               "geckolib3", () -> StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache);
         addModdedMixinCFG("mixins.stellar_core_guguutils.json",              "gugu-utils");
         addModdedMixinCFG("mixins.stellar_core_ic2.json",                    "ic2");
         addModdedMixinCFG("mixins.stellar_core_ic2_energynet.json",          "ic2");

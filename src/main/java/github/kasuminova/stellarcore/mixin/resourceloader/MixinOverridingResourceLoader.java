@@ -29,38 +29,35 @@ public class MixinOverridingResourceLoader implements StellarCoreResourcePack {
     private final Map<String, File> stellar_core$namespaceRoots = new NonBlockingHashMap<>();
 
     @Unique
-    private boolean stellar_core$cacheEnabled;
+    private volatile boolean stellar_core$cacheEnabled;
 
-    @Inject(method = {"resourceExists", "func_110589_b"}, at = @At("HEAD"), cancellable = true)
-    private void stellar_core$usePositiveCache(@Nullable final ResourceLocation location,
+    @Inject(method = "resourceExists", at = @At("HEAD"), cancellable = true, remap = true)
+    private void stellar_core$usePositiveCache(@Nullable final ResourceLocation rl,
                                                final CallbackInfoReturnable<Boolean> cir) {
-        if (stellar_core$cacheEnabled && location != null
-            && Boolean.TRUE.equals(stellar_core$resourceExistsCache.get(location))) {
+        if (stellar_core$cacheEnabled && rl != null
+            && Boolean.TRUE.equals(stellar_core$resourceExistsCache.get(rl))) {
             cir.setReturnValue(true);
         }
     }
 
-    @Inject(method = {"resourceExists", "func_110589_b"}, at = @At("RETURN"))
-    private void stellar_core$rememberExisting(@Nullable final ResourceLocation location,
+    @Inject(method = "resourceExists", at = @At("RETURN"), remap = true)
+    private void stellar_core$rememberExisting(@Nullable final ResourceLocation rl,
                                                final CallbackInfoReturnable<Boolean> cir) {
-        if (stellar_core$cacheEnabled && location != null && cir.getReturnValueZ()) {
-            stellar_core$resourceExistsCache.putIfAbsent(location, Boolean.TRUE);
+        if (stellar_core$cacheEnabled && rl != null && cir.getReturnValueZ()) {
+            stellar_core$resourceExistsCache.putIfAbsent(rl, Boolean.TRUE);
         }
     }
 
-    @Redirect(
-        method = {"resourceExists", "func_110589_b"},
-        at = @At(value = "INVOKE", target = "Ljava/io/File;isFile()Z")
-    )
-    private boolean stellar_core$isIndexedFile(final File file, final ResourceLocation location) {
+    @Redirect(method = "resourceExists", at = @At(value = "INVOKE", target = "Ljava/io/File;isFile()Z", remap = false), remap = true)
+    private boolean stellar_core$isIndexedFile(final File file, final ResourceLocation rl) {
         if (!StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache
             || !StellarCoreConfig.PERFORMANCE.vanilla.directoryResourcePackIndex
-            || location == null) {
+            || rl == null) {
             return file.isFile();
         }
-        final String namespace = location.getNamespace();
+        final String namespace = rl.getNamespace();
         final File root = stellar_core$getNamespaceRoot(namespace);
-        return DirectoryPathIndex.contains(root, location.getPath(), file);
+        return DirectoryPathIndex.contains(root, rl.getPath(), file);
     }
 
     @Unique
