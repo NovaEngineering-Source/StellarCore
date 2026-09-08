@@ -122,6 +122,8 @@ stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalizatio
 stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization.tooltip=(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage. Works in most cases, but may cause rendering issues with models in some mods.
 stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT=Deallocate Empty Capability NBT
 stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT.tooltip=When writing to Capability's NBT, if the returned NBT is empty, no content is written, which may help improve performance.
+stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections=OreDictionary Primitive Collections
+stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections.tooltip=(Client/Server Performance) Replace OreDictionary's boxed collections with fastutil primitive ones and rewrite the hot methods to work on int directly, removing Integer boxing from getOreID/getOreIDs/rebakeMap. Disable this if another mod reflects on OreDictionary's internal field types.
 stellar_core.config.performance.astralSorcery.tileNetworkSkyboundImprovements=Tile Network Skybound Improvements
 stellar_core.config.performance.astralSorcery.tileNetworkSkyboundImprovements.tooltip=(Server Performance) Add optional updates to the block to improve network bandwidth usage.
 stellar_core.config.performance.avaritia.tileBaseImprovements=Tile Base Improvements

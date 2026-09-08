@@ -122,6 +122,8 @@ stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalizatio
 stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization.tooltip=(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage. Works in most cases, but may cause rendering issues with models in some mods.
 stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT=释放空 Capability NBT
 stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT.tooltip=When writing to Capability's NBT, if the returned NBT is empty, no content is written, which may help improve performance.
+stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections=OreDictionary 原始类型集合
+stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections.tooltip=(Client/Server Performance) 将 OreDictionary 的包装类型集合替换为 fastutil 原始类型集合，并覆写热点方法直接使用 int，消除 getOreID/getOreIDs/rebakeMap 中的 Integer 装箱。如果有其他模组反射读取 OreDictionary 内部字段类型，请关闭此项。
 stellar_core.config.performance.astralSorcery.tileNetworkSkyboundImprovements=TileNetworkSkybound 优化
 stellar_core.config.performance.astralSorcery.tileNetworkSkyboundImprovements.tooltip=(Server Performance) Add optional updates to the block to improve network bandwidth usage.
 stellar_core.config.performance.avaritia.tileBaseImprovements=TileBase 优化

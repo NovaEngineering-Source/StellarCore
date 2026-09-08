@@ -500,6 +500,17 @@ public class Performance {
         @Config.Name("DeallocateEmptyCapabilityNBT")
         public boolean deallocateEmptyCapabilityNBT = true;
 
+        @Config.Comment({
+                "(Client/Server Performance) Replace OreDictionary's boxed collections with fastutil primitive ones",
+                "(name -> id map, stack hash -> ore id lists) and rewrite the hot methods to work on int directly.",
+                "Removes Integer boxing and array unboxing from getOreID/getOreIDs/rebakeMap.",
+                "Disable this if another mod reflects on OreDictionary's internal field types."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections")
+        @Config.Name("OreDictionaryPrimitiveCollections")
+        public boolean oreDictionary = true;
+
     }
 
     public static class AstralSorcery {
