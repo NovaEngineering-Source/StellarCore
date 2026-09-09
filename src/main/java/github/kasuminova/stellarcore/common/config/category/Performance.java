@@ -136,6 +136,14 @@ public class Performance {
         public int hudCachingFPSLimit = 20;
 
         @Config.Comment({
+                "Disable HudCaching in specified dimension IDs.",
+                "Example: 0 for Overworld, -1 for Nether, 1 for The End.",
+                "Use this to avoid render issues in dimensions with custom rendering."
+        })
+        @Config.Name("HudCachingDimensionBlacklist")
+        public int[] hudCachingDimensionBlacklist = {};
+
+        @Config.Comment({
                 "(Client Performance | Experimental) A feature that helps speed up game loading by modifying the model loader's code to enable parallel loading capabilities (5s ~ 40s faster).",
                 "Incompatible with some mod's models because they use their own model loader, if you encounter a missing model, please report it to the StellarCore author for manual compatibility.",
                 "Compatible model loader: CTM，LibNine，TConstruct",

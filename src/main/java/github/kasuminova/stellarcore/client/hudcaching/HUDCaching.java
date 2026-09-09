@@ -48,6 +48,14 @@ public class HUDCaching {
             ingame.renderGameOverlay(partialTicks);
             return;
         }
+
+        if (isCurrentDimensionBlacklisted()) {
+            dirty = true;
+            ingame.renderGameOverlay(partialTicks);
+            renderIGIOverlayIfRequiredWhenBypassed(partialTicks);
+            return;
+        }
+
         GlStateManager.enableDepth();
         ScaledResolution resolution = new ScaledResolution(MC);
         int width = resolution.getScaledWidth();
@@ -105,6 +113,31 @@ public class HUDCaching {
         if (Loader.isModLoaded("ingameinfoxml") && StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
             renderIGIOverlay(partialTicks);
         }
+    }
+
+    private static void renderIGIOverlayIfRequiredWhenBypassed(float partialTicks) {
+        if (StellarCoreConfig.PERFORMANCE.vanilla.hudCaching && Loader.isModLoaded("ingameinfoxml") && StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
+            renderIGIOverlay(partialTicks);
+        }
+    }
+
+    private static boolean isCurrentDimensionBlacklisted() {
+        if (MC.world == null || MC.world.provider == null) {
+            return false;
+        }
+
+        int currentDim = MC.world.provider.getDimension();
+        int[] blacklist = StellarCoreConfig.PERFORMANCE.vanilla.hudCachingDimensionBlacklist;
+        if (blacklist == null || blacklist.length == 0) {
+            return false;
+        }
+
+        for (int dimId : blacklist) {
+            if (dimId == currentDim) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Optional.Method(modid = "ingameinfoxml")
