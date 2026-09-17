@@ -64,10 +64,10 @@ public class ClientEventHandler {
             return;
         }
 
-        if (Loader.isModLoaded("betterchat")) {
+        if (Mods.BETTER_CHAT.loaded()) {
             handleBetterChatAnim();
         }
-        if (Loader.isModLoaded("neverenoughanimations")) {
+        if (Mods.NEVER_ENOUGH_ANIMATIONS.loaded()) {
             handleNEAAnim();
         }
     }

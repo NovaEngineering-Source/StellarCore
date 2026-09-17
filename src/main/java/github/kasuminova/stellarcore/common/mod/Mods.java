@@ -17,6 +17,9 @@ public enum Mods {
     CUBIC_CHUNKS ("cubicchunks"       ),
     GC           ("galacticraftcore"  ),
     FN("fluxnetworks"),
+    BETTER_CHAT("betterchat"),
+    NEVER_ENOUGH_ANIMATIONS("neverenoughanimations"),
+    INGAME_INFO_XML("ingameinfoxml"),
 
     MMCE                  ("modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
     CENSORED_ASM          ("loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"         ),

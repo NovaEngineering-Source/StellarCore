@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.client.hudcaching;
 
 import com.github.lunatrius.ingameinfo.handler.Ticker;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.mixin.minecraft.hudcaching.AccessorGuiIngameForge;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -11,7 +12,6 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraftforge.client.GuiIngameForge;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -110,13 +110,13 @@ public class HUDCaching {
 
         GlStateManager.enableDepth();
 
-        if (Loader.isModLoaded("ingameinfoxml") && StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
+        if (Mods.INGAME_INFO_XML.loaded() && StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
             renderIGIOverlay(partialTicks);
         }
     }
 
     private static void renderIGIOverlayIfRequiredWhenBypassed(float partialTicks) {
-        if (StellarCoreConfig.PERFORMANCE.vanilla.hudCaching && Loader.isModLoaded("ingameinfoxml") && StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
+        if (StellarCoreConfig.PERFORMANCE.vanilla.hudCaching && Mods.INGAME_INFO_XML.loaded() && StellarCoreConfig.PERFORMANCE.inGameInfoXML.hudFrameBuffer) {
             renderIGIOverlay(partialTicks);
         }
     }
@@ -128,7 +128,7 @@ public class HUDCaching {
 
         int currentDim = MC.world.provider.getDimension();
         int[] blacklist = StellarCoreConfig.PERFORMANCE.vanilla.hudCachingDimensionBlacklist;
-        if (blacklist == null || blacklist.length == 0) {
+        if (blacklist == null) {
             return false;
         }
 
