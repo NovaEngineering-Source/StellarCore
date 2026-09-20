@@ -7,8 +7,10 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -81,6 +83,30 @@ public final class ZipEntryIndex {
         return names.contains(name) ? PRESENT : ABSENT;
     }
 
+    public static Set<String> lookupResourceDomains(@Nullable final File archive) {
+        if (archive == null) {
+            return null;
+        }
+        final Index index = INDEXES.get(key(archive));
+        if (index == null || index.generation != GENERATION.get()) {
+            return null;
+        }
+        final ObjectOpenHashSet<String> domains = index.resourceDomains;
+        return domains == null ? null : Collections.unmodifiableSet(domains);
+    }
+
+    public static Set<String> lookupInvalidResourceDomains(@Nullable final File archive) {
+        if (archive == null) {
+            return null;
+        }
+        final Index index = INDEXES.get(key(archive));
+        if (index == null || index.generation != GENERATION.get()) {
+            return null;
+        }
+        final ObjectOpenHashSet<String> domains = index.invalidResourceDomains;
+        return domains == null ? null : Collections.unmodifiableSet(domains);
+    }
+
     private static boolean isIndexable(@Nullable final String name) {
         if (name == null || name.isEmpty()) {
             return false;
@@ -125,6 +151,8 @@ public final class ZipEntryIndex {
         private final long generation;
 
         private volatile ObjectOpenHashSet<String> names;
+        private volatile ObjectOpenHashSet<String> resourceDomains;
+        private volatile ObjectOpenHashSet<String> invalidResourceDomains;
 
         private Index(final long generation) {
             this.generation = generation;
@@ -141,9 +169,13 @@ public final class ZipEntryIndex {
             }
 
             final ObjectOpenHashSet<String> collected;
+            final ObjectOpenHashSet<String> collectedDomains;
+            final ObjectOpenHashSet<String> collectedInvalidDomains;
             try {
                 @SuppressWarnings("resource") final ZipFile zipFile = opener.call();
                 collected = new ObjectOpenHashSet<>(Math.max(16, zipFile.size()));
+                collectedDomains = new ObjectOpenHashSet<>();
+                collectedInvalidDomains = new ObjectOpenHashSet<>();
                 final Enumeration<? extends ZipEntry> entries = zipFile.entries();
                 while (entries.hasMoreElements()) {
                     final String name = entries.nextElement().getName();
@@ -152,6 +184,20 @@ public final class ZipEntryIndex {
                     }
                     final boolean directory = name.charAt(name.length() - 1) == '/';
                     final String bare = directory ? name.substring(0, name.length() - 1) : name;
+                    if (bare.startsWith("assets/")) {
+                        final int namespaceStart = "assets/".length();
+                        final int namespaceEnd = bare.indexOf('/', namespaceStart);
+                        final String namespace = namespaceEnd < 0
+                            ? bare.substring(namespaceStart)
+                            : bare.substring(namespaceStart, namespaceEnd);
+                        if (!namespace.isEmpty()) {
+                            if (namespace.equals(namespace.toLowerCase(Locale.ROOT))) {
+                                collectedDomains.add(namespace);
+                            } else {
+                                collectedInvalidDomains.add(namespace);
+                            }
+                        }
+                    }
                     if (!isIndexable(bare)) {
                         continue;
                     }
@@ -170,11 +216,15 @@ public final class ZipEntryIndex {
             }
 
             collected.trim();
+            collectedDomains.trim();
+            collectedInvalidDomains.trim();
             if (isStale()) {
                 INDEXES.remove(key, this);
                 return;
             }
             this.names = collected;
+            this.resourceDomains = collectedDomains;
+            this.invalidResourceDomains = collectedInvalidDomains;
         }
     }
 }

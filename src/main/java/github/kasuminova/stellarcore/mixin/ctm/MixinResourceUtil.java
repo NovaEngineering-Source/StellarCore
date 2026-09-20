@@ -30,7 +30,8 @@ public class MixinResourceUtil {
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void injectClinit(final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader
+            && !StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler) {
             return;
         }
         stellar_core$absent = new IMetadataSectionCTM.V1();

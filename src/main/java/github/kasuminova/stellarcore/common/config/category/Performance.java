@@ -209,6 +209,15 @@ public class Performance {
         @Config.Name("StateMapperBaseImprovements")
         public boolean stateMapperBase = true;
 
+        @Config.Comment({
+                "(Client Performance | Experimental) Cache multipart selector predicates by BlockStateContainer identity.",
+                "The cache is scoped to each Selector instance and does not cache predicate application results."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.selectorPredicateCache")
+        @Config.Name("SelectorPredicateCache")
+        public boolean selectorPredicateCache = false;
+
         @Config.Comment("(Server Performance) Modified the data structure of capturedBlockSnapshots to a LinkedList to help improve insertion and deletion performance.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.capturedBlockSnapshotsImprovements")

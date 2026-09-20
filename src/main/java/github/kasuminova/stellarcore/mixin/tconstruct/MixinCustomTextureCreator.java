@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.tconstruct;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.common.util.ParallelForEach;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -91,7 +92,7 @@ public class MixinCustomTextureCreator {
         final Set<String> toolPartBaseTextures = stellar_core$collectToolPartBaseTextures();
         final AtomicInteger created = new AtomicInteger();
 
-        targets.parallelStream().forEach(baseTexture -> {
+        ParallelForEach.balanced(targets, baseTexture -> {
             final Set<IToolPart> parts = texturePartMapping.get(baseTexture);
             final Map<String, TextureAtlasSprite> builtSprites = new Object2ObjectOpenHashMap<>();
 
@@ -150,7 +151,7 @@ public class MixinCustomTextureCreator {
                 return null;
             }
             if (material.renderInfo.getTextureSuffix() != null) {
-                final String loc2 = baseTexture.toString() + "_" + material.renderInfo.getTextureSuffix();
+                final String loc2 = baseTexture + "_" + material.renderInfo.getTextureSuffix();
                 TextureAtlasSprite base2 = map.getTextureExtry(loc2);
                 if (base2 == null && CustomTextureCreator.exists(loc2)) {
                     base2 = TinkerTexture.loadManually(new ResourceLocation(loc2));

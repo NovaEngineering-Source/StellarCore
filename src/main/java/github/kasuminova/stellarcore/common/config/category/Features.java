@@ -107,6 +107,15 @@ public class Features {
         @Config.Name("ShutUpModelLoader")
         public boolean shutUpModelLoader = false;
 
+        @Config.Comment({
+                "Hide model-loading progress titles and per-model messages while preserving progress accounting.",
+                "Only affects ProgressBar titles beginning with ModelLoader:."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.features.vanilla.hideModelLoadingProgress")
+        @Config.Name("HideModelLoadingProgress")
+        public boolean hideModelLoadingProgress = false;
+
         @Config.Comment("(Client Only) Listening to clients loading/unloading new worlds, disabling this option will cause some features on memory leak fixing to fail.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.features.vanilla.handleClientWorldLoad")

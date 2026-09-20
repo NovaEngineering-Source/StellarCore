@@ -1,10 +1,14 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreProgressBar;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ProgressManager.ProgressBar.class, remap = false)
 public abstract class MixinProgressBar implements StellarCoreProgressBar {
@@ -21,6 +25,15 @@ public abstract class MixinProgressBar implements StellarCoreProgressBar {
     @Shadow
     public abstract String getTitle();
 
+    @Inject(method = "getTitle", at = @At("RETURN"), cancellable = true, require = 1)
+    private void stellar_core$hideModelLoaderTitle(final CallbackInfoReturnable<String> cir) {
+        if (StellarCoreConfig.FEATURES.vanilla.hideModelLoadingProgress
+            && cir.getReturnValue() != null
+            && cir.getReturnValue().startsWith("ModelLoader:")) {
+            cir.setReturnValue("");
+        }
+    }
+
     @Override
     public void stellar_core$stepBatch(final int count, final String message) {
         if (count <= 0) {
@@ -33,7 +46,10 @@ public abstract class MixinProgressBar implements StellarCoreProgressBar {
             }
             this.step = next;
         }
-        this.message = FMLCommonHandler.instance().stripSpecialChars(message);
+        final String displayedMessage = StellarCoreConfig.FEATURES.vanilla.hideModelLoadingProgress
+            ? ""
+            : message;
+        this.message = FMLCommonHandler.instance().stripSpecialChars(displayedMessage);
         FMLCommonHandler.instance().processWindowMessages();
     }
 }
