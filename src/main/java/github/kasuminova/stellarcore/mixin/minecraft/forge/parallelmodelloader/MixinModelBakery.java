@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
+import github.kasuminova.stellarcore.client.model.ModelDefinitionFlight;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreModelBakery;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.renderer.BlockModelShapes;
@@ -21,6 +22,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings({"MethodMayBeStatic", "FieldAccessedSynchronizedAndUnsynchronized"})
 @Mixin(ModelBakery.class)
@@ -49,6 +52,9 @@ public abstract class MixinModelBakery implements StellarCoreModelBakery {
 
     @Unique
     private Map<ResourceLocation, Integer> stellar_core$definitionResourceCounts;
+
+    @Unique
+    private final Map<ResourceLocation, ModelDefinitionFlight> stellar_core$definitionFlights = new ConcurrentHashMap<>();
 
     @Unique
     private static final ThreadLocal<int[]> stellar_core$LOADED_RESOURCE_COUNT = ThreadLocal.withInitial(() -> new int[1]);
@@ -87,18 +93,69 @@ public abstract class MixinModelBakery implements StellarCoreModelBakery {
             return cached;
         }
 
+        final ModelDefinitionFlight existing = this.stellar_core$definitionFlights.get(resourcelocation);
+        if (existing != null) {
+            if (existing.owner == Thread.currentThread()) {
+                return this.stellar_core$loadDefinition(location, resourcelocation);
+            }
+            try {
+                return existing.future.get();
+            } catch (final InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for blockstate " + resourcelocation, interrupted);
+            } catch (final ExecutionException failure) {
+                final Throwable cause = failure.getCause();
+                if (cause instanceof RuntimeException runtime) {
+                    throw runtime;
+                }
+                throw new IllegalStateException("Failed while waiting for blockstate " + resourcelocation, cause);
+            }
+        }
+
+        final ModelDefinitionFlight created = new ModelDefinitionFlight(Thread.currentThread());
+        final ModelDefinitionFlight previous = this.stellar_core$definitionFlights.putIfAbsent(resourcelocation, created);
+        if (previous != null) {
+            if (previous.owner == Thread.currentThread()) {
+                return this.stellar_core$loadDefinition(location, resourcelocation);
+            }
+            try {
+                return previous.future.get();
+            } catch (final InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for blockstate " + resourcelocation, interrupted);
+            } catch (final ExecutionException failure) {
+                final Throwable cause = failure.getCause();
+                if (cause instanceof RuntimeException runtime) {
+                    throw runtime;
+                }
+                throw new IllegalStateException("Failed while waiting for blockstate " + resourcelocation, cause);
+            }
+        }
+
+        try {
+            final ModelBlockDefinition loaded = this.stellar_core$loadDefinition(location, resourcelocation);
+            created.future.complete(loaded);
+            return loaded;
+        } catch (final Throwable failure) {
+            created.future.completeExceptionally(failure);
+            throw failure;
+        } finally {
+            this.stellar_core$definitionFlights.remove(resourcelocation, created);
+        }
+    }
+
+    @Unique
+    private ModelBlockDefinition stellar_core$loadDefinition(final ResourceLocation location, final ResourceLocation resourceLocation) {
         final int[] counter = stellar_core$LOADED_RESOURCE_COUNT.get();
         counter[0] = 0;
-        ModelBlockDefinition loaded = this.loadMultipartMBD(location, resourcelocation);
+        final ModelBlockDefinition loaded = this.loadMultipartMBD(location, resourceLocation);
         final int loadedCount = counter[0];
-
-        final Integer bestKnown = stellar_core$definitionResourceCounts.get(resourcelocation);
+        final Integer bestKnown = stellar_core$definitionResourceCounts.get(resourceLocation);
         if (bestKnown != null && loadedCount < bestKnown) {
             return loaded;
         }
-        stellar_core$definitionResourceCounts.put(resourcelocation, loadedCount);
-
-        this.blockDefinitions.put(resourcelocation, loaded);
+        stellar_core$definitionResourceCounts.put(resourceLocation, loadedCount);
+        this.blockDefinitions.put(resourceLocation, loaded);
         return loaded;
     }
 

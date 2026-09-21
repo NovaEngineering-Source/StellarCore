@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
 import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
+import github.kasuminova.stellarcore.client.model.ModelLoadFlight;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
@@ -31,9 +32,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
 @SuppressWarnings({"StaticVariableMayNotBeInitialized", "SynchronizeOnNonFinalField"})
@@ -47,10 +52,27 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     private static volatile ICustomModelLoader[] stellar_core$loaderArray = new ICustomModelLoader[0];
 
     @Unique
+    private static final Map<ResourceLocation, ICustomModelLoader> stellar_core$loaderSelectionCache = new NonBlockingHashMap<>();
+
+    @Unique
+    private static final Set<ResourceLocation> stellar_core$noLoaderLocations = new NonBlockingHashSet<>();
+
+    @Unique
     private static final AtomicInteger stellar_core$ACTIVE_MODEL_LOADS = new AtomicInteger();
 
     @Unique
+    private static final AtomicLong stellar_core$MODEL_GENERATION = new AtomicLong();
+
+    @Unique
     private static Map<ResourceLocation, IModel> stellar_core$cache = new NonBlockingHashMap<>();
+
+    /** One shared future per model location while a concurrent generation is loading it. */
+    @Unique
+    private static final Map<ResourceLocation, ModelLoadFlight> stellar_core$inFlight = new NonBlockingHashMap<>();
+
+    /** Wait-for edges used to reject cross-thread dependency cycles instead of deadlocking. */
+    @Unique
+    private static final Map<Thread, Thread> stellar_core$waitingFor = new NonBlockingHashMap<>();
 
     @Unique
     private static Map<ResourceLocation, ResourceLocation> stellar_core$aliases = new NonBlockingHashMap<>();
@@ -95,6 +117,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
     private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
         stellar_core$loaderArray = loaders.toArray(new ICustomModelLoader[0]);
+        stellar_core$clearLoaderSelectionCache();
         Class<? extends ICustomModelLoader> loaderClass = loader.getClass();
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Registered model loader: {}, AsyncBlackListed: {}",
                 loaderClass.getName(),
@@ -108,8 +131,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
      */
     @Inject(method = "getModel", at = @At("HEAD"), cancellable = true, remap = false)
     private static void getModel(final ResourceLocation location, final CallbackInfoReturnable<IModel> cir) throws Exception {
-        IModel model;
-        IModel cached = stellar_core$cache.get(location);
+        final IModel cached = stellar_core$cache.get(location);
         if (cached != null) {
             cir.setReturnValue(cached);
             return;
@@ -122,105 +144,146 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                 throw new ModelLoaderRegistry.LoaderException("circular model dependencies, stack: [" + Joiner.on(", ").join(loadingModels) + "]");
             }
         }
+
+        final ModelLoadFlight existing = stellar_core$inFlight.get(location);
+        if (existing != null) {
+            if (existing.owner == Thread.currentThread()) {
+                throw new ModelLoaderRegistry.LoaderException("reentrant model load for " + location);
+            }
+            cir.setReturnValue(stellar_core$awaitFlight(location, existing));
+            return;
+        }
+
+        final ModelLoadFlight flight = new ModelLoadFlight(Thread.currentThread(), stellar_core$MODEL_GENERATION.get());
+        final ModelLoadFlight previous = stellar_core$inFlight.putIfAbsent(location, flight);
+        if (previous != null) {
+            if (previous.owner == Thread.currentThread()) {
+                throw new ModelLoaderRegistry.LoaderException("reentrant model load for " + location);
+            }
+            cir.setReturnValue(stellar_core$awaitFlight(location, previous));
+            return;
+        }
+
+        IModel model = null;
+        Throwable failure = null;
         loadingModels.add(location);
         stellar_core$ACTIVE_MODEL_LOADS.incrementAndGet();
         try {
-            ResourceLocation aliased = stellar_core$aliases.get(location);
+            final ResourceLocation aliased = stellar_core$aliases.get(location);
             if (aliased != null) {
-                cir.setReturnValue(getModel(aliased));
-                return;
-            }
-
-            if (!stellar_core$concurrent) {
-                StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] A mod trying to load model `{}` without concurrent state, it may cause some performance issues.", location);
-            }
-
-            ResourceLocation actual = getActualLocation(location);
-            ICustomModelLoader accepted = null;
-            final ICustomModelLoader[] registeredLoaders = stellar_core$loaderArray;
-            for (final ICustomModelLoader loader : registeredLoaders) {
-                try {
-                    if (loader.accepts(actual)) {
-                        if (accepted != null) {
-                            throw new ModelLoaderRegistry.LoaderException(String.format("2 loaders (%s and %s) want to load the same model %s", accepted, loader, location));
-                        }
-                        accepted = loader;
-                    }
-                } catch (Exception e) {
-                    throw new ModelLoaderRegistry.LoaderException(String.format("Exception checking if model %s can be loaded with loader %s, skipping", location, loader), e);
-                }
-            }
-
-            // no custom loaders found, try vanilla ones
-            if (accepted == null) {
-                ICustomModelLoader variantLoader = stellar_core$getVariantLoader();
-                if (variantLoader.accepts(actual)) {
-                    accepted = variantLoader;
-                } else {
-                    ICustomModelLoader vanillaLoader = stellar_core$getVanillaLoader();
-                    if (vanillaLoader.accepts(actual)) {
-                        accepted = vanillaLoader;
-                    }
-                }
-            }
-
-            if (accepted == null) {
-                throw new ModelLoaderRegistry.LoaderException("no suitable loader found for the model " + location + ", skipping");
-            }
-            final boolean asyncUnsafe = ParallelModelLoaderAsyncBlackList.INSTANCE.isInSet(accepted.getClass());
-            try {
-                if (asyncUnsafe) {
-                    synchronized (accepted) {
-                        model = accepted.loadModel(actual);
-                    }
-                } else {
-                    model = accepted.loadModel(actual);
-                }
-            } catch (Exception e) {
-                throw new ModelLoaderRegistry.LoaderException(String.format("Exception loading model %s with loader %s, skipping", location, accepted), e);
-            }
-            if (model == getMissingModel()) {
-                throw new ModelLoaderRegistry.LoaderException(String.format("Loader %s returned missing model while loading model %s", accepted, location));
-            }
-            if (model == null) {
-                throw new ModelLoaderRegistry.LoaderException(String.format("Loader %s returned null while loading model %s", accepted, location));
-            }
-            if (asyncUnsafe) {
-                AsyncUnsafeModels.register(model);
-            }
-            if (!stellar_core$concurrent) {
-                synchronized (stellar_core$textures) {
-                    stellar_core$textures.addAll(model.getTextures());
-                }
-            } else if (asyncUnsafe) {
-                synchronized (accepted) {
-                    stellar_core$textures.addAll(model.getTextures());
+                model = getModel(aliased);
+                if (flight.generation == stellar_core$MODEL_GENERATION.get()) {
+                    stellar_core$cache.put(location, model);
                 }
             } else {
-                stellar_core$textures.addAll(model.getTextures());
+                if (!stellar_core$concurrent) {
+                    StellarLog.LOG.warn("[StellarCore-ParallelModelLoader] A mod trying to load model `{}` without concurrent state, it may cause some performance issues.", location);
+                }
+
+                final ResourceLocation actual = getActualLocation(location);
+                ICustomModelLoader accepted = stellar_core$loaderSelectionCache.get(actual);
+                if (accepted == null && !stellar_core$noLoaderLocations.contains(actual)) {
+                    final ICustomModelLoader[] registeredLoaders = stellar_core$loaderArray;
+                    for (final ICustomModelLoader loader : registeredLoaders) {
+                        try {
+                            if (loader.accepts(actual)) {
+                                if (accepted != null) {
+                                    throw new ModelLoaderRegistry.LoaderException(String.format("2 loaders (%s and %s) want to load the same model %s", accepted, loader, location));
+                                }
+                                accepted = loader;
+                            }
+                        } catch (Exception e) {
+                            throw new ModelLoaderRegistry.LoaderException(String.format("Exception checking if model %s can be loaded with loader %s, skipping", location, loader), e);
+                        }
+                    }
+
+                    if (accepted == null) {
+                        final ICustomModelLoader variantLoader = stellar_core$getVariantLoader();
+                        if (variantLoader.accepts(actual)) {
+                            accepted = variantLoader;
+                        } else {
+                            final ICustomModelLoader vanillaLoader = stellar_core$getVanillaLoader();
+                            if (vanillaLoader.accepts(actual)) {
+                                accepted = vanillaLoader;
+                            }
+                        }
+                    }
+                    if (accepted != null) {
+                        stellar_core$loaderSelectionCache.putIfAbsent(actual, accepted);
+                    } else {
+                        stellar_core$noLoaderLocations.add(actual);
+                    }
+                }
+
+                if (accepted == null) {
+                    throw new ModelLoaderRegistry.LoaderException("no suitable loader found for the model " + location + ", skipping");
+                }
+                final boolean asyncUnsafe = ParallelModelLoaderAsyncBlackList.INSTANCE.isInSet(accepted.getClass());
+                try {
+                    if (asyncUnsafe) {
+                        synchronized (accepted) {
+                            model = accepted.loadModel(actual);
+                        }
+                    } else {
+                        model = accepted.loadModel(actual);
+                    }
+                } catch (Exception e) {
+                    throw new ModelLoaderRegistry.LoaderException(String.format("Exception loading model %s with loader %s, skipping", location, accepted), e);
+                }
+                if (model == getMissingModel()) {
+                    throw new ModelLoaderRegistry.LoaderException(String.format("Loader %s returned missing model while loading model %s", accepted, location));
+                }
+                if (model == null) {
+                    throw new ModelLoaderRegistry.LoaderException(String.format("Loader %s returned null while loading model %s", accepted, location));
+                }
+                if (asyncUnsafe) {
+                    AsyncUnsafeModels.register(model);
+                }
+                if (!stellar_core$concurrent) {
+                    synchronized (stellar_core$textures) {
+                        stellar_core$textures.addAll(model.getTextures());
+                    }
+                } else if (asyncUnsafe) {
+                    synchronized (accepted) {
+                        stellar_core$textures.addAll(model.getTextures());
+                    }
+                } else {
+                    stellar_core$textures.addAll(model.getTextures());
+                }
+                if (flight.generation == stellar_core$MODEL_GENERATION.get()) {
+                    stellar_core$cache.put(location, model);
+                }
+                for (final ResourceLocation dep : model.getDependencies()) {
+                    getModelOrMissing(dep);
+                }
             }
+            cir.setReturnValue(model);
+        } catch (Exception exception) {
+            failure = exception;
+            throw exception;
+        } catch (Error error) {
+            failure = error;
+            throw error;
         } finally {
             try {
-                ResourceLocation popLoc = loadingModels.pop();
+                final ResourceLocation popLoc = loadingModels.pop();
                 if (popLoc != location) {
                     throw new IllegalStateException("Corrupted loading model stack: " + popLoc + " != " + location);
                 }
             } finally {
                 stellar_core$ACTIVE_MODEL_LOADS.decrementAndGet();
+                if (flight.generation == stellar_core$MODEL_GENERATION.get()) {
+                    if (failure == null) {
+                        flight.future.complete(model);
+                    } else {
+                        flight.future.completeExceptionally(failure);
+                    }
+                } else {
+                    flight.future.completeExceptionally(new ModelLoaderRegistry.LoaderException("model generation was replaced while loading " + location));
+                }
+                stellar_core$inFlight.remove(location, flight);
             }
         }
-
-        if (!stellar_core$concurrent) {
-            synchronized (stellar_core$cache) {
-                stellar_core$cache.put(location, model);
-            }
-        } else {
-            stellar_core$cache.put(location, model);
-        }
-        for (ResourceLocation dep : model.getDependencies()) {
-            getModelOrMissing(dep);
-        }
-        cir.setReturnValue(model);
     }
 
     /**
@@ -240,6 +303,13 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     @SuppressWarnings("InstantiationOfUtilityClass")
     public static void clearModelCache(IResourceManager newManager) {
         manager = newManager;
+        stellar_core$MODEL_GENERATION.incrementAndGet();
+        for (final ModelLoadFlight flight : stellar_core$inFlight.values()) {
+            flight.future.completeExceptionally(new ModelLoaderRegistry.LoaderException("model cache was cleared during reload"));
+        }
+        stellar_core$inFlight.clear();
+        stellar_core$waitingFor.clear();
+        stellar_core$clearLoaderSelectionCache();
         ModelLoaderRegistryRef.instance = (ConcurrentModelLoaderRegistry) new ModelLoaderRegistry();
         AsyncUnsafeModels.clear();
         stellar_core$aliases.clear();
@@ -394,6 +464,16 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     private static volatile ICustomModelLoader stellar_core$vanillaLoader = null;
 
     @Unique
+    private static void stellar_core$clearLoaderSelectionCache() {
+        if (stellar_core$loaderSelectionCache != null) {
+            stellar_core$loaderSelectionCache.clear();
+        }
+        if (stellar_core$noLoaderLocations != null) {
+            stellar_core$noLoaderLocations.clear();
+        }
+    }
+
+    @Unique
     private static ICustomModelLoader stellar_core$getVariantLoader() {
         ICustomModelLoader loader = stellar_core$variantLoader;
         if (loader == null) {
@@ -411,6 +491,45 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             stellar_core$vanillaLoader = loader;
         }
         return loader;
+    }
+
+    @Unique
+    private static IModel stellar_core$awaitFlight(final ResourceLocation location, final ModelLoadFlight flight) throws ModelLoaderRegistry.LoaderException {
+        final Thread current = Thread.currentThread();
+        if (stellar_core$hasWaitCycle(current, flight.owner)) {
+            throw new ModelLoaderRegistry.LoaderException("circular in-flight model dependency while loading " + location);
+        }
+        stellar_core$waitingFor.put(current, flight.owner);
+        try {
+            return flight.future.get();
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new ModelLoaderRegistry.LoaderException("interrupted while waiting for model " + location, interrupted);
+        } catch (ExecutionException failure) {
+            final Throwable cause = failure.getCause();
+            if (cause instanceof ModelLoaderRegistry.LoaderException loaderFailure) {
+                throw loaderFailure;
+            }
+            if (cause instanceof RuntimeException runtimeFailure) {
+                throw runtimeFailure;
+            }
+            throw new ModelLoaderRegistry.LoaderException("failed while waiting for model " + location, cause);
+        } finally {
+            stellar_core$waitingFor.remove(current, flight.owner);
+        }
+    }
+
+    @Unique
+    private static boolean stellar_core$hasWaitCycle(final Thread current, final Thread owner) {
+        Thread cursor = owner;
+        final Set<Thread> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        while (cursor != null && visited.add(cursor)) {
+            if (cursor == current) {
+                return true;
+            }
+            cursor = stellar_core$waitingFor.get(cursor);
+        }
+        return false;
     }
 
     @Unique

@@ -22,8 +22,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Positive-only index for mutable directory resources.
  *
- * <p>Indexed hits avoid filesystem calls. Every miss still checks the live filesystem, so an
- * asynchronous scan can never turn a newly created resource into a persistent false negative.</p>
+ * <p>Indexed hits avoid filesystem calls. Before the asynchronous scan completes, every miss still checks the live filesystem, so a
+ * scan can never turn a newly created resource into a persistent false negative. Once a scan completes for the current
+ * resource-generation, misses are negative-cached as well; the generation is cleared on resource reload.</p>
  */
 public final class DirectoryPathIndex {
 
@@ -31,6 +32,8 @@ public final class DirectoryPathIndex {
     private static final NonBlockingHashMap<String, Index> INDEXES = new NonBlockingHashMap<>();
     private static final AtomicLong GENERATION = new AtomicLong();
     private static final int MAX_SCAN_THREADS = 4;
+
+    private static volatile boolean negativeCachingEnabled;
 
     private static volatile ExecutorService executor;
 
@@ -40,6 +43,17 @@ public final class DirectoryPathIndex {
     public static void clear() {
         GENERATION.incrementAndGet();
         INDEXES.clear();
+        negativeCachingEnabled = false;
+    }
+
+    /** Enables generation-scoped negative results while ResourceExistingCache owns the reload snapshot. */
+    public static void enableNegativeCaching() {
+        negativeCachingEnabled = true;
+    }
+
+    /** Disables negative results after the resource generation ends. */
+    public static void disableNegativeCaching() {
+        negativeCachingEnabled = false;
     }
 
     public static void prewarmAsync(@Nullable final File rootDirectory) {
@@ -79,6 +93,9 @@ public final class DirectoryPathIndex {
             }
 
             index.ensureInitializedAsync();
+            if (index.canUseNegativeResult()) {
+                return false;
+            }
             if (!candidateFile.isFile()) {
                 return false;
             }
@@ -177,6 +194,8 @@ public final class DirectoryPathIndex {
         private final NonBlockingHashSet<String> paths = new NonBlockingHashSet<>();
 
         private volatile boolean initializationStarted;
+        private volatile boolean initialized;
+        private volatile boolean initializationFailed;
 
         private Index(final File root, final long generation) {
             this.root = root;
@@ -185,6 +204,10 @@ public final class DirectoryPathIndex {
 
         private boolean contains(final String path) {
             return paths.contains(path);
+        }
+
+        private boolean canUseNegativeResult() {
+            return initialized && !initializationFailed && negativeCachingEnabled && isCurrent();
         }
 
         private boolean addIfCurrent(final String path) {
@@ -215,7 +238,11 @@ public final class DirectoryPathIndex {
         private void initialize() {
             try {
                 scan();
+                if (isCurrent()) {
+                    initialized = true;
+                }
             } catch (Throwable throwable) {
+                initializationFailed = true;
                 StellarLog.LOG.error(
                     "[StellarCore-DirectoryPathIndex] Failed to scan directory index. root={}",
                     root.getAbsolutePath(), throwable

@@ -6,7 +6,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.integration.railcraft.RCModelBaker;
 import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
-import github.kasuminova.stellarcore.common.util.ParallelForEach;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreModelBakery;
@@ -107,7 +106,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) bakeBar;
         final ReentrantLock barLock = new ReentrantLock();
         final AtomicInteger deferredSteps = new AtomicInteger();
-        ParallelForEach.balanced(models.keySet().toArray(new IModel[0]), (model) -> {
+        models.keySet().parallelStream().forEach((model) -> {
             Set<ModelResourceLocation> locations = models.get(model);
             if (barLock.tryLock()) {
                 try {
@@ -169,7 +168,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) blockBar;
         final ReentrantLock barLock = new ReentrantLock();
         final AtomicInteger deferredSteps = new AtomicInteger();
-        ParallelForEach.balanced(blocks, block -> {
+        blocks.parallelStream().forEach(block -> {
             if (barLock.tryLock()) {
                 try {
                     progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, Objects.requireNonNull(block.getRegistryName()).toString());
@@ -254,7 +253,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) itemBar;
         final ReentrantLock barLock = new ReentrantLock();
         final AtomicInteger deferredSteps = new AtomicInteger();
-        ParallelForEach.balanced(items, item -> {
+        items.parallelStream().forEach(item -> {
             if (barLock.tryLock()) {
                 try {
                     progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, Objects.requireNonNull(item.getRegistryName()).toString());

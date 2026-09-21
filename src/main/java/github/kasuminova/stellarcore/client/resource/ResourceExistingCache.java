@@ -34,6 +34,7 @@ public class ResourceExistingCache {
             });
             RESOURCE_PACKS.clear();
             RESOURCE_PACKS.addAll(persistentResourcePacks);
+            DirectoryPathIndex.disableNegativeCaching();
             enabled = false;
             StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache cleared.");
         }
@@ -46,6 +47,7 @@ public class ResourceExistingCache {
             }
             DirectoryPathIndex.clear();
             RESOURCE_PACKS.forEach(StellarCoreResourcePack::stellar_core$enableCache);
+            DirectoryPathIndex.enableNegativeCaching();
             enabled = true;
             StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache enabled.");
         }
@@ -54,6 +56,7 @@ public class ResourceExistingCache {
     public static void disableCache() {
         synchronized (LIFECYCLE_LOCK) {
             RESOURCE_PACKS.forEach(StellarCoreResourcePack::stellar_core$disableCache);
+            DirectoryPathIndex.disableNegativeCaching();
             enabled = false;
             StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache disabled.");
         }
