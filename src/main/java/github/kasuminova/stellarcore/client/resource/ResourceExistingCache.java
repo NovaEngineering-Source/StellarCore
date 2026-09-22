@@ -13,6 +13,15 @@ public class ResourceExistingCache {
 
     private static boolean enabled = false;
 
+    /**
+     * How many cache windows are currently open.
+     *
+     * <p>A resource reload opens one for its whole duration, and the model loader opens a shorter one inside it.
+     * Counting them keeps the inner window from closing the outer one, and keeps a clear performed during the
+     * reload from leaving the rest of it without a cache.</p>
+     */
+    private static int depth = 0;
+
     public static void addResourcePack(StellarCoreResourcePack resourcePack) {
         resourcePack.stellar_core$onReload();
         synchronized (LIFECYCLE_LOCK) {
@@ -34,32 +43,51 @@ public class ResourceExistingCache {
             });
             RESOURCE_PACKS.clear();
             RESOURCE_PACKS.addAll(persistentResourcePacks);
-            DirectoryPathIndex.disableNegativeCaching();
             enabled = false;
-            StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache cleared.");
+            // A cleared index still has to answer whatever window is open around this reload.
+            applyStateLocked(depth > 0, "Resource cache cleared");
         }
     }
 
+    /** Opens a cache window; the cache stays on until the last one closes. */
     public static void enableCache() {
         synchronized (LIFECYCLE_LOCK) {
-            if (enabled) {
-                return;
+            depth++;
+            if (!enabled) {
+                applyStateLocked(true, "Resource cache enabled");
             }
+        }
+    }
+
+    /** Closes the innermost cache window. */
+    public static void disableCache() {
+        synchronized (LIFECYCLE_LOCK) {
+            if (depth > 0) {
+                depth--;
+            }
+            if (depth == 0 && enabled) {
+                applyStateLocked(false, "Resource cache disabled");
+            }
+        }
+    }
+
+    /**
+     * Applies the requested state to the packs and to the directory index.
+     *
+     * @param target whether the cache should be on
+     * @param reason log message describing the transition
+     */
+    private static void applyStateLocked(final boolean target, final String reason) {
+        if (target) {
             DirectoryPathIndex.clear();
             RESOURCE_PACKS.forEach(StellarCoreResourcePack::stellar_core$enableCache);
             DirectoryPathIndex.enableNegativeCaching();
-            enabled = true;
-            StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache enabled.");
-        }
-    }
-
-    public static void disableCache() {
-        synchronized (LIFECYCLE_LOCK) {
+        } else {
             RESOURCE_PACKS.forEach(StellarCoreResourcePack::stellar_core$disableCache);
             DirectoryPathIndex.disableNegativeCaching();
-            enabled = false;
-            StellarLog.LOG.info("[StellarCore-ResourceExistingCache] Resource cache disabled.");
         }
+        enabled = target;
+        StellarLog.LOG.info("[StellarCore-ResourceExistingCache] {}.", reason);
     }
 
 }

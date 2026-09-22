@@ -70,6 +70,16 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
         this.stellar_core$loadingPackDomains = new ThreadLocal<>();
     }
 
+    @Inject(method = "reloadResources", at = @At("HEAD"))
+    private void stellar_core$openResourceCache(final List<IResourcePack> resourcePacks, final CallbackInfo ci) {
+        ResourceExistingCache.enableCache();
+    }
+
+    @Inject(method = "reloadResources", at = @At("RETURN"))
+    private void stellar_core$closeResourceCache(final List<IResourcePack> resourcePacks, final CallbackInfo ci) {
+        ResourceExistingCache.disableCache();
+    }
+
     @Inject(method = "clearResources", at = @At("RETURN"))
     private void stellar_core$clearResources(final CallbackInfo ci) {
         final Map<String, FallbackResourceManager> emptyManagers = new NonBlockingHashMap<>();

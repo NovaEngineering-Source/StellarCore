@@ -63,25 +63,24 @@ public final class DirectoryPathIndex {
     }
 
     public static boolean contains(@Nullable final File rootDirectory, @Nullable final String relativePath) {
-        return contains(rootDirectory, relativePath,
-            rootDirectory == null || relativePath == null ? null : new File(rootDirectory, relativePath));
+        return contains(rootDirectory, relativePath, null);
     }
 
     public static boolean contains(@Nullable final File rootDirectory,
                                    @Nullable final String relativePath,
                                    @Nullable final File candidateFile) {
-        if (rootDirectory == null || candidateFile == null || !isSafeRelativePath(relativePath)) {
+        if (rootDirectory == null || !isSafeRelativePath(relativePath)) {
             return false;
-        }
-        if (!rootDirectory.isDirectory()) {
-            // Root is not a directory (e.g. a pack.mcmeta file); no index can exist,
-            // fall back to the live filesystem check only.
-            return candidateFile.isFile();
         }
 
         final String normalizedPath = normalizePath(relativePath);
         while (true) {
             final Index index = currentIndex(rootDirectory);
+            if (!index.isRootDirectory()) {
+                // Root is not a directory (e.g. a pack.mcmeta file); no index can exist,
+                // fall back to the live filesystem check only.
+                return candidate(rootDirectory, relativePath, candidateFile).isFile();
+            }
             if (index.contains(normalizedPath)) {
                 if (index.isCurrent()) {
                     return true;
@@ -96,13 +95,28 @@ public final class DirectoryPathIndex {
             if (index.canUseNegativeResult()) {
                 return false;
             }
-            if (!candidateFile.isFile()) {
+            if (!candidate(rootDirectory, relativePath, candidateFile).isFile()) {
                 return false;
             }
             if (index.addIfCurrent(normalizedPath)) {
                 return true;
             }
         }
+    }
+
+    /**
+     * Resolves the file an answer would be checked against, reusing the caller's instance when it supplied one.
+     *
+     * <p>Callers that pass no candidate pay for the {@code File} only on the paths that actually need it, so an
+     * index hit costs no allocation.</p>
+     *
+     * @param rootDirectory indexed root
+     * @param relativePath relative path being asked about
+     * @param candidateFile caller supplied file, or {@code null}
+     * @return the file to probe
+     */
+    private static File candidate(final File rootDirectory, final String relativePath, @Nullable final File candidateFile) {
+        return candidateFile != null ? candidateFile : new File(rootDirectory, relativePath);
     }
 
     private static boolean isSafeRelativePath(@Nullable final String path) {
@@ -191,6 +205,7 @@ public final class DirectoryPathIndex {
     private static final class Index {
         private final File root;
         private final long generation;
+        private final boolean rootDirectory;
         private final NonBlockingHashSet<String> paths = new NonBlockingHashSet<>();
 
         private volatile boolean initializationStarted;
@@ -200,6 +215,13 @@ public final class DirectoryPathIndex {
         private Index(final File root, final long generation) {
             this.root = root;
             this.generation = generation;
+            // Asked once per index rather than on every query: the answer is a property of the pack directory and
+            // the filesystem call behind it was a measurable share of resource loading.
+            this.rootDirectory = root.isDirectory();
+        }
+
+        private boolean isRootDirectory() {
+            return this.rootDirectory;
         }
 
         private boolean contains(final String path) {

@@ -13,7 +13,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.6.1"
+version = "1.6.2"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -396,3 +396,6 @@ jmh {
             }
     }
 }
+
+// CurseForge publishing, mirroring RandomComplement's layout
+apply(from = "gradle/scripts/curseforge.gradle")

@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.client.resource;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingIdentityHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import javax.annotation.Nullable;
@@ -37,6 +38,7 @@ public final class ZipEntryIndex {
 
     private static final boolean CASE_INSENSITIVE = isWindows();
     private static final NonBlockingHashMap<String, Index> INDEXES = new NonBlockingHashMap<>();
+    private static final NonBlockingIdentityHashMap<File, String> KEYS = new NonBlockingIdentityHashMap<>();
     private static final AtomicLong GENERATION = new AtomicLong();
     private static final int MAX_SCAN_THREADS = 4;
 
@@ -48,6 +50,7 @@ public final class ZipEntryIndex {
     public static void clear() {
         GENERATION.incrementAndGet();
         INDEXES.clear();
+        KEYS.clear();
     }
 
     public static void invalidate(@Nullable final File archive) {
@@ -138,9 +141,26 @@ public final class ZipEntryIndex {
         }
     }
 
+    /**
+     * Returns the index key of one archive, computing it once per archive instance.
+     *
+     * <p>Every lookup asks for this key, and deriving it walks the archive's path through
+     * {@link File#getAbsolutePath()} and a case fold, which allocates two strings per call. Packs hand back the
+     * same {@link File}, so one identity-keyed entry serves all lookups; an archive seen as a new instance simply
+     * computes its key again.</p>
+     *
+     * @param archive archive to describe
+     * @return normalised absolute path used as the index key
+     */
     private static String key(final File archive) {
+        final String cached = KEYS.get(archive);
+        if (cached != null) {
+            return cached;
+        }
         final String path = archive.getAbsolutePath();
-        return CASE_INSENSITIVE ? path.toLowerCase(Locale.ROOT) : path;
+        final String computed = CASE_INSENSITIVE ? path.toLowerCase(Locale.ROOT) : path;
+        KEYS.put(archive, computed);
+        return computed;
     }
 
     private static boolean isWindows() {

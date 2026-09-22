@@ -15,10 +15,21 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public final class MutableResourcePackBindings {
 
     private volatile Snapshot snapshot = Snapshot.empty();
+
+    /**
+     * Answers already given by {@link #canDiscover}.
+
+     * <p>Replaced, never mutated in place, whenever the snapshot changes: an answer describes the current set of
+     * mutable packs and the namespaces they already declare, so it stops being valid the moment that set is
+     * rebuilt. Scoping it this way also bounds it to one reload generation.</p>
+     */
+    private volatile ConcurrentMap<ResourceLocation, Boolean> discoverable = new ConcurrentHashMap<>();
 
     private static RefreshPlan buildPlan(final Snapshot current,
                                          final Snapshot next,
@@ -61,7 +72,17 @@ public final class MutableResourcePackBindings {
     }
 
     public void beginFullReload() {
-        snapshot = Snapshot.empty();
+        applySnapshot(Snapshot.empty());
+    }
+
+    /**
+     * Publishes a new snapshot and drops answers derived from the previous one.
+     *
+     * @param next snapshot to serve from now on
+     */
+    private void applySnapshot(final Snapshot next) {
+        this.discoverable = new ConcurrentHashMap<>();
+        this.snapshot = next;
     }
 
     public RecordPlan prepareRecordPack(final IResourcePack pack, final Set<String> namespaces) {
@@ -72,7 +93,7 @@ public final class MutableResourcePackBindings {
     }
 
     public void commit(final RecordPlan plan) {
-        snapshot = plan.nextSnapshot;
+        applySnapshot(plan.nextSnapshot);
     }
 
     public RefreshPlan refreshMutableNamespaces(final MetadataSerializer serializer) {
@@ -110,11 +131,35 @@ public final class MutableResourcePackBindings {
         return buildPlan(current, new Snapshot(nextBindings), serializer, affected);
     }
 
+    /**
+     * Reports whether a mutable pack could provide a resource in a namespace it has not declared yet.
+     *
+     * <p>The answer is asked for every resource the model loader looks up and misses, and computing it probes every
+     * mutable pack, so the answers are remembered for as long as the snapshot they describe is in place.</p>
+     *
+     * @param location resource being looked up
+     * @return whether any mutable pack reports the resource
+     */
     public boolean canDiscover(final ResourceLocation location) {
         final Binding[] probes = snapshot.mutableProbes;
         if (probes.length == 0) {
             return false;
         }
+
+        final ConcurrentMap<ResourceLocation, Boolean> answers = this.discoverable;
+        final Boolean cached = answers.get(location);
+        if (cached != null) {
+            return cached;
+        }
+
+        final boolean discovered = probeMutablePacks(location, probes);
+        // Written to the map read above: if the snapshot was replaced meanwhile, the new one owns a fresh map and
+        // this write is simply never read again.
+        answers.put(location, discovered);
+        return discovered;
+    }
+
+    private static boolean probeMutablePacks(final ResourceLocation location, final Binding[] probes) {
         final String namespace = location.getNamespace();
         for (final Binding probe : probes) {
             if (!probe.namespaces.contains(namespace) && probe.pack.resourceExists(location)) {
@@ -161,7 +206,7 @@ public final class MutableResourcePackBindings {
     }
 
     public void commit(final RefreshPlan plan) {
-        snapshot = plan.nextSnapshot;
+        applySnapshot(plan.nextSnapshot);
     }
 
     public Map<String, FallbackResourceManager> rebuildFallbackManagers(final MetadataSerializer serializer) {

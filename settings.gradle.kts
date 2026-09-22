@@ -16,6 +16,15 @@ pluginManagement {
     }
 }
 
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath("net.darkhax.curseforgegradle:CurseForgeGradle:1.3.33")
+    }
+}
+
 plugins {
     // Automatic toolchain provisioning
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.4.0"

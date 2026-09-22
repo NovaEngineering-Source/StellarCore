@@ -1,0 +1,61 @@
+name: Release tagged build
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: |
+            8
+            17
+            21
+            25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Resolve release version
+        run: |
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Build release artifacts
+        run: ./gradlew build -Pmod_version="${RELEASE_VERSION}"
+
+      - name: Create GitHub release
+        run: gh release create "$RELEASE_TAG" "build/libs/StellarCore-${RELEASE_VERSION}.jar" --title "$RELEASE_TAG" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to CurseForge
+        if: env.CURSEFORGE_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          changelog_file="${RUNNER_TEMP}/curseforge-changelog.md"
+          : > "${changelog_file}"
+          gh release view "${RELEASE_TAG}" --json body --jq .body > "${changelog_file}"
+          ./gradlew publishCurseForge \
+            -Pmod_version="${RELEASE_VERSION}" \
+            "-Pcurseforge_changelog_file=${changelog_file}"

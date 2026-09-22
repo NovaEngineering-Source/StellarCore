@@ -1,0 +1,54 @@
+def curseforgeProjectId = '1064321'
+def curseforgeRequiredDependencies = ['mixinbooter', 'configanytime']
+def curseforgeOptionalDependencies = []
+
+def modVersion = findProperty('mod_version')?.toString()?.trim() ?: project.version.toString()
+
+def releaseType = findProperty('release_type')?.toString()?.trim()?.toLowerCase()
+if (!releaseType) {
+    def version = modVersion.toLowerCase()
+    releaseType = version.contains('alpha') ? 'alpha' :
+            (version.contains('beta') || version.contains('pre') || version.contains('rc') ? 'beta' : 'release')
+}
+if (!['alpha', 'beta', 'release'].contains(releaseType)) {
+    throw new GradleException("release_type must be one of alpha, beta, release: ${releaseType}")
+}
+
+def changelogProperty = findProperty('curseforge_changelog_file')?.toString()?.trim()
+def changelogFile = changelogProperty ? file(changelogProperty) : file('CHANGELOG.md')
+if (!changelogFile.isFile()) {
+    changelogFile = null
+}
+
+tasks.register('publishCurseForge', net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+    dependsOn tasks.named('reobfJar')
+    group = 'publishing'
+    description = "Publishes StellarCore ${modVersion} to CurseForge project ${curseforgeProjectId}."
+    apiToken = providers.environmentVariable('CURSEFORGE_TOKEN')
+    debugMode = (findProperty('curseforge_debug')?.toString() ?: 'false').toBoolean()
+    disableVersionDetection()
+
+    def reobfJar = tasks.named('reobfJar').get().archiveFile.get().asFile
+
+    def artifact = upload(curseforgeProjectId, reobfJar)
+    artifact.releaseType = releaseType
+    artifact.changelogType = 'markdown'
+    if (changelogFile != null) {
+        artifact.changelog = changelogFile
+    }
+    artifact.addGameVersion('1.12.2')
+    artifact.addModLoader('Forge')
+    artifact.addJavaVersion('Java 8')
+    artifact.addJavaVersion('Java 25')
+    artifact.addRequirement(*curseforgeRequiredDependencies)
+    artifact.addOptional(*curseforgeOptionalDependencies)
+
+    doFirst {
+        if (!providers.environmentVariable('CURSEFORGE_TOKEN').isPresent()) {
+            throw new GradleException('CURSEFORGE_TOKEN is required to publish to CurseForge.')
+        }
+        uploadArtifacts.each { uploaded ->
+            uploaded.addEnvironment('Client', 'Server')
+        }
+    }
+}
