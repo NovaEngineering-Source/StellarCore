@@ -1,6 +1,6 @@
 def curseforgeProjectId = '1064321'
-def curseforgeRequiredDependencies = ['mixinbooter', 'configanytime']
-def curseforgeOptionalDependencies = []
+def curseforgeRequiredDependencies = ['mixin-booter', 'configanytime']
+def curseforgeOptionalDependencies = ['blahajasm', 'chibi', 'fermiumasm', 'vintagefix']
 
 def modVersion = findProperty('mod_version')?.toString()?.trim() ?: project.version.toString()
 
