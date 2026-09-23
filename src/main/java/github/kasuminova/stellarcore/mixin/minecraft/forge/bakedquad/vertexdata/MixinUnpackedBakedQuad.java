@@ -6,15 +6,16 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.LightUtil;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -40,36 +41,57 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void injectInit(final float[][][] unpackedData, final int tint, final EnumFacing orientation, final TextureAtlasSprite texture, final boolean applyDiffuseLighting, final VertexFormat format, final CallbackInfo ci) {
-        // Deallocate vertex data.
-        ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(null);
+    private void injectInit(final float[][][] unpackedDataIn, final int tint, final EnumFacing orientation, final TextureAtlasSprite texture, final boolean applyDiffuseLighting, final VertexFormat formatIn, final CallbackInfo ci) {
+        if ((Object) this.getClass() != UnpackedBakedQuad.class) {
+            return;
+        }
+        stellar_core$packAndDrop();
     }
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/vertex/VertexFormat;getSize()I"))
-    private static int injectInitAtInvoke(final VertexFormat instance) {
-        // Return 0 to create empty array, don't allocate.
-        return 0;
+    @Inject(method = "pipe", at = @At("HEAD"), cancellable = true, remap = false)
+    private void stellar_core$pipePacked(final IVertexConsumer consumer, final CallbackInfo ci) {
+        if (unpackedData != null) {
+            return;
+        }
+        LightUtil.putBakedQuad(consumer, (BakedQuad) (Object) this);
+        ci.cancel();
     }
 
-    @SuppressWarnings("SynchronizeOnNonFinalField")
     @Inject(method = "getVertexData", at = @At("HEAD"))
     private void injectGetVertexData(final CallbackInfoReturnable<int[]> cir) {
         if (packed) {
             return;
         }
-        synchronized (unpackedData) {
+        stellar_core$packAndDrop();
+    }
+
+    @Unique
+    private void stellar_core$packAndDrop() {
+        final float[][][] data = unpackedData;
+        if (data == null) {
+            packed = true;
+            return;
+        }
+        synchronized (data) {
             if (packed) {
                 return;
             }
-            // Lazy init array
-            ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(new int[format.getSize()]);
+            int[] packedData = vertexData;
+            if (packedData == null || packedData.length < format.getSize()) {
+                packedData = new int[format.getSize()];
+            }
             for (int v = 0; v < 4; v++) {
                 for (int e = 0; e < format.getElementCount(); e++) {
-                    LightUtil.pack(unpackedData[v][e], vertexData, format, v, e);
+                    LightUtil.pack(data[v][e], packedData, format, v, e);
                 }
             }
-            ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(StellarUnpackedDataPool.canonicalize(vertexData));
             packed = true;
+            if ((Object) this.getClass() == UnpackedBakedQuad.class) {
+                unpackedData = null;
+            }
+            ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(packedData);
+            StellarUnpackedDataPool.canonicalizeAsync(packedData, canonicalized ->
+                    ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(canonicalized));
         }
     }
 

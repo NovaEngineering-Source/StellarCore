@@ -21,6 +21,8 @@ public enum Mods {
     NEVER_ENOUGH_ANIMATIONS("neverenoughanimations"),
     INGAME_INFO_XML("ingameinfoxml"),
 
+    // JourneyMap 6.0 才有的类；老构建里在 journeymap.common.feature，新构建在 util。
+    JOURNEY_MAP           ("journeymap",        "journeymap.common.util.PlayerRadarManager"       ),
     MMCE                  ("modularmachinery",  "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"),
     CENSORED_ASM          ("loliasm",           "zone.rong.loliasm.core.LoliLoadingPlugin"         ),
     FERMIUM_OR_BLAHAJ_ASM ("normalasm",         "mirror.normalasm.core.NormalLoadingPlugin"        ),

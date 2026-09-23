@@ -10,7 +10,6 @@ import java.lang.invoke.MethodType;
 public final class ModLoaderEarly {
 
     private static final MethodHandle loadMod;
-    private static final Object obj;
 
     static {
         Object o;
@@ -19,19 +18,17 @@ public final class ModLoaderEarly {
             var c = Class.forName("com.cleanroommc.discovery.CleanroomModDiscoverer");
             o = c.getMethod("instance").invoke(null);
             MethodType mt = MethodType.methodType(boolean.class, String.class);
-            load = MethodHandles.lookup().findVirtual(c, "isModPresent", mt);
+            load = MethodHandles.lookup().bind(o,"isModPresent", mt);
         } catch (Exception e) {
             load = null;
-            o = null;
         }
-        obj = o;
         loadMod = load;
     }
 
     public static boolean isModLoad(String modid) {
         if (loadMod != null) {
             try {
-                return (boolean) loadMod.invoke(obj,modid);
+                return (boolean) loadMod.invoke(modid);
             } catch (Throwable ignored) {
 
             }

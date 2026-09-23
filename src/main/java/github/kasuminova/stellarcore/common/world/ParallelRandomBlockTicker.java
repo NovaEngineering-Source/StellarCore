@@ -46,7 +46,7 @@ public class ParallelRandomBlockTicker {
 
         final boolean parallel = StellarEnvironment.shouldParallel();
         final int concurrency = parallel ? StellarEnvironment.getConcurrency() : 1;
-        final List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new LinkedList<>()) : new LinkedList<>();
+        final List<List<RandomTickTask>> randomTickData = parallel ? Collections.synchronizedList(new ObjectArrayList<>()) : new ObjectArrayList<>();
 
         IntStream stream = parallel ? IntStream.range(0, concurrency).parallel() : IntStream.range(0, concurrency);
         stream.forEach(i -> {
@@ -54,11 +54,7 @@ public class ParallelRandomBlockTicker {
             while ((data = enqueuedChunks.poll()) != null) {
                 List<RandomTickTask> collectedData = new ObjectArrayList<>();
                 for (final TickData tickData : data.data()) {
-                    List<RandomTickTask> tasks = getRandomTickData(data.chunk(), tickData);
-                    if (tasks.isEmpty()) {
-                        continue;
-                    }
-                    collectedData.addAll(tasks);
+                    collectRandomTickData(data.chunk(), tickData, collectedData);
                 }
                 if (!collectedData.isEmpty()) {
                     randomTickData.add(collectedData);
@@ -73,12 +69,11 @@ public class ParallelRandomBlockTicker {
         enqueuedChunks.clear();
     }
 
-    private static List<RandomTickTask> getRandomTickData(Chunk chunk, TickData tickData) {
+    private static void collectRandomTickData(Chunk chunk, TickData tickData, List<RandomTickTask> enqueuedData) {
         ExtendedBlockStorage storage = tickData.blockStorage();
         IntList lcgList = tickData.lcgList();
         int chunkXPos = chunk.x << 4;
         int chunkZPos = chunk.z << 4;
-        List<RandomTickTask> enqueuedData = new ObjectArrayList<>(lcgList.size());
         IntListIterator it = lcgList.iterator();
         while (it.hasNext()) {
             int lcg = it.nextInt() >> 2;
@@ -95,8 +90,6 @@ public class ParallelRandomBlockTicker {
                 enqueuedData.add(new RandomTickTask(storage, pos, x, y, z));
             }
         }
-
-        return enqueuedData;
     }
 
     private void executeTask(List<RandomTickTask> tickDataList) {

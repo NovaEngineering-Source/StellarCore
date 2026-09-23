@@ -22,14 +22,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-/**
- * Complete entry-name index for archive-backed resource packs.
- *
- * <p>A zip archive cannot gain entries while it is mounted as a resource pack, so a finished index
- * answers both hits and misses authoritatively and lets {@code hasResourceName} skip the monitor
- * inside {@link ZipFile#getEntry(String)}. Lookups performed before the asynchronous scan completes
- * report {@link #UNKNOWN} and fall through to the live archive.</p>
- */
 public final class ZipEntryIndex {
 
     public static final int UNKNOWN = 0;
@@ -141,17 +133,6 @@ public final class ZipEntryIndex {
         }
     }
 
-    /**
-     * Returns the index key of one archive, computing it once per archive instance.
-     *
-     * <p>Every lookup asks for this key, and deriving it walks the archive's path through
-     * {@link File#getAbsolutePath()} and a case fold, which allocates two strings per call. Packs hand back the
-     * same {@link File}, so one identity-keyed entry serves all lookups; an archive seen as a new instance simply
-     * computes its key again.</p>
-     *
-     * @param archive archive to describe
-     * @return normalised absolute path used as the index key
-     */
     private static String key(final File archive) {
         final String cached = KEYS.get(archive);
         if (cached != null) {

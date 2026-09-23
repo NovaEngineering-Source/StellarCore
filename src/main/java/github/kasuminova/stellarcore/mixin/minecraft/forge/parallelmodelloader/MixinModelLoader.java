@@ -10,6 +10,7 @@ import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreModelBakery;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreProgressBar;
+import github.kasuminova.stellarcore.mixin.util.StellarCoreStateMapper;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
@@ -41,6 +42,7 @@ import java.lang.invoke.MethodType;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 @SuppressWarnings("MethodMayBeStatic")
 @Mixin(ModelLoader.class)
@@ -111,6 +113,8 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
             if (barLock.tryLock()) {
                 try {
                     progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, "[" + Joiner.on(", ").join(locations) + "]");
+                } catch (Throwable t) {
+                    StellarLog.LOG.error("[StellarCore-ParallelModelLoader] Failed to step the bake bar for {}:", model, t);
                 } finally {
                     barLock.unlock();
                 }
@@ -130,8 +134,8 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
                     return;
                 }
                 bakedModelsConcurrent.put(model, stellar_core$bakeModel(model, textureGetter));
-            } catch (Exception e) {
-                if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
+            } catch (Throwable e) {
+                if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader || !(e instanceof Exception)) {
                     FMLLog.log.error("Exception baking model for location(s) {}:", "[" + Joiner.on(", ").join(locations) + "]", e);
                 }
                 bakedModelsConcurrent.put(model, missingBaked);
@@ -164,6 +168,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         @Local(name = "mapper") BlockStateMapper mapper) {
         long startTime = System.currentTimeMillis();
         stellar_core$toConcurrent();
+        stellar_core$forEachStateMapper(mapper, StellarCoreStateMapper::stellar_core$ensureConcurrent);
 
         final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) blockBar;
         final ReentrantLock barLock = new ReentrantLock();
@@ -198,6 +203,15 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         stellar_core$toDefault();
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
         return Collections.emptyIterator();
+    }
+
+    @Unique
+    private static void stellar_core$forEachStateMapper(final BlockStateMapper mapper, final Consumer<StellarCoreStateMapper> action) {
+        for (final IStateMapper stateMapper : ((AccessorBlockStateMapper) mapper).stellar_core$getBlockStateMap().values()) {
+            if (stateMapper instanceof StellarCoreStateMapper) {
+                action.accept((StellarCoreStateMapper) stateMapper);
+            }
+        }
     }
 
     @Unique
@@ -343,8 +357,6 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         }
     }
 
-    // Reflection. So many magic fields...
-
     @Unique
     private static MethodHandle stellar_core$ItemLoadingExceptionConstructor = null;
 
@@ -380,7 +392,6 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
             Class<?> ile = Class.forName("net.minecraftforge.client.model.ModelLoader$ItemLoadingException");
             stellar_core$ItemLoadingExceptionConstructor = MethodHandles.lookup().findConstructor(ile, MethodType.methodType(void.class, String.class, Exception.class, Exception.class));
         } catch (Throwable e) {
-            // Always throws exception because it cannot be failure.
             throw new RuntimeException("[StellarCore-ParallelModelLoader] Caught a fatal exception, please report to mod author!", e);
         }
     }

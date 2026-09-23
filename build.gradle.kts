@@ -13,7 +13,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.6.2"
+version = "1.6.3"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -303,7 +303,11 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ancient-spellcraft-358124:7134366"))
     compileOnly(rfg.deobf("curse.maven:psi-241665:3085917"))
     compileOnly(rfg.deobf("curse.maven:random-psideas-302313:3215550"))
-    compileOnly(rfg.deobf("curse.maven:journeymap-32274:5172461"))
+    // Two JourneyMap builds on purpose: the 5172461 layout is what the existing <6.0 code (journeymap.common.feature)
+    // compiles against, while 8923612 matches the 6.0 runtime jar (journeymap.client.model.chunk + journeymap.common.util).
+    // Both artifacts are needed, javac resolves each reference from whichever jar provides it.
+    compileOnly(rfg.deobf("curse.maven:journeymap-legacy-32274:5172461"))
+    compileOnly(rfg.deobf("curse.maven:journeymap-32274:8923612"))
     compileOnly(rfg.deobf("curse.maven:abyssalcraft-53686:5330323"))
     compileOnly(rfg.deobf("curse.maven:vintagefix-871198:5536276"))
     implementation(rfg.deobf("curse.maven:lolasm-460609:5257348")) // ASM Compat

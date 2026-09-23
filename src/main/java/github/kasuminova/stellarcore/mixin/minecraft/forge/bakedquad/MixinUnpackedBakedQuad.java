@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.bakedquad;
 
 import github.kasuminova.stellarcore.client.pool.StellarUnpackedDataPool;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
@@ -24,6 +25,9 @@ public class MixinUnpackedBakedQuad {
     @SuppressWarnings("ConstantValue")
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final float[][][] unpackedData, final int tint, final EnumFacing orientation, final TextureAtlasSprite texture, final boolean applyDiffuseLighting, final VertexFormat format, final CallbackInfo ci) {
+        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization) {
+            return;
+        }
         if ((Object) (this).getClass() == UnpackedBakedQuad.class) {
             StellarUnpackedDataPool.canonicalizeAsync(unpackedData, (canonicalizedData) -> this.unpackedData = canonicalizedData);
         }

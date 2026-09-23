@@ -16,12 +16,10 @@ public abstract class MixinTileEntityDispenser extends TileEntityLockableLoot im
     @Override
     @SuppressWarnings("AddedMixinMembersNamePattern")
     public void update() {
-        if (world.isRemote) {
+        if (!Mods.EBWIZARDRY.loaded()) {
             return;
         }
-        if (Mods.EBWIZARDRY.loaded()) {
-            stellar_core$handleEBWizardryUpdate();
-        }
+        stellar_core$handleEBWizardryUpdate();
     }
 
     @Unique

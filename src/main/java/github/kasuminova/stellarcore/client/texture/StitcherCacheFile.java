@@ -6,20 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The compact on-disk form of a stitcher layout.
- *
- * <p>The layout used to be written as NBT, which stores every holder and every slot as a compound with its own
- * hash map; a texture map with a few thousand sprites therefore spent megabytes and a per-tag allocation on data
- * that is a handful of numbers and one name. This form writes the same information as a length-prefixed stream of
- * primitives, so a read allocates the two lists and nothing else, and a write never builds a tag tree.</p>
- *
- * <p>Holder dimensions and scale are part of the format on purpose: validating against them detects a sprite whose
- * size changed since the layout was written, which the name-only NBT form could not do.</p>
- */
 final class StitcherCacheFile {
 
-    /** Identifies a compact cache inside the gzip payload; the legacy form is gzip-compressed NBT without it. */
     static final int MAGIC = 0x53435331;
 
     static final int VERSION = 1;
@@ -63,9 +51,6 @@ final class StitcherCacheFile {
         return this.height;
     }
 
-    /**
-     * Writes the payload, magic excluded: the caller has already identified the stream as a compact cache.
-     */
     void writeTo(final DataOutputStream out) throws IOException {
         out.writeInt(VERSION);
         out.writeInt(this.width);
@@ -84,9 +69,6 @@ final class StitcherCacheFile {
         }
     }
 
-    /**
-     * Reads the payload, magic excluded.
-     */
     static StitcherCacheFile readFrom(final DataInputStream in) throws IOException {
         final int version = in.readInt();
         if (version != VERSION) {

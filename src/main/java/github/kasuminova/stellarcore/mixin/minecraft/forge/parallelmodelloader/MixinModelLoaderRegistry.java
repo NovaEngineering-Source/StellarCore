@@ -66,11 +66,9 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     @Unique
     private static Map<ResourceLocation, IModel> stellar_core$cache = new NonBlockingHashMap<>();
 
-    /** One shared future per model location while a concurrent generation is loading it. */
     @Unique
     private static final Map<ResourceLocation, ModelLoadFlight> stellar_core$inFlight = new NonBlockingHashMap<>();
 
-    /** Wait-for edges used to reject cross-thread dependency cycles instead of deadlocking. */
     @Unique
     private static final Map<Thread, Thread> stellar_core$waitingFor = new NonBlockingHashMap<>();
 
@@ -315,7 +313,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         stellar_core$aliases.clear();
         stellar_core$textures.clear();
         stellar_core$cache.clear();
-        // putting the builtin models in
+        
         stellar_core$cache.put(new ResourceLocation("minecraft:builtin/generated"), ItemLayerModel.INSTANCE);
         stellar_core$cache.put(new ResourceLocation("minecraft:block/builtin/generated"), ItemLayerModel.INSTANCE);
         stellar_core$cache.put(new ResourceLocation("minecraft:item/builtin/generated"), ItemLayerModel.INSTANCE);
@@ -340,9 +338,9 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             return;
         }
 
-        final long deadlineNanos = System.nanoTime() + 60_000_000_000L; // 60s
+        final long deadlineNanos = System.nanoTime() + 60_000_000_000L; 
         while ((active = stellar_core$ACTIVE_MODEL_LOADS.get()) > 0 && System.nanoTime() < deadlineNanos) {
-            LockSupport.parkNanos(1_000_000L); // 1ms
+            LockSupport.parkNanos(1_000_000L); 
         }
 
         if (active > 0) {
@@ -391,9 +389,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         stellar_core$concurrent = true;
     }
 
-    /**
-     * 用于其他优化模组优化缓存，例如 FoamFix。
-     */
+    
     @Override
     public void stellar_core$writeToOriginalMap() {
         for (final Map.Entry<ResourceLocation, IModel> entry : stellar_core$cache.entrySet()) {

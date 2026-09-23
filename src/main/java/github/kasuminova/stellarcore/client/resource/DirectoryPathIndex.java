@@ -19,13 +19,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Positive-only index for mutable directory resources.
- *
- * <p>Indexed hits avoid filesystem calls. Before the asynchronous scan completes, every miss still checks the live filesystem, so a
- * scan can never turn a newly created resource into a persistent false negative. Once a scan completes for the current
- * resource-generation, misses are negative-cached as well; the generation is cleared on resource reload.</p>
- */
 public final class DirectoryPathIndex {
 
     private static final boolean CASE_INSENSITIVE = isWindows();
@@ -46,12 +39,10 @@ public final class DirectoryPathIndex {
         negativeCachingEnabled = false;
     }
 
-    /** Enables generation-scoped negative results while ResourceExistingCache owns the reload snapshot. */
     public static void enableNegativeCaching() {
         negativeCachingEnabled = true;
     }
 
-    /** Disables negative results after the resource generation ends. */
     public static void disableNegativeCaching() {
         negativeCachingEnabled = false;
     }
@@ -77,8 +68,6 @@ public final class DirectoryPathIndex {
         while (true) {
             final Index index = currentIndex(rootDirectory);
             if (!index.isRootDirectory()) {
-                // Root is not a directory (e.g. a pack.mcmeta file); no index can exist,
-                // fall back to the live filesystem check only.
                 return candidate(rootDirectory, relativePath, candidateFile).isFile();
             }
             if (index.contains(normalizedPath)) {
@@ -104,17 +93,6 @@ public final class DirectoryPathIndex {
         }
     }
 
-    /**
-     * Resolves the file an answer would be checked against, reusing the caller's instance when it supplied one.
-     *
-     * <p>Callers that pass no candidate pay for the {@code File} only on the paths that actually need it, so an
-     * index hit costs no allocation.</p>
-     *
-     * @param rootDirectory indexed root
-     * @param relativePath relative path being asked about
-     * @param candidateFile caller supplied file, or {@code null}
-     * @return the file to probe
-     */
     private static File candidate(final File rootDirectory, final String relativePath, @Nullable final File candidateFile) {
         return candidateFile != null ? candidateFile : new File(rootDirectory, relativePath);
     }
@@ -215,8 +193,8 @@ public final class DirectoryPathIndex {
         private Index(final File root, final long generation) {
             this.root = root;
             this.generation = generation;
-            // Asked once per index rather than on every query: the answer is a property of the pack directory and
-            // the filesystem call behind it was a measurable share of resource loading.
+            
+            
             this.rootDirectory = root.isDirectory();
         }
 

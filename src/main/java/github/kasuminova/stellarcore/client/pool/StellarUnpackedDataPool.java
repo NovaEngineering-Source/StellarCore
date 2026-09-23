@@ -33,19 +33,13 @@ public class StellarUnpackedDataPool {
     public static void canonicalizeAsync(final float[][][] unpackedData, final Consumer<float[][][]> callback) {
         POOL_LEVEL1.canonicalizeAsync(unpackedData, floatsL1 -> {
             final int level = getLevel();
-            // Level 2
-            if (unpackedData != floatsL1 && level >= 2) {
+            if (level >= 2) {
                 for (int i = 0; i < floatsL1.length; i++) {
-                    float[][] floatsL2 = POOL_LEVEL2.canonicalize(floatsL1[i]);
-                    if (floatsL1[i] == floatsL2) {
-                        continue;
-                    }
-
+                    final float[][] floatsL2 = POOL_LEVEL2.canonicalize(floatsL1[i]);
                     floatsL1[i] = floatsL2;
-                    // Level 3
                     if (level >= 3) {
-                        for (int j = 0; j < floatsL1[i].length; j++) {
-                            floatsL1[i][j] = POOL_LEVEL3.canonicalize(floatsL1[i][j]);
+                        for (int j = 0; j < floatsL2.length; j++) {
+                            floatsL2[j] = POOL_LEVEL3.canonicalize(floatsL2[j]);
                         }
                     }
                 }
@@ -108,11 +102,6 @@ public class StellarUnpackedDataPool {
     public static boolean update() {
         boolean changed = false;
         int level = getLevel();
-//        if (level != 1 && !POOL_LEVEL1.getPoolKeySet().isEmpty()) {
-//            POOL_LEVEL1.clearAndTrim();
-//            StellarLog.LOG.info("[StellarCore-UnpackedDataPool] Level {} Pool cleared.", level);
-//            changed = true;
-//        }
         if (level < 2 && !POOL_LEVEL2.getPoolKeySet().isEmpty()) {
             POOL_LEVEL2.clearAndTrim();
             StellarLog.LOG.info("[StellarCore-UnpackedDataPool] Level {} Pool cleared.", level);

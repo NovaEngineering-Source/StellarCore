@@ -9,6 +9,7 @@
         "MixinStackSizeRenderer"
     ],
     "mixins": [
-        "MixinCraftingGridCache"
+        "MixinCraftingGridCache",
+        "MixinNormalItemVariantList"
     ]
 }

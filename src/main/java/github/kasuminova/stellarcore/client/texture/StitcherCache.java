@@ -1,6 +1,5 @@
 package github.kasuminova.stellarcore.client.texture;
 
-
 import github.kasuminova.stellarcore.common.util.LargeNBTUtils;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.minecraft.stitcher.AccessorStitcher;
@@ -54,10 +53,8 @@ public class StitcherCache {
 
     private Future<Void> readTask;
 
-    /** The compact layout parsed from disk; null while the file is absent, broken or still in the legacy NBT form. */
     private StitcherCacheFile data = null;
 
-    /** The legacy NBT form, still readable so a cache written before the format change stays usable. */
     private NBTTagCompound readTag = null;
 
     private volatile Set<String> cachedSpriteNamesFromFile = null;
@@ -110,10 +107,7 @@ public class StitcherCache {
         StitcherCache.activeMapToStitch = activeMap;
     }
 
-    /**
-     * Writes the cached layout through a temporary file, so a crash or a full disk can never leave a partially
-     * written cache behind: the previous file either stays intact or is replaced by a complete one.
-     */
+    
     public void writeToFile() {
         final File temporary = new File(this.cacheFile.getParentFile(), this.cacheFile.getName() + ".tmp");
         try {
@@ -141,8 +135,8 @@ public class StitcherCache {
             final AccessorStitcherHolder accessor = (AccessorStitcherHolder) holder;
             final String sprite = holder.getAtlasSprite().getIconName();
             holderIndexes.put(sprite, holderEntries.size());
-            // Dimensions and scale travel with the entry: they are what lets a later run reject a layout whose
-            // sprites changed size, which the name-only NBT form could not see.
+            
+            
             holderEntries.add(new StitcherCacheFile.HolderEntry(sprite, accessor.realWidth(), accessor.realHeight(),
                 accessor.scaleFactor(), holder.isRotated(), holder.getAtlasSprite() == cacheFor.getMissingSprite()));
         }
@@ -202,8 +196,8 @@ public class StitcherCache {
             this.readTag = null;
             this.cacheState = State.UNAVAILABLE;
             StellarLog.LOG.warn("[StellarCore-StitcherCache] Failed to read stitcher cache file, it may be broken.", e);
-            // A cache that cannot be read is of no use, and keeping it only makes the next launch fail the same
-            // way; the layout is recomputed and written again.
+            
+            
             if (!cacheFile.delete()) {
                 StellarLog.LOG.warn("[StellarCore-StitcherCache] Could not remove broken cache file `{}`.", cacheFile.getAbsolutePath());
             }
@@ -216,11 +210,7 @@ public class StitcherCache {
         }
     }
 
-    /**
-     * Best-effort: returns sprite names from the on-disk cache file tag (if ready).
-     *
-     * <p>Used to stabilize stitching inputs across runs when mods register sprites nondeterministically.
-     */
+    
     public Set<String> getCachedSpriteNamesFromFile() {
         checkReadTaskState();
 
@@ -272,23 +262,16 @@ public class StitcherCache {
         } catch (Throwable e) {
             StellarLog.LOG.warn("[StellarCore-StitcherCache] Failed to parse stitcher cache file, it may be broken.", e);
         } finally {
-            // The file form is fully consumed here: the layout lives in the holders and slots from now on, and the
-            // sprite names were only needed while sprites were being registered. Holding either for the rest of the
-            // session would keep a second copy of the atlas layout in memory for nothing.
+            
+            
+            
             this.data = null;
             this.readTag = null;
             this.cachedSpriteNamesFromFile = null;
         }
     }
 
-    /**
-     * Validates the compact layout against this run's sprites before building any of it.
-     *
-     * <p>The name-only form had to construct every holder and slot before it could tell whether the layout was
-     * usable, so a stale cache paid for a tree it then threw away. The compact form carries the dimensions and the
-     * scale each holder had when it was written, which is enough to reject a stale layout up front and to build the
-     * tree only for a layout that is actually reused.</p>
-     */
+    
     private void parseData(final Stitcher stitcher, final Set<Stitcher.Holder> targetHolders) {
         this.extraHolders = null;
 
@@ -308,7 +291,7 @@ public class StitcherCache {
             final String spriteName = target.getAtlasSprite().getIconName();
             final StitcherCacheFile.HolderEntry entry = cached.get(spriteName);
             if (entry == null) {
-                // Runtime has a sprite that the cache doesn't — record as extra.
+                
                 extras.add(target);
                 continue;
             }
@@ -326,15 +309,15 @@ public class StitcherCache {
         }
 
         if (matched != resolvable) {
-            // Cache has sprites that runtime doesn't — cache is stale.
+            
             StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} cached holders not found in runtime.", resolvable - matched);
             this.cacheState = State.UNAVAILABLE;
             return;
         }
 
         if (!extras.isEmpty()) {
-            // Runtime is a strict superset of cache — partial match.
-            // These extra holders will be allocated into the cached layout.
+            
+            
             this.extraHolders = extras;
             StellarLog.LOG.info("[StellarCore-StitcherCache] Cache is a partial match: {} extra sprites in runtime (nondeterministic registration); will allocate incrementally.", extras.size());
         }
@@ -348,7 +331,7 @@ public class StitcherCache {
         this.holders.clear();
         this.slots.clear();
 
-        // Positions are kept even for entries whose sprite is gone, because the slots address holders by position.
+        
         final List<StitcherCacheFile.HolderEntry> entries = this.data.holders();
         final List<Stitcher.Holder> materialised = new ArrayList<>(entries.size());
         for (final StitcherCacheFile.HolderEntry entry : entries) {
@@ -419,17 +402,7 @@ public class StitcherCache {
         return slot;
     }
 
-    /**
-     * Checks the cached layout against the sprites this run is about to stitch.
-     *
-     * <p>Both sides are keyed by sprite name and a texture map registers each name once, so counting matches is
-     * enough to tell "the cache has sprites this run does not" from "this run has sprites the cache does not":
-     * only the latter is usable, and its extra sprites are recorded for incremental allocation. The map is read
-     * directly rather than copied first, which used to allocate an entry per registered sprite on every reload.</p>
-     *
-     * @param targetHolders sprites this run will stitch
-     * @return whether the cached layout can be reused
-     */
+    
     public boolean holdersEquals(Set<Stitcher.Holder> targetHolders) {
         this.extraHolders = null;
 
@@ -440,7 +413,7 @@ public class StitcherCache {
             String spriteName = target.getAtlasSprite().getIconName();
             Stitcher.Holder cached = this.holders.get(spriteName);
             if (cached == null) {
-                // Runtime has a sprite that the cache doesn't — record as extra.
+                
                 extras.add(target);
                 continue;
             }
@@ -452,14 +425,14 @@ public class StitcherCache {
         }
 
         if (matched != this.holders.size()) {
-            // Cache has sprites that runtime doesn't — cache is stale.
+            
             StellarLog.LOG.warn("[StellarCore-StitcherCache] Stitcher cache is unavailable, {} cached holders not found in runtime.", this.holders.size() - matched);
             return false;
         }
 
         if (!extras.isEmpty()) {
-            // Runtime is a strict superset of cache — partial match.
-            // These extra holders will be allocated into the cached layout.
+            
+            
             this.extraHolders = extras;
             StellarLog.LOG.info("[StellarCore-StitcherCache] Cache is a partial match: {} extra sprites in runtime (nondeterministic registration); will allocate incrementally.", extras.size());
         }
@@ -548,7 +521,7 @@ public class StitcherCache {
         });
 
         NBTTagList slotsTagList = tag.getTagList("slots", Constants.NBT.TAG_COMPOUND);
-        // 提前填充 slot 列表，用于并行流。
+        
         int bound = slotsTagList.tagCount();
         for (int i = 0; i < bound; i++) {
             this.slots.add(null);
@@ -601,7 +574,7 @@ public class StitcherCache {
             int bound = subSlotsTag.tagCount();
             for (int i = 0; i < bound; i++) {
                 NBTTagCompound tagAt = subSlotsTag.getCompoundTagAt(i);
-                // Recursive
+                
                 Stitcher.Slot readSlotNBT = readSlotNBT(tagAt);
                 subSlots.add(readSlotNBT);
             }

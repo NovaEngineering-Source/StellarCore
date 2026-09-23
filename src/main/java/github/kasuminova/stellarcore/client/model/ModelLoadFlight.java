@@ -4,7 +4,6 @@ import net.minecraftforge.client.model.IModel;
 
 import java.util.concurrent.CompletableFuture;
 
-/** Shared in-flight model load state for one resource generation. */
 public final class ModelLoadFlight {
 
     public final Thread owner;

@@ -13,6 +13,10 @@ public class Performance {
     @Config.Name("Forge")
     public final Forge forge = new Forge();
 
+    @Config.LangKey("stellar_core.config.performance.appliedEnergistics")
+    @Config.Name("AppliedEnergistics")
+    public final AppliedEnergistics appliedEnergistics = new AppliedEnergistics();
+
     @Config.LangKey("stellar_core.config.performance.astralSorcery")
     @Config.Name("AstralSorcery")
     public final AstralSorcery astralSorcery = new AstralSorcery();
@@ -96,6 +100,10 @@ public class Performance {
     @Config.LangKey("stellar_core.config.performance.immersiveEngineering")
     @Config.Name("ImmersiveEngineering")
     public final ImmersiveEngineering immersiveEngineering = new ImmersiveEngineering();
+
+    @Config.LangKey("stellar_core.config.performance.journeyMap")
+    @Config.Name("JourneyMap")
+    public final JourneyMap journeyMap = new JourneyMap();
 
     @Config.LangKey("stellar_core.config.performance.libNine")
     @Config.Name("LibNine")
@@ -503,13 +511,15 @@ public class Performance {
         public int unpackedBakedQuadDataCanonicalizationLevel = 1;
 
         @Config.Comment({
-                "(Client Performance | Experimental) Deduplicate vertexData array to optimise memory usage.",
+                "(Client Performance | Experimental) Pack UnpackedBakedQuad into vertexData at construction,",
+                "intern the packed int[] and drop the unpacked float[][][] immediately.",
+                "Pipe() after packing uses LightUtil.putBakedQuad.",
                 "Works in most cases, but may cause rendering issues with models in some mods."
         })
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization")
         @Config.Name("UnpackedBakedQuadVertexDataCanonicalization")
-        public boolean unpackedBakedQuadVertexDataCanonicalization = false;
+        public boolean unpackedBakedQuadVertexDataCanonicalization = true;
 
         @Config.Comment("When writing to Capability's NBT, if the returned NBT is empty, no content is written, which may help improve performance.")
         @Config.RequiresMcRestart
@@ -527,6 +537,38 @@ public class Performance {
         @Config.LangKey("stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections")
         @Config.Name("OreDictionaryPrimitiveCollections")
         public boolean oreDictionary = true;
+
+        @Config.Comment({
+                "(Client Performance) Share the IModel produced by OBJModel.process/retexture when the same model is",
+                "processed with the same arguments again, instead of building an equal copy every time.",
+                "Forge asks every blockstate variant to process+retexture its model, so a single .obj referenced by N",
+                "variants yields N identical IModels. Only object identity changes, never the model itself."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.objModelVariantCache")
+        @Config.Name("ObjModelVariantCache")
+        public boolean objModelVariantCache = true;
+
+        @Config.Comment({
+                "(Client Performance) Share the IBakedModel produced by OBJModel.bake for the same model state.",
+                "Only has an effect together with ObjModelVariantCache: without shared IModels every bake call has its",
+                "own receiver and the cache never hits. Only object identity changes, never the model itself."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.objModelBakeCache")
+        @Config.Name("ObjModelBakeCache")
+        public boolean objModelBakeCache = true;
+
+        @Config.Comment({
+                "(Client Performance) The same idea for the vanilla JSON model wrapper",
+                "(net.minecraftforge.client.model.ModelLoader$VanillaModelWrapper.retexture): a blockstate variant that",
+                "overrides \"textures\" otherwise gets a fully copied ModelBlock, elements and face maps for every variant.",
+                "Only object identity changes, never the model itself."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.vanillaModelVariantCache")
+        @Config.Name("VanillaModelVariantCache")
+        public boolean vanillaModelVariantCache = true;
 
     }
 
@@ -559,6 +601,20 @@ public class Performance {
         @Config.LangKey("stellar_core.config.performance.biomesOPlenty.trailManagerAsync")
         @Config.Name("TrailManagerAsync")
         public boolean trailManager = true;
+
+    }
+
+    public static class AppliedEnergistics {
+
+        @Config.Comment({
+                "(Client/Server Performance) Allocate ItemList's per-item variant record map with a small initial capacity.",
+                "AE2 builds one Reference2ObjectOpenHashMap per (ItemList, Item) pair, and fastutil's no-arg constructor",
+                "reserves 16 entries, i.e. two 32-element arrays for a map that almost always holds a single entry."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.appliedEnergistics.smallVariantRecordMap")
+        @Config.Name("SmallVariantRecordMap")
+        public boolean smallVariantRecordMap = true;
 
     }
 
@@ -738,6 +794,11 @@ public class Performance {
         @Config.Name("FarmerImprovements")
         public boolean commune = true;
 
+        @Config.Comment("(Server Performance) Cache CapacitorKey#getLegacyName, which otherwise allocates a new lowercased String on every call.")
+        @Config.LangKey("stellar_core.config.performance.enderIO.capacitorKeyLegacyNameCache")
+        @Config.Name("CapacitorKeyLegacyNameCache")
+        public boolean capacitorKeyLegacyNameCache = true;
+
     }
 
     public static class EnderIOConduits {
@@ -887,6 +948,16 @@ public class Performance {
         @Config.LangKey("stellar_core.config.performance.immersiveEngineering.energyTransferNoUpdate")
         @Config.Name("EnergyTransferNoUpdate")
         public boolean energyTransferNoUpdate = true;
+
+    }
+
+    public static class JourneyMap {
+
+        @Config.Comment("(Client Performance) JourneyMap chunk data access (ChunkMD). Only loads on JourneyMap 6.0+.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.journeyMap.mapperOptimizations")
+        @Config.Name("MapperOptimizations")
+        public boolean mapperOptimizations = true;
 
     }
 

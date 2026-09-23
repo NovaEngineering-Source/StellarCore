@@ -6,6 +6,8 @@ import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.Loader;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
+import static github.kasuminova.stellarcore.mixin.util.ModLoaderEarly.isClassPresent;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -20,7 +22,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
 
     static {
         addModdedMixinCFG("mixins.stellar_core_advancedrocketry.json",       "advancedrocketry");
-        addModdedMixinCFG("mixins.stellar_core_ae.json",                     "appliedenergistics2");
+        addModdedMixinCFG("mixins.stellar_core_ae.json",                     "appliedenergistics2", () -> !modLoaded("ae2"));
         addModdedMixinCFG("mixins.stellar_core_armourers_workshop.json",     "armourers_workshop");
         addModdedMixinCFG("mixins.stellar_core_astralsorcery.json",          "astralsorcery");
         addModdedMixinCFG("mixins.stellar_core_avaritia.json",               "avaritia");
@@ -55,6 +57,9 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_igi.json",                    "ingameinfoxml");
         addModdedMixinCFG("mixins.stellar_core_immersiveengineering.json",   "immersiveengineering");
         addModdedMixinCFG("mixins.stellar_core_jei.json",                    "jei", () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
+        addMixinCFG      ("mixins.stellar_core_journeymap.json",                    () -> StellarCoreConfig.PERFORMANCE.journeyMap.mapperOptimizations
+                && Loader.isModLoaded("journeymap")
+                && isClassPresent("journeymap.common.util.PlayerRadarManager"));
         addModdedMixinCFG("mixins.stellar_core_threng.json",                 "threng");
         addModdedMixinCFG("mixins.stellar_core_legendarytooltips.json",      "legendarytooltips");
         addModdedMixinCFG("mixins.stellar_core_libnine.json",                "libnine", () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
