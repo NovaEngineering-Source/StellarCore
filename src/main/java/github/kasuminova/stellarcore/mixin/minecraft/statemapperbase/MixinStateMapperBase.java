@@ -55,7 +55,8 @@ public abstract class MixinStateMapperBase implements StellarCoreStateMapper {
 
         final Map<IBlockState, ModelResourceLocation> map = new Reference2ObjectOpenHashMap<>(validStates.size());
 
-        if (this.mapStateModelLocations instanceof ConcurrentMap<IBlockState, ModelResourceLocation> chm) {
+        if (this.mapStateModelLocations instanceof ConcurrentMap) {
+            ConcurrentMap<IBlockState, ModelResourceLocation> chm = (ConcurrentMap<IBlockState, ModelResourceLocation>) this.mapStateModelLocations;
             for (IBlockState state : validStates) {
                 ModelResourceLocation location = chm.get(state);
                 if (location == null) {
