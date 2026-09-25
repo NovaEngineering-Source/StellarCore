@@ -71,6 +71,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_modelloader.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addMixinCFG("mixins.stellar_core_forge_objmodel.json",                   () -> StellarCoreConfig.PERFORMANCE.forge.objModelVariantCache);
         addMixinCFG("mixins.stellar_core_forge_vanillamodel.json",               () -> StellarCoreConfig.PERFORMANCE.forge.vanillaModelVariantCache);
+        addMixinCFG("mixins.stellar_core_forge_vanillamodel_diskcache.json",     () -> StellarCoreConfig.PERFORMANCE.forge.vanillaModelDiskCache);
         addMixinCFG("mixins.stellar_core_forge_oredict.json",                    () -> StellarCoreConfig.PERFORMANCE.forge.oreDictionary);
         addMixinCFG("mixins.stellar_core_forge_registry.json",                   () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
         addMixinCFG("mixins.stellar_core_hudcaching.json",                       () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);

@@ -570,6 +570,21 @@ public class Performance {
         @Config.Name("VanillaModelVariantCache")
         public boolean vanillaModelVariantCache = true;
 
+        @Config.Comment({
+                "(Client Performance | Experimental) Cache raw vanilla JSON model bytes to disk, so subsequent",
+                "game restarts with the same mod list can skip the resource-pack scan + JSON parse for vanilla-",
+                "format models. Snapshot stores SHA-256 of model + armature JSON and re-validates against the live",
+                "resource manager at load time, so toggling resource packs (which overrides models per-file) is",
+                "still picked up correctly. Mod updates invalidate the whole file because the cache file name is",
+                "keyed on a fingerprint of the mod list.",
+                "Only pure-vanilla JSON models are cached; OBJ / B3D / CTM / custom loaders are untouched.",
+                "The first run with this feature enabled populates the cache; speedup is visible from the second run."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.vanillaModelDiskCache")
+        @Config.Name("VanillaModelDiskCache")
+        public boolean vanillaModelDiskCache = true;
+
     }
 
     public static class AstralSorcery {
