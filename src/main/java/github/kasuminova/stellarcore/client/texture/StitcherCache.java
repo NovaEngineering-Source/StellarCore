@@ -494,6 +494,39 @@ public class StitcherCache {
         return height;
     }
 
+    /**
+     * The horizontal extent the given top-level slots actually occupy.
+     *
+     * <p>The dimensions this cache stores are the <em>atlas</em> size: the extent
+     * the layout occupied, rounded up to a power of two at the end of the stitch.
+     * Allocation has to resume from the extent itself. Resuming from the rounded
+     * size means the first extra tile crosses that power-of-two boundary, and the
+     * closing round-up doubles the atlas &mdash; growth the caller then rejects,
+     * throwing the cache away and re-stitching every sprite.</p>
+     */
+    public static int occupiedWidth(final List<Stitcher.Slot> slots) {
+        int extent = 0;
+        for (final Stitcher.Slot slot : slots) {
+            final int edge = slot.getOriginX() + ((AccessorStitcherSlot) slot).width();
+            if (edge > extent) {
+                extent = edge;
+            }
+        }
+        return extent;
+    }
+
+    /** Vertical counterpart of {@link #occupiedWidth}. */
+    public static int occupiedHeight(final List<Stitcher.Slot> slots) {
+        int extent = 0;
+        for (final Stitcher.Slot slot : slots) {
+            final int edge = slot.getOriginY() + ((AccessorStitcherSlot) slot).height();
+            if (edge > extent) {
+                extent = edge;
+            }
+        }
+        return extent;
+    }
+
     private void checkReadTaskState() {
         if (readTask != null) {
             if (!readTask.isDone()) {

@@ -109,6 +109,15 @@ public final class VanillaModelDiskCache {
 
     private volatile long loadedSeed = 0L;
 
+    /**
+     * Whether this session's fingerprint has been corroborated by an actual
+     * cache file. The pack list grows while mods load, so a fingerprint computed
+     * early can name an environment that never had a cache; pruning on such a
+     * guess would delete the very files the next (correct) fingerprint needs.
+     * Only a successful read or write proves the environment is real.
+     */
+    private volatile boolean environmentConfirmed = false;
+
     /** The fingerprint-then-read pipeline started by {@link #prepareAsync}. */
     private volatile CompletableFuture<Void> prepareFuture = null;
     private volatile boolean prepared = false;
@@ -233,6 +242,7 @@ public final class VanillaModelDiskCache {
                 return;
             }
             diskView = result.entries;
+            environmentConfirmed = true;
             StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Loaded {} vanilla model snapshots from {}.",
                     result.entries.size(), file.getName());
         } catch (Throwable t) {
@@ -259,6 +269,7 @@ public final class VanillaModelDiskCache {
                 return;
             }
             blockstateView = result.entries;
+            environmentConfirmed = true;
             StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Loaded {} blockstate snapshots from {}.",
                     result.entries.size(), file.getName());
         } catch (Throwable t) {
@@ -325,6 +336,7 @@ public final class VanillaModelDiskCache {
         } catch (AtomicMoveNotSupportedException fallback) {
             Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
+        environmentConfirmed = true;
         StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Wrote {} blockstate snapshots to {}.",
                 blockstates.size(), file.getName());
     }
@@ -348,6 +360,7 @@ public final class VanillaModelDiskCache {
         } catch (AtomicMoveNotSupportedException fallback) {
             Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
+        environmentConfirmed = true;
         StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Wrote {} entries to {}.",
                 snapshot.size(), file.getName());
         pruneStaleFiles(configDir, seed);
@@ -363,6 +376,12 @@ public final class VanillaModelDiskCache {
      * environment's files.</p>
      */
     private void pruneStaleFiles(final File configDir, final long seed) {
+        if (!environmentConfirmed) {
+            // Nothing has corroborated this fingerprint, so files named after
+            // other fingerprints are not known to be foreign. Leaving them costs
+            // disk; deleting them costs a full model reload on the next run.
+            return;
+        }
         final File parent = resolveCacheDir(configDir);
         if (parent == null) {
             return;
@@ -436,6 +455,7 @@ public final class VanillaModelDiskCache {
      * that changed models does not.
      */
     public void onModelCacheCleared() {
+        environmentConfirmed = false;
         live.clear();
         liveBlockstates.clear();
         diskView = null;

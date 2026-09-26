@@ -7,8 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.ResourcePackRepository;
 import net.minecraftforge.common.ForgeVersion;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.ModContainer;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -35,16 +33,15 @@ import java.util.zip.ZipFile;
  *
  * <h2>What the fingerprint covers</h2>
  * <ul>
- *   <li><b>Mods</b> by id, version, and the path and size of each model resource
- *       they ship. Timestamps are deliberately excluded: in a development
- *       environment a mod's source is a build output that the IDE touches on
- *       every compile, so a timestamp would invalidate the cache continuously
- *       while the models never change. Sizes cost one directory walk and still
- *       catch a mod that ships different models under an unchanged version.</li>
- *   <li><b>Resource packs</b> in priority order. A zip pack contributes the CRC
- *       of each relevant entry, read from the central directory at no
- *       decompression cost; a directory pack contributes the path, size and mtime
- *       of each relevant file.</li>
+ *   <li><b>Resource packs</b> in priority order, which is where every model
+ *       comes from. FML registers each mod as one of these, so a mod's models are
+ *       covered here and do not need a separate mod-list component. A zip pack
+ *       contributes the CRC of each relevant entry, read from the central
+ *       directory at no decompression cost; a directory pack contributes the
+ *       path, size and mtime of each relevant file.</li>
+ *   <li><b>Mod ids and versions are deliberately not part of this.</b> They
+ *       describe code, not model resources, and a version string changes on every
+ *       development build even when the models are untouched.</li>
  *   <li>Only {@code models/}, {@code blockstates/} and {@code armatures/} are
  *       considered. Editing a texture or a language file does not invalidate the
  *       cache, and neither does recompiling a mod.</li>
@@ -156,24 +153,8 @@ public final class EnvironmentFingerprint {
 
     private static long compute() {
         long hash = FNV_OFFSET_BASIS;
-        hash = mixMods(hash);
         hash = mixForgeVersion(hash);
         hash = mixResourcePacks(hash);
-        return hash;
-    }
-
-    private static long mixMods(long hash) {
-        try {
-            final List<ModContainer> mods = Loader.instance().getModList();
-            mods.sort(Comparator.comparing(ModContainer::getModId));
-            for (final ModContainer mod : mods) {
-                hash = mix(hash, mod.getModId());
-                hash = mix(hash, mod.getVersion());
-            }
-        } catch (Throwable t) {
-            StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to fingerprint mod list", t);
-            hash = mix(hash, "mod-scan-failed");
-        }
         return hash;
     }
 

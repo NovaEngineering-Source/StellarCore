@@ -53,30 +53,55 @@ public abstract class MixinStitcher {
             List<Stitcher.Holder> extras = cache.getExtraHolders();
             int extraCount = extras == null ? 0 : extras.size();
 
-            // Apply cached slot layout and atlas dimensions.
+            // Apply the cached slot layout. Allocation resumes from the extent the
+            // layout occupies rather than from the stored atlas size, so extras
+            // consume the slack that rounding left instead of crossing the
+            // power-of-two boundary and doubling the atlas.
+            final int atlasWidth = cache.getWidth();
+            final int atlasHeight = cache.getHeight();
+
             this.stitchSlots.clear();
             this.stitchSlots.addAll(cache.getSlots());
-            this.currentWidth = cache.getWidth();
-            this.currentHeight = cache.getHeight();
+            final int occupiedWidth = StitcherCache.occupiedWidth(this.stitchSlots);
+            final int occupiedHeight = StitcherCache.occupiedHeight(this.stitchSlots);
+            if (occupiedWidth <= 0 || occupiedHeight <= 0) {
+                // A cache that lists holders but describes no layout cannot be
+                // resumed; let the stitcher pack everything from scratch. The
+                // slots must be cleared first because doStitch appends to them.
+                this.stitchSlots.clear();
+                this.currentWidth = 0;
+                this.currentHeight = 0;
+                cache.clear();
+                return;
+            }
+            this.currentWidth = occupiedWidth;
+            this.currentHeight = occupiedHeight;
 
             // Allocate any extra sprites that exist in runtime but not in cache
             // (e.g. mods that randomly register different sprites each launch).
             if (extraCount > 0) {
-                final int baseWidth = this.currentWidth;
-                final int baseHeight = this.currentHeight;
                 final boolean[] rotatedSnapshot = new boolean[extraCount];
                 for (int i = 0; i < extraCount; i++) {
                     rotatedSnapshot[i] = extras.get(i).isRotated();
                 }
 
+                boolean allPlaced = true;
                 for (int i = 0; i < extraCount; i++) {
-                    ((AccessorStitcher) this).invokeAllocateSlot(extras.get(i));
+                    if (!((AccessorStitcher) this).invokeAllocateSlot(extras.get(i))) {
+                        allPlaced = false;
+                        break;
+                    }
                 }
-                // Re-round atlas dimensions to power of 2 after allocation.
-                this.currentWidth = MathHelper.smallestEncompassingPowerOfTwo(this.currentWidth);
-                this.currentHeight = MathHelper.smallestEncompassingPowerOfTwo(this.currentHeight);
 
-                if (this.currentWidth != baseWidth || this.currentHeight != baseHeight) {
+                if (!allPlaced
+                        || MathHelper.smallestEncompassingPowerOfTwo(this.currentWidth) > atlasWidth
+                        || MathHelper.smallestEncompassingPowerOfTwo(this.currentHeight) > atlasHeight) {
+                    // The extras do not fit inside the atlas the cache describes.
+                    // Growing it to fit would spend twice the texture memory on a
+                    // guess, so pack everything properly instead.
+
+                    // Undo the rotations allocation left behind, so the re-stitch
+                    // sees the holders as they arrived.
                     for (int i = 0; i < extraCount; i++) {
                         final Stitcher.Holder extra = extras.get(i);
                         if (extra.isRotated() != rotatedSnapshot[i]) {
@@ -90,6 +115,11 @@ public abstract class MixinStitcher {
                     return;
                 }
             }
+
+            // Everything fits the atlas the cache describes, so its dimensions
+            // stand and the texture is allocated at exactly the size it had.
+            this.currentWidth = atlasWidth;
+            this.currentHeight = atlasHeight;
 
             // Write updated cache (including extras) for next launch.
             stellar_core$storeCache(cache);
