@@ -2,7 +2,7 @@ package github.kasuminova.stellarcore.mixin.ctm;
 
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
-import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingIdentityHashMap;
 import github.kasuminova.stellarcore.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -38,7 +38,6 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("StaticVariableMayNotBeInitialized")
 @Mixin(value = TextureMetadataHandler.class, remap = false)
@@ -61,7 +60,7 @@ public abstract class MixinTextureMetadataHandler {
     private static Field multipartPartModels;
 
     @Unique
-    private final Map<ResourceLocation, Boolean> stellar_core$wrappedModelsConcurrent = new NonBlockingHashMap<>();
+    private final Map<IModel, Boolean> stellar_core$wrapDecisions = new NonBlockingIdentityHashMap<>();
 
     @Nonnull
     @Shadow
@@ -90,81 +89,23 @@ public abstract class MixinTextureMetadataHandler {
                     return;
                 }
 
-                Deque<ResourceLocation> dependencies = new ArrayDeque<>();
-                Set<ResourceLocation> seenModels = new ObjectOpenHashSet<>();
-                dependencies.push(mrl);
-                seenModels.add(mrl);
-                boolean shouldWrap = stellar_core$wrappedModelsConcurrent.getOrDefault(mrl, Boolean.FALSE);
-                while (!shouldWrap && !dependencies.isEmpty()) {
-                    ResourceLocation dep = dependencies.pop();
-                    IModel model;
-                    try {
-                        model = dep == mrl ? rootModel : ModelLoaderRegistry.getModel(dep);
-                    } catch (Exception e) {
-                        continue;
-                    }
-
-                    Set<ResourceLocation> textures = new ObjectOpenHashSet<>(model.getTextures());
-                    if (vanillaModelWrapperClass.isAssignableFrom(model.getClass())) {
-                        ModelBlock parent;
-                        try {
-                            parent = ((ModelBlock) modelWrapperModel.get(model)).parent;
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                        while (parent != null) {
-                            textures.addAll(parent.textures.values().stream()
-                                    .filter(s -> !s.startsWith("#"))
-                                    .map(ResourceLocation::new)
-                                    .collect(Collectors.toSet())
-                            );
-                            parent = parent.parent;
-                        }
-                    }
-
-                    Set<ResourceLocation> newDependencies = new ObjectOpenHashSet<>(model.getDependencies());
-                    if (multipartModelClass.isAssignableFrom(model.getClass())) {
-                        Map<?, IModel> partModels;
-                        try {
-                            partModels = (Map<?, IModel>) multipartPartModels.get(model);
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                        textures = new ObjectOpenHashSet<>();
-                        for (IModel partModel : partModels.values()) {
-                            textures.addAll(partModel.getTextures());
-                            newDependencies.addAll(partModel.getDependencies());
-                        }
-                    }
-
-                    for (ResourceLocation tex : textures) {
-                        IMetadataSectionCTM meta = null;
-                        try {
-                            meta = ResourceUtil.getMetadata(ResourceUtil.spriteToAbsolute(tex));
-                        } catch (IOException ignored) {
-                        }
-                        if (meta != null) {
-                            shouldWrap = true;
-                            break;
-                        }
-                    }
-
-                    for (ResourceLocation newDependency : newDependencies) {
-                        if (seenModels.add(newDependency)) {
-                            dependencies.push(newDependency);
-                        }
-                    }
+                // The walk only ever looks at the model graph, so every location sharing a model
+                // gets the same answer; deciding per location walked the same graph once per
+                // variant and allocated a fresh deque plus two sets each time.
+                Boolean shouldWrap = stellar_core$wrapDecisions.get(rootModel);
+                if (shouldWrap == null) {
+                    shouldWrap = stellar_core$shouldWrap(mrl, rootModel) ? Boolean.TRUE : Boolean.FALSE;
+                    stellar_core$wrapDecisions.put(rootModel, shouldWrap);
+                }
+                if (!shouldWrap) {
+                    return;
                 }
 
-                stellar_core$wrappedModelsConcurrent.put(mrl, shouldWrap ? Boolean.TRUE : Boolean.FALSE);
-
-                if (shouldWrap) {
-                    try {
-                        IBakedModel wrapped = wrap(rootModel, registry.getObject(mrl));
-                        wrappedConcurrent.offer(new Tuple<>(mrl, wrapped));
-                    } catch (IOException e) {
-                        CTM.logger.error("[StellarCore-CTM] Could not wrap model {}. Aborting.", mrl, e);
-                    }
+                try {
+                    IBakedModel wrapped = wrap(rootModel, registry.getObject(mrl));
+                    wrappedConcurrent.offer(new Tuple<>(mrl, wrapped));
+                } catch (IOException e) {
+                    CTM.logger.error("[StellarCore-CTM] Could not wrap model {}. Aborting.", mrl, e);
                 }
             });
             Tuple<ModelResourceLocation, IBakedModel> tuple;
@@ -172,8 +113,77 @@ public abstract class MixinTextureMetadataHandler {
                 registry.putObject(tuple.getFirst(), tuple.getSecond());
             }
         } finally {
-            stellar_core$wrappedModelsConcurrent.clear();
+            stellar_core$wrapDecisions.clear();
         }
+    }
+
+    @Unique
+    private boolean stellar_core$shouldWrap(final ResourceLocation mrl, final IModel rootModel) {
+        Deque<ResourceLocation> dependencies = new ArrayDeque<>();
+        Set<ResourceLocation> seenModels = new ObjectOpenHashSet<>();
+        dependencies.push(mrl);
+        seenModels.add(mrl);
+
+        while (!dependencies.isEmpty()) {
+            ResourceLocation dep = dependencies.pop();
+            IModel model;
+            try {
+                model = dep == mrl ? rootModel : ModelLoaderRegistry.getModel(dep);
+            } catch (Exception e) {
+                continue;
+            }
+
+            Set<ResourceLocation> textures = new ObjectOpenHashSet<>(model.getTextures());
+            if (vanillaModelWrapperClass.isAssignableFrom(model.getClass())) {
+                ModelBlock parent;
+                try {
+                    parent = ((ModelBlock) modelWrapperModel.get(model)).parent;
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+                while (parent != null) {
+                    for (String texture : parent.textures.values()) {
+                        if (!texture.startsWith("#")) {
+                            textures.add(new ResourceLocation(texture));
+                        }
+                    }
+                    parent = parent.parent;
+                }
+            }
+
+            Set<ResourceLocation> newDependencies = new ObjectOpenHashSet<>(model.getDependencies());
+            if (multipartModelClass.isAssignableFrom(model.getClass())) {
+                Map<?, IModel> partModels;
+                try {
+                    partModels = (Map<?, IModel>) multipartPartModels.get(model);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+                textures = new ObjectOpenHashSet<>();
+                for (IModel partModel : partModels.values()) {
+                    textures.addAll(partModel.getTextures());
+                    newDependencies.addAll(partModel.getDependencies());
+                }
+            }
+
+            for (ResourceLocation tex : textures) {
+                IMetadataSectionCTM meta = null;
+                try {
+                    meta = ResourceUtil.getMetadata(ResourceUtil.spriteToAbsolute(tex));
+                } catch (IOException ignored) {
+                }
+                if (meta != null) {
+                    return true;
+                }
+            }
+
+            for (ResourceLocation newDependency : newDependencies) {
+                if (seenModels.add(newDependency)) {
+                    dependencies.push(newDependency);
+                }
+            }
+        }
+        return false;
     }
 
 }

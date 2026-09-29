@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.common.mod;
 
+import github.kasuminova.stellarcore.mixin.util.ModLoaderEarly;
 import net.minecraftforge.fml.common.Loader;
 
 public enum Mods {
@@ -70,12 +71,10 @@ public enum Mods {
         initialized = true;
 
         if (requiredClass != null) {
-            try {
-                Class.forName(requiredClass);
-                return loaded = true;
-            } catch (Throwable e) {
-                return loaded = false;
-            }
+            // Presence, not Class.forName: the markers only tell forks of the same mod apart, while
+            // loading and initializing one drags in its whole static-init graph (284ms measured for
+            // the Mekanism marker) and happens while the mixin configs are still being queued.
+            return loaded = ModLoaderEarly.isClassPresent(requiredClass);
         }
         return loaded = Loader.isModLoaded(modID);
     }

@@ -2,9 +2,6 @@ package github.kasuminova.stellarcore.mixin.minecraft.randomtick;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.common.world.ParallelRandomBlockTicker;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -15,8 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.List;
 
 @Mixin(WorldServer.class)
 public abstract class MixinWorldServer extends World {
@@ -37,23 +32,32 @@ public abstract class MixinWorldServer extends World {
             )
     )
     private ExtendedBlockStorage[] redirectUpdateBlocksGetBlockStorageArray(final Chunk chunk, final @Local(name = "i") int tickSpeed) {
+        final ExtendedBlockStorage[] storageArray = chunk.getBlockStorageArray();
+
+        // Vanilla advances the LCG only inside the branch that needs a tick, so a chunk that has nothing to tick can
+        // return here without touching the world state, and without the bookkeeping it used to do for every chunk.
+        boolean anyTickable = false;
+        for (final ExtendedBlockStorage storage : storageArray) {
+            if (storage != Chunk.NULL_BLOCK_STORAGE && storage.needsRandomTick()) {
+                anyTickable = true;
+                break;
+            }
+        }
+        if (!anyTickable) {
+            return EMPTY_ARRAY;
+        }
+
+        final ParallelRandomBlockTicker ticker = ParallelRandomBlockTicker.INSTANCE;
+        final int chunkX = chunk.x;
+        final int chunkZ = chunk.z;
         int updateLCG = this.updateLCG;
-        ExtendedBlockStorage[] storageArray = chunk.getBlockStorageArray();
-        List<ParallelRandomBlockTicker.TickData> tickDataList = new ObjectArrayList<>(storageArray.length + 1);
-        for (ExtendedBlockStorage storage : storageArray) {
+        for (final ExtendedBlockStorage storage : storageArray) {
             if (storage == Chunk.NULL_BLOCK_STORAGE || !storage.needsRandomTick()) {
                 continue;
             }
-
-            IntList lcgList = new IntArrayList(tickSpeed + 1);
-            for (int i = 0; i < tickSpeed; ++i) {
-                updateLCG = (updateLCG * 3) + 0x3c6ef35f;
-                lcgList.add(updateLCG);
-            }
-            tickDataList.add(new ParallelRandomBlockTicker.TickData(storage, lcgList));
+            updateLCG = ticker.enqueueSection(storage, chunkX, chunkZ, tickSpeed, updateLCG);
         }
         this.updateLCG = updateLCG;
-        ParallelRandomBlockTicker.INSTANCE.enqueueChunk(chunk, tickDataList);
         return EMPTY_ARRAY;
     }
 

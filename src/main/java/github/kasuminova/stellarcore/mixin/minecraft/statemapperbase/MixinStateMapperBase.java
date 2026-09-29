@@ -27,6 +27,9 @@ public abstract class MixinStateMapperBase implements StellarCoreStateMapper {
     @Unique
     private static final int STELLAR_CORE$MIN_CONCURRENT_CAP = 64;
 
+    @Unique
+    private static final int STELLAR_CORE$UNKNOWN_CAPACITY = -1;
+
     @Shadow
     protected Map<IBlockState, ModelResourceLocation> mapStateModelLocations;
 
@@ -81,7 +84,7 @@ public abstract class MixinStateMapperBase implements StellarCoreStateMapper {
 
     @Override
     public void stellar_core$ensureConcurrent() {
-        stellar_core$ensureConcurrent(Math.max(STELLAR_CORE$MIN_CONCURRENT_CAP, stellar_core$size()));
+        stellar_core$ensureConcurrent(STELLAR_CORE$UNKNOWN_CAPACITY);
     }
 
     @Override
@@ -108,8 +111,11 @@ public abstract class MixinStateMapperBase implements StellarCoreStateMapper {
         if (this.mapStateModelLocations instanceof ConcurrentMap && !this.stellar_core$frozen) {
             return;
         }
+        final int capacity = expected == STELLAR_CORE$UNKNOWN_CAPACITY
+            ? Math.max(STELLAR_CORE$MIN_CONCURRENT_CAP, stellar_core$size())
+            : expected;
         final NonBlockingIdentityHashMap<IBlockState, ModelResourceLocation> next =
-            stellar_core$newConcurrent(expected);
+            stellar_core$newConcurrent(capacity);
         if (this.mapStateModelLocations != null && !this.mapStateModelLocations.isEmpty()) {
             next.putAll(this.mapStateModelLocations);
         }

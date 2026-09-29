@@ -34,6 +34,14 @@ public final class ZipEntryIndex {
     private static final AtomicLong GENERATION = new AtomicLong();
     private static final int MAX_SCAN_THREADS = 4;
 
+    /**
+     * Cheap stand-in for {@code INDEXES.isEmpty()}: asking a jctools map for its size sums the
+     * per-CPU counters of its auto table, which is expensive enough to show up on the lookup path.
+     * Only ever set to {@code true} (a stale {@code true} costs one extra map lookup, never a
+     * wrong answer) and reset when the indexes are dropped.
+     */
+    private static volatile boolean indexesPresent = false;
+
     private static volatile ExecutorService executor;
 
     private ZipEntryIndex() {
@@ -43,6 +51,7 @@ public final class ZipEntryIndex {
         GENERATION.incrementAndGet();
         INDEXES.clear();
         KEYS.clear();
+        indexesPresent = false;
     }
 
     public static void invalidate(@Nullable final File archive) {
@@ -60,11 +69,12 @@ public final class ZipEntryIndex {
         if (INDEXES.putIfAbsent(key, created) != null) {
             return;
         }
+        indexesPresent = true;
         CompletableFuture.runAsync(() -> created.scan(key, archive, opener), executor());
     }
 
     public static int lookup(@Nullable final File archive, @Nullable final String name) {
-        if (INDEXES.isEmpty() || archive == null || !isIndexable(name)) {
+        if (!indexesPresent || archive == null || !isIndexable(name)) {
             return UNKNOWN;
         }
         final Index index = INDEXES.get(key(archive));

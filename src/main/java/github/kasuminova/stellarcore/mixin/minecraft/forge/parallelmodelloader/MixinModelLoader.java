@@ -41,6 +41,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
@@ -108,11 +110,14 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) bakeBar;
         final ReentrantLock barLock = new ReentrantLock();
         final AtomicInteger deferredSteps = new AtomicInteger();
+        final AtomicLong nextMessageNanos = new AtomicLong();
+        final AtomicReference<String> lastMessage = new AtomicReference<>("");
         models.keySet().parallelStream().forEach((model) -> {
             Set<ModelResourceLocation> locations = models.get(model);
             if (barLock.tryLock()) {
                 try {
-                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, "[" + Joiner.on(", ").join(locations) + "]");
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1,
+                        stellar_core$bakeMessage(locations, nextMessageNanos, lastMessage));
                 } catch (Throwable t) {
                     StellarLog.LOG.error("[StellarCore-ParallelModelLoader] Failed to step the bake bar for {}:", model, t);
                 } finally {
@@ -152,6 +157,23 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
     }
 
     @Unique
+    private static String stellar_core$bakeMessage(final Set<ModelResourceLocation> locations,
+                                                   final AtomicLong nextMessageNanos,
+                                                   final AtomicReference<String> lastMessage) {
+        if (StellarCoreConfig.FEATURES.vanilla.hideModelLoadingProgress) {
+            return "";
+        }
+        final long now = System.nanoTime();
+        if (now < nextMessageNanos.get()) {
+            return lastMessage.get();
+        }
+        nextMessageNanos.set(now + 50_000_000L);
+        final String message = "[" + Joiner.on(", ").join(locations) + "]";
+        lastMessage.set(message);
+        return message;
+    }
+
+    @Unique
     private static IBakedModel stellar_core$bakeModel(final IModel model, final DefaultTextureGetter textureGetter) {
         if (AsyncUnsafeModels.contains(model)) {
             synchronized (AsyncUnsafeModels.bakeLock()) {
@@ -176,7 +198,10 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         blocks.parallelStream().forEach(block -> {
             if (barLock.tryLock()) {
                 try {
-                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, Objects.requireNonNull(block.getRegistryName()).toString());
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1,
+                        StellarCoreConfig.FEATURES.vanilla.hideModelLoadingProgress
+                            ? ""
+                            : Objects.requireNonNull(block.getRegistryName()).toString());
                 } finally {
                     barLock.unlock();
                 }
@@ -270,7 +295,10 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         items.parallelStream().forEach(item -> {
             if (barLock.tryLock()) {
                 try {
-                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1, Objects.requireNonNull(item.getRegistryName()).toString());
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1,
+                        StellarCoreConfig.FEATURES.vanilla.hideModelLoadingProgress
+                            ? ""
+                            : Objects.requireNonNull(item.getRegistryName()).toString());
                 } finally {
                     barLock.unlock();
                 }

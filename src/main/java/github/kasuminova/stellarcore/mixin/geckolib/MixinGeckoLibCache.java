@@ -8,6 +8,7 @@ import software.bernie.geckolib3.resource.GeckoLibCache;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.zip.ZipFile;
 
 @Mixin(value = GeckoLibCache.class, remap = false)
 public abstract class MixinGeckoLibCache {
@@ -18,9 +19,14 @@ public abstract class MixinGeckoLibCache {
     )
     private Object stellar_core$openZipFile(final Field field, final Object obj) throws IllegalAccessException {
         if (obj instanceof StellarCoreFileResourcePackAccessor s) {
+            final ZipFile zipFile;
             try {
-                return s.stellar_core$getResourcePackZipFile();
-            } catch (IOException ignored) {
+                zipFile = s.stellar_core$getResourcePackZipFile();
+            } catch (IOException failure) {
+                return field.get(obj);
+            }
+            if (zipFile != null) {
+                return zipFile;
             }
         }
         return field.get(obj);
