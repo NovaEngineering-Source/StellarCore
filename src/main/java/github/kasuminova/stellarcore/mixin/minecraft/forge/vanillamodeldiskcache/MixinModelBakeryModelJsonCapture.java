@@ -11,8 +11,6 @@ import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-import java.io.IOException;
-
 /**
  * Copies the model JSON the vanilla loader parses into the current
  * {@link ModelCapture} scope.

@@ -35,6 +35,27 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
     @Shadow(remap = false)
     protected VertexFormat format;
 
+    /**
+     * What {@code unpackedData} becomes once the quad has been packed.
+     *
+     * <p>Not {@code null}, even though the data is deliberately dropped: the
+     * field has no getter, but it is reachable by reflection, and mods do reach
+     * it. FoamFix's model deduplicator walks every baked model on the bake event
+     * and takes the length of this array, so a {@code null} makes it throw once
+     * per quad — and its handler prints the whole stack trace at INFO. A pack
+     * with a hundred thousand quads then writes a hundred thousand stack traces
+     * from the loading thread: the progress bar sits still for minutes and the
+     * log grows past a gigabyte. An empty array reads as "this quad has no
+     * unpacked vertices", which is exactly true by then, and iterating it costs
+     * nothing.</p>
+     */
+    @Unique
+    private static final float[][][] STELLAR_CORE$DROPPED_DATA = new float[0][0][0];
+
+    /** Whether this quad's unpacked data was dropped, so the packed data must be used instead. */
+    @Unique
+    private boolean stellar_core$dropped;
+
     @SuppressWarnings({"deprecation", "DataFlowIssue"})
     public MixinUnpackedBakedQuad() {
         super(null, 0, null, null);
@@ -50,7 +71,7 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
 
     @Inject(method = "pipe", at = @At("HEAD"), cancellable = true, remap = false)
     private void stellar_core$pipePacked(final IVertexConsumer consumer, final CallbackInfo ci) {
-        if (unpackedData != null) {
+        if (!stellar_core$dropped) {
             return;
         }
         LightUtil.putBakedQuad(consumer, (BakedQuad) (Object) this);
@@ -87,7 +108,8 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
             }
             packed = true;
             if ((Object) this.getClass() == UnpackedBakedQuad.class) {
-                unpackedData = null;
+                unpackedData = STELLAR_CORE$DROPPED_DATA;
+                stellar_core$dropped = true;
             }
             ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(packedData);
             StellarUnpackedDataPool.canonicalizeAsync(packedData, canonicalized ->
