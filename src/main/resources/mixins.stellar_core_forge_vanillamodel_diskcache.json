@@ -7,6 +7,7 @@
     "client": [
         "AccessorMinecraftResourcePacks",
         "MixinModelBakeryBlockstateCache",
+        "MixinModelBakeryModelJsonCapture",
         "MixinModelBakeryVanillaCache",
         "MixinVanillaLoaderArmatureCache"
     ]

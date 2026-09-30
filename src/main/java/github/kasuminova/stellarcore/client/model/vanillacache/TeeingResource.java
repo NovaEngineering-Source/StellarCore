@@ -9,20 +9,32 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.UnaryOperator;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public final class TeeingResource implements IResource {
 
     private final IResource delegate;
+    private final UnaryOperator<InputStream> tee;
 
+    /** Taps whatever {@link BlockstateCapture} is collecting. */
     public TeeingResource(final IResource delegate) {
+        this(delegate, BlockstateCapture::tee);
+    }
+
+    /**
+     * @param tee the tap to install on the stream; it decides on its own whether
+     *            it is currently collecting anything
+     */
+    public TeeingResource(final IResource delegate, final UnaryOperator<InputStream> tee) {
         this.delegate = delegate;
+        this.tee = tee;
     }
 
     @Override
     public InputStream getInputStream() {
-        return BlockstateCapture.tee(delegate.getInputStream());
+        return tee.apply(delegate.getInputStream());
     }
 
     @Override

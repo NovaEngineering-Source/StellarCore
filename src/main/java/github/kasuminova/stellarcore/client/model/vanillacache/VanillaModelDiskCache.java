@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -60,6 +61,14 @@ import java.util.zip.GZIPOutputStream;
  * bytes were read once at startup, and a hit is a map lookup plus a Gson parse.
  * The previous design re-read and re-hashed every model on every hit, which cost
  * as much as not caching at all.</p>
+ *
+ * <h2>Capture</h2>
+ * A snapshot holds the bytes the model loader itself read, tapped as it read them
+ * (see {@link ModelCapture}). Reading each file a second time afterwards would
+ * double the resource lookups on the model-loading critical path, and on a
+ * machine where that second lookup comes back empty it would leave the cache
+ * silently empty forever — so the second read exists only as a fallback for when
+ * a tap could not be installed.</p>
  *
  * <h2>Self-healing</h2>
  * If a cached entry fails to parse (truncated write, hand-edited file, a mod that
@@ -100,6 +109,34 @@ public final class VanillaModelDiskCache {
 
     /** Blockstates captured during this run, persisted alongside the models. */
     private final Map<ResourceLocation, BlockstateSnapshot> liveBlockstates = new ConcurrentHashMap<>();
+
+    /**
+     * Vanilla-format model loads observed this session, and where their bytes
+     * came from. The capture path is best-effort and swallows its own failures,
+     * so these counters are the only way {@link #saveAsync} can tell "nothing to
+     * save" apart from "capture is broken" — and, when it is broken, which half
+     * of it broke.
+     */
+    private final LongAdder captureAttempts = new LongAdder();
+
+    /** Captures whose bytes came from the loader's own read. */
+    private final LongAdder captureTapped = new LongAdder();
+
+    /** Captures whose bytes had to be read again, the tap being unavailable. */
+    private final LongAdder captureReread = new LongAdder();
+
+    /** Captures that produced nothing: no read yielded the model JSON. */
+    private final LongAdder captureMisses = new LongAdder();
+
+    /**
+     * The fingerprint the captured snapshots were taken under. Captures may
+     * survive several resource reloads (mods reload resources for their own
+     * reasons without touching models), so the capture maps cannot be wiped
+     * whenever a reload starts; they are dropped only when a reload recomputes
+     * a different fingerprint, and included in a save only when the tag still
+     * matches the seed being written.
+     */
+    private volatile long captureSeed = 0L;
 
     /** Snapshots read from disk for the current environment; the hit source. */
     private volatile Map<ResourceLocation, VanillaModelSnapshot> diskView = null;
@@ -209,6 +246,13 @@ public final class VanillaModelDiskCache {
         if (newSeed == 0L) {
             return;
         }
+        if (captureSeed != 0L && captureSeed != newSeed) {
+            // The environment this session captured models in no longer exists
+            // (the reload changed the pack set); the snapshots are stale.
+            live.clear();
+            liveBlockstates.clear();
+            captureSeed = 0L;
+        }
         loadedSeed = newSeed;
         prepared = true;
         prepareFuture = CompletableFuture.completedFuture(null);
@@ -288,8 +332,10 @@ public final class VanillaModelDiskCache {
             return;
         }
         final long seed = loadedSeed;
+        final long attempts = captureAttempts.sum();
         final Map<ResourceLocation, VanillaModelSnapshot> models;
         final Map<ResourceLocation, BlockstateSnapshot> blockstates;
+        final boolean capturesValid;
         synchronized (this) {
             if (live.isEmpty() && liveBlockstates.isEmpty()) {
                 // Nothing to write, but retired environments may still need
@@ -297,10 +343,54 @@ public final class VanillaModelDiskCache {
                 pruneStaleFiles(configDir, seed);
                 return;
             }
-            models = new Object2ObjectOpenHashMap<>(live.size() * 2);
-            models.putAll(live);
-            blockstates = new Object2ObjectOpenHashMap<>(liveBlockstates.size() * 2);
-            blockstates.putAll(liveBlockstates);
+            // Hits are never re-captured, so the views read for this exact
+            // environment must be merged back in: a save built from the capture
+            // maps alone would silently shrink the cache to whatever this run
+            // happened to load last.
+            capturesValid = captureSeed == 0L || captureSeed == seed;
+            models = new Object2ObjectOpenHashMap<>(
+                    Math.max(16, live.size() + (diskView == null ? 0 : diskView.size())) * 2);
+            if (diskView != null) {
+                models.putAll(diskView);
+            }
+            if (capturesValid) {
+                models.putAll(live);
+            }
+            blockstates = new Object2ObjectOpenHashMap<>(
+                    Math.max(16, liveBlockstates.size() + (blockstateView == null ? 0 : blockstateView.size())) * 2);
+            if (blockstateView != null) {
+                blockstates.putAll(blockstateView);
+            }
+            if (capturesValid) {
+                blockstates.putAll(liveBlockstates);
+            }
+            if (!capturesValid) {
+                // The reload that changed the environment already reloaded
+                // models under the new one; these can never be written.
+                live.clear();
+                liveBlockstates.clear();
+                captureSeed = 0L;
+            }
+        }
+        if (capturesValid && attempts > 0L) {
+            final long tapped = captureTapped.sum();
+            final long reread = captureReread.sum();
+            final long misses = captureMisses.sum();
+            if (models.isEmpty()) {
+                // A session that clearly loaded models produced no snapshot at
+                // all. Writing the (merged) empty map would still be harmless,
+                // but this state means something is broken — say so, with the
+                // breakdown, instead of staying silent for release after release.
+                StellarLog.LOG.warn(
+                    "[StellarCore-VanillaModelDiskCache] {} vanilla models were loaded this session but none were captured "
+                  + "(tapped {}, re-read {}, unreadable {}); the model cache will remain empty until the capture reads work again.",
+                        attempts, tapped, reread, misses);
+            } else if (misses > 0L) {
+                StellarLog.LOG.info(
+                    "[StellarCore-VanillaModelDiskCache] {} of {} vanilla models could not be captured "
+                  + "(tapped {}, re-read {}); they will be loaded normally again next run.",
+                        misses, attempts, tapped, reread);
+            }
         }
         final Thread writer = new Thread(() -> {
             try {
@@ -454,10 +544,23 @@ public final class VanillaModelDiskCache {
      * fingerprint, so a reload that changed nothing inherits the cache and one
      * that changed models does not.
      */
+    /**
+     * Drop everything known about the current environment's *views*. Called when
+     * a resource reload starts, because the reload may legitimately change which
+     * packs are active; {@link #prepareSync} then re-reads the file for the newly
+     * computed fingerprint, so a reload that changed nothing inherits the cache
+     * and one that changed models does not.
+     *
+     * <p>The capture maps are deliberately not touched here. Mods reload
+     * resources for their own reasons after the model loader has run, and a
+     * reload whose fingerprint ends up unchanged must not throw away the
+     * snapshots this session captured — on some machines such a reload lands
+     * between capture and save, which used to cost the entire cache. Whether
+     * the captures still belong to the current environment is decided in
+     * {@link #prepareSync}, where the fresh fingerprint is known.</p>
+     */
     public void onModelCacheCleared() {
         environmentConfirmed = false;
-        live.clear();
-        liveBlockstates.clear();
         diskView = null;
         blockstateView = null;
         loadedSeed = 0L;
@@ -596,24 +699,58 @@ public final class VanillaModelDiskCache {
     /**
      * Record the raw JSON backing a model the normal loader just produced. Runs
      * once per model per environment (a hit short-circuits before this is
-     * reached), so the extra read is paid only when the cache is being built or
+     * reached), so it only costs anything while the cache is being built or
      * repaired. Failures are swallowed: caching is best-effort and must never
      * break model loading.
+     *
+     * <p>Both files come from the loader's own reads when the taps are in place,
+     * which is free. The files are read here only when a tap is unavailable, so a
+     * machine whose taps cannot be installed keeps the old behaviour instead of
+     * losing the cache.</p>
      */
     public void captureFrom(final ResourceLocation location, final IResourceManager manager) {
-        if (!isEnabled() || manager == null) {
+        if (!isEnabled()) {
             return;
         }
+        captureAttempts.increment();
+        captureSeed = loadedSeed;
         try {
             final ResourceLocation key = normalize(location);
-            final byte[] modelJson = readResourceBytes(manager, modelJsonLocation(location));
+            final byte[] tappedModel = ModelCapture.modelJson();
+            final byte[] modelJson = tappedModel != null ? tappedModel
+                    : manager == null ? null : readResourceBytes(manager, modelJsonLocation(location));
             if (modelJson == null || modelJson.length == 0) {
+                captureMisses.increment();
                 return;
             }
-            final byte[] armatureJson = readResourceBytes(manager, armatureLocation(location));
-            live.put(key, new VanillaModelSnapshot(key, modelJson, armatureJson));
+            if (tappedModel != null) {
+                captureTapped.increment();
+            } else {
+                captureReread.increment();
+            }
+            live.put(key, new VanillaModelSnapshot(key, modelJson, armatureJson(location, manager)));
         } catch (Throwable ignored) {
+            captureMisses.increment();
         }
+    }
+
+    /**
+     * The armature JSON for {@code location}, or {@code null} when the model has
+     * none.
+     *
+     * <p>Normally answered by the tap on Forge's own armature lookup, which also
+     * reports the case a tap cannot see any other way: the lookup failed with
+     * "file not found", so the model demonstrably has no armature. Without a tap
+     * the file is read here, as it always was — a missing armature then records
+     * as absent, exactly as before.</p>
+     */
+    @Nullable
+    private static byte[] armatureJson(final ResourceLocation location, final IResourceManager manager) {
+        final byte[] tapped = ModelCapture.armatureJson();
+        if (tapped != null || ModelCapture.armatureAbsent()) {
+            return tapped;
+        }
+        return manager == null ? null : readResourceBytes(manager, armatureLocation(location));
     }
 
     // ------------------------------------------------------------------------
