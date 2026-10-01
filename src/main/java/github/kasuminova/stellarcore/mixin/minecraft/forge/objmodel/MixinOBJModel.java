@@ -6,6 +6,7 @@ import github.kasuminova.stellarcore.client.model.obj.OBJBakeCacheKey;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
@@ -21,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import javax.vecmath.Matrix4f;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -128,7 +130,7 @@ public class MixinOBJModel {
         if (cache == null) {
             return;
         }
-        final OBJBakeCacheKey key = stellar_core$bakeKey(state, format);
+        final OBJBakeCacheKey key = stellar_core$bakeKey(state, format, bakedTextureGetter);
         if (key == null) {
             return;
         }
@@ -145,7 +147,7 @@ public class MixinOBJModel {
         if (!StellarCoreConfig.PERFORMANCE.forge.objModelBakeCache) {
             return;
         }
-        final OBJBakeCacheKey key = stellar_core$bakeKey(state, format);
+        final OBJBakeCacheKey key = stellar_core$bakeKey(state, format, bakedTextureGetter);
         if (key == null) {
             return;
         }
@@ -165,7 +167,9 @@ public class MixinOBJModel {
     }
 
     @Unique
-    private OBJBakeCacheKey stellar_core$bakeKey(final IModelState state, final VertexFormat format) {
+    private OBJBakeCacheKey stellar_core$bakeKey(final IModelState state,
+                                                  final VertexFormat format,
+                                                  final Function<ResourceLocation, TextureAtlasSprite> bakedTextureGetter) {
         if (state == null || state instanceof OBJModel.OBJState) {
             return null;
         }
@@ -182,7 +186,39 @@ public class MixinOBJModel {
             index++;
         }
         final Optional<TRSRTransformation> transform = state.apply(Optional.empty());
-        return new OBJBakeCacheKey(format, transform.orElse(null), visibility);
+        final float[] cameraTransforms = stellar_core$cameraTransforms(state);
+        return new OBJBakeCacheKey(format, bakedTextureGetter, transform.orElse(null), cameraTransforms, visibility);
+    }
+
+    @Unique
+    private static float[] stellar_core$cameraTransforms(final IModelState state) {
+        final ItemCameraTransforms.TransformType[] types = ItemCameraTransforms.TransformType.values();
+        final float[] transforms = new float[types.length * 16];
+        int offset = 0;
+        for (final ItemCameraTransforms.TransformType type : types) {
+            final Optional<TRSRTransformation> transform = state.apply(Optional.of(type));
+            if (transform.isPresent()) {
+                final Matrix4f matrix = transform.get().getMatrix();
+                transforms[offset] = matrix.m00;
+                transforms[offset + 1] = matrix.m01;
+                transforms[offset + 2] = matrix.m02;
+                transforms[offset + 3] = matrix.m03;
+                transforms[offset + 4] = matrix.m10;
+                transforms[offset + 5] = matrix.m11;
+                transforms[offset + 6] = matrix.m12;
+                transforms[offset + 7] = matrix.m13;
+                transforms[offset + 8] = matrix.m20;
+                transforms[offset + 9] = matrix.m21;
+                transforms[offset + 10] = matrix.m22;
+                transforms[offset + 11] = matrix.m23;
+                transforms[offset + 12] = matrix.m30;
+                transforms[offset + 13] = matrix.m31;
+                transforms[offset + 14] = matrix.m32;
+                transforms[offset + 15] = matrix.m33;
+            }
+            offset += 16;
+        }
+        return transforms;
     }
 
 }
