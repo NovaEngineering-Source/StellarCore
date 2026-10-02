@@ -6,14 +6,14 @@ import github.kasuminova.stellarcore.common.util.StellarLog;
 import net.minecraftforge.fml.common.Loader;
 import zone.rong.mixinbooter.ILateMixinLoader;
 
-import static github.kasuminova.stellarcore.mixin.util.ModLoaderEarly.isClassPresent;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
+
+import static github.kasuminova.stellarcore.mixin.util.ModLoaderEarly.isClassPresent;
 
 @SuppressWarnings({"unused", "SameParameterValue"})
 public class StellarCoreLateMixinLoader implements ILateMixinLoader {
@@ -82,6 +82,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_thermaldynamics.json",        "thermaldynamics");
         addModdedMixinCFG("mixins.stellar_core_thermalexpansion.json",       "thermalexpansion", () -> StellarCoreConfig.BUG_FIXES.thermalExpansion.containerSatchelFilter);
         addModdedMixinCFG("mixins.stellar_core_touhou_little_maid.json",     "touhou_little_maid", () -> StellarCoreConfig.PERFORMANCE.tlm.modelDataCanonicalization);
+        addModdedMixinCFG("mixins.stellar_core_ucw.json",                    "unlimitedchiselworks");
         addModdedMixinCFG("mixins.stellar_core_vintagefix.json",             "vintagefix");
     }
 

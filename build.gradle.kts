@@ -1,6 +1,6 @@
 import org.jetbrains.gradle.ext.Gradle
 import org.jetbrains.gradle.ext.RunConfigurationContainer
-import java.util.*
+import java.util.Collections
 
 plugins {
     id("java-library")
@@ -322,6 +322,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:tatw-263980:2585616"))
     compileOnly(rfg.deobf("curse.maven:resource-loader-226447:2477566"))
     compileOnly(rfg.deobf("curse.maven:base-246996:3440963"))
+    compileOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
+    runtimeOnly(rfg.deobf("curse.maven:unlimited-chisel-works-278493:3319307"))
 }
 
 // IDE Settings
