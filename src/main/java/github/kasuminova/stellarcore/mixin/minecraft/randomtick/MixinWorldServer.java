@@ -32,21 +32,11 @@ public abstract class MixinWorldServer extends World {
             )
     )
     private ExtendedBlockStorage[] redirectUpdateBlocksGetBlockStorageArray(final Chunk chunk, final @Local(name = "i") int tickSpeed) {
-        final ExtendedBlockStorage[] storageArray = chunk.getBlockStorageArray();
-
-        // Vanilla advances the LCG only inside the branch that needs a tick, so a chunk that has nothing to tick can
-        // return here without touching the world state, and without the bookkeeping it used to do for every chunk.
-        boolean anyTickable = false;
-        for (final ExtendedBlockStorage storage : storageArray) {
-            if (storage != Chunk.NULL_BLOCK_STORAGE && storage.needsRandomTick()) {
-                anyTickable = true;
-                break;
-            }
-        }
-        if (!anyTickable) {
+        if (tickSpeed <= 0) {
             return EMPTY_ARRAY;
         }
 
+        final ExtendedBlockStorage[] storageArray = chunk.getBlockStorageArray();
         final ParallelRandomBlockTicker ticker = ParallelRandomBlockTicker.INSTANCE;
         final int chunkX = chunk.x;
         final int chunkZ = chunk.z;

@@ -6,4 +6,6 @@ public interface IMixinInGameInfoCore {
 
     boolean isPostDrawing();
 
+    void stellar_core$clearRenderCache();
+
 }

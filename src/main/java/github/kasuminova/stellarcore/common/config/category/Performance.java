@@ -389,7 +389,7 @@ public class Performance {
         public boolean archiveResourcePackIndex = true;
 
         @Config.Comment({
-                "(Client/Server Performance) Use parallelStream to handle randomTick operations on world blocks to improve performance in more player environments.",
+                "(Client/Server Performance) Reuse random-tick buffers, select candidates in parallel, and run block callbacks on the server thread.",
                 "Note: Possibly affecting the random logic of the original game."
         })
         @Config.RequiresMcRestart

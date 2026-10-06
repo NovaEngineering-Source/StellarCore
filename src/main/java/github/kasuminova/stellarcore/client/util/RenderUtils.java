@@ -4,12 +4,28 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import org.lwjgl.opengl.GL11;
 
 public class RenderUtils {
+
+    public static void deleteOwnedFramebuffer(final Minecraft minecraft, final Framebuffer framebuffer) {
+        final boolean previousFboEnable = minecraft.gameSettings.fboEnable;
+        minecraft.gameSettings.fboEnable = true;
+        try {
+            framebuffer.deleteFramebuffer();
+        } finally {
+            minecraft.gameSettings.fboEnable = previousFboEnable;
+            if (OpenGlHelper.isFramebufferEnabled()) {
+                minecraft.getFramebuffer().bindFramebuffer(false);
+            } else {
+                OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, 0);
+            }
+        }
+    }
 
     public static void renderFramebuffer(final Minecraft minecraft, final Framebuffer framebuffer) {
         ScaledResolution res = new ScaledResolution(minecraft);

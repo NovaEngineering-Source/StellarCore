@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.client.handler;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import com.cleanroommc.neverenoughanimations.NEAConfig;
 import com.cleanroommc.neverenoughanimations.animations.HotbarAnimation;
+import com.github.lunatrius.ingameinfo.InGameInfoCore;
 import com.kamefrede.rpsideas.items.components.ItemBioticSensor;
 import com.llamalad7.betterchat.gui.GuiBetterChat;
 import github.kasuminova.stellarcore.client.hudcaching.HUDCaching;
@@ -12,6 +13,7 @@ import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.common.pool.LowerCaseStringPool;
 import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.mixin.util.IMixinInGameInfoCore;
 import journeymap.common.feature.PlayerRadarManager;
 import mekanism.client.ClientTickHandler;
 import net.minecraft.client.Minecraft;
@@ -21,6 +23,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -50,6 +53,7 @@ public class ClientEventHandler {
             return;
         }
         clientTick++;
+        HUDCaching.releaseUnusedFramebuffer();
 
         StellarUnpackedDataPool.update();
 
@@ -189,6 +193,25 @@ public class ClientEventHandler {
             ((Map<EntityPlayer, List<EntityLivingBase>>) triggeredBioticsRemote.get(null)).clear();
         } catch (Throwable e) {
             StellarLog.LOG.warn("Failed to clear triggeredBioticsRemote in ItemBioticSensor.", e);
+        }
+    }
+
+    /** Cache lifetime must not depend on the optional third-party world leak fixes. */
+    @SubscribeEvent
+    public void onClientWorldUnload(final WorldEvent.Unload event) {
+        if (!event.getWorld().isRemote) {
+            return;
+        }
+        HUDCaching.releaseFramebuffer();
+        if (Mods.INGAME_INFO_XML.loaded()) {
+            clearInGameInfoRenderCache();
+        }
+    }
+
+    @Optional.Method(modid = "ingameinfoxml")
+    private static void clearInGameInfoRenderCache() {
+        if (InGameInfoCore.INSTANCE instanceof IMixinInGameInfoCore) {
+            ((IMixinInGameInfoCore) InGameInfoCore.INSTANCE).stellar_core$clearRenderCache();
         }
     }
 

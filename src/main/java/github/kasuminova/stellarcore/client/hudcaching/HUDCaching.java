@@ -1,14 +1,20 @@
 package github.kasuminova.stellarcore.client.hudcaching;
 
 import com.github.lunatrius.ingameinfo.handler.Ticker;
+import github.kasuminova.stellarcore.client.util.RenderUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.mod.Mods;
 import github.kasuminova.stellarcore.mixin.minecraft.hudcaching.AccessorGuiIngameForge;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraftforge.client.GuiIngameForge;
@@ -26,12 +32,30 @@ public class HUDCaching {
     public static Framebuffer framebuffer = null;
     public static boolean dirty = true;
     public static boolean renderingCacheOverride = false;
+    private static boolean lastMinimapVisible = true;
 
     public static boolean igiRendering = false;
 
     private static long lastRenderMS = 0;
 
     private HUDCaching() {
+    }
+
+    public static void releaseFramebuffer() {
+        if (framebuffer != null) {
+            RenderUtils.deleteOwnedFramebuffer(MC, framebuffer);
+            framebuffer = null;
+        }
+        dirty = true;
+        lastRenderMS = 0;
+    }
+
+    public static void releaseUnusedFramebuffer() {
+        if (framebuffer != null && (MC.world == null
+                || !OpenGlHelper.isFramebufferEnabled()
+                || !StellarCoreConfig.PERFORMANCE.vanilla.hudCaching || isCurrentDimensionBlacklisted())) {
+            releaseFramebuffer();
+        }
     }
 
     @SubscribeEvent
@@ -44,13 +68,24 @@ public class HUDCaching {
     }
 
     public static void renderCachedHud(EntityRenderer renderer, GuiIngame ingame, float partialTicks) {
+        // JourneyMap 6.0 draws its minimap only in-world and in chat. Refresh the HUD texture
+        // when that visibility changes, and do not blit the previous screen's cached HUD first.
+        final boolean minimapVisible = MC.currentScreen == null || MC.currentScreen instanceof GuiChat;
+        final boolean minimapVisibilityChanged = minimapVisible != lastMinimapVisible;
+        if (minimapVisibilityChanged) {
+            lastMinimapVisible = minimapVisible;
+            dirty = true;
+        }
+
         if (!OpenGlHelper.isFramebufferEnabled() || !StellarCoreConfig.PERFORMANCE.vanilla.hudCaching) {
+            releaseFramebuffer();
             ingame.renderGameOverlay(partialTicks);
+            renderIGIOverlayIfRequiredWhenBypassed(partialTicks);
             return;
         }
 
         if (isCurrentDimensionBlacklisted()) {
-            dirty = true;
+            releaseFramebuffer();
             ingame.renderGameOverlay(partialTicks);
             renderIGIOverlayIfRequiredWhenBypassed(partialTicks);
             return;
@@ -63,7 +98,7 @@ public class HUDCaching {
         renderer.setupOverlayRendering();
         GlStateManager.enableBlend();
 
-        if (framebuffer != null) {
+        if (framebuffer != null && !minimapVisibilityChanged) {
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder worldRenderer = tessellator.getBuffer();
             if (ingame instanceof GuiIngameForge) {
@@ -101,11 +136,21 @@ public class HUDCaching {
             GlStateManager.color(1, 1, 1, 1);
             GlStateManager.disableLighting();
             GlStateManager.disableFog();
+            final boolean previousOverride = renderingCacheOverride;
+            // Keep literal boolean stores so older LaunchWrapper compatibility transformers can
+            // mirror the cache window without depending on the saved local-variable value.
             renderingCacheOverride = true;
-            ingame.renderGameOverlay(partialTicks);
-            renderingCacheOverride = false;
-            MC.getFramebuffer().bindFramebuffer(false);
-            GlStateManager.enableBlend();
+            try {
+                ingame.renderGameOverlay(partialTicks);
+            } finally {
+                if (previousOverride) {
+                    renderingCacheOverride = true;
+                } else {
+                    renderingCacheOverride = false;
+                }
+                MC.getFramebuffer().bindFramebuffer(false);
+                GlStateManager.enableBlend();
+            }
         }
 
         GlStateManager.enableDepth();
@@ -142,9 +187,13 @@ public class HUDCaching {
 
     @Optional.Method(modid = "ingameinfoxml")
     private static void renderIGIOverlay(float partialTicks) {
+        final boolean previousRendering = igiRendering;
         igiRendering = true;
-        Ticker.INSTANCE.onRenderTick(new TickEvent.RenderTickEvent(TickEvent.Phase.END, partialTicks));
-        igiRendering = false;
+        try {
+            Ticker.INSTANCE.onRenderTick(new TickEvent.RenderTickEvent(TickEvent.Phase.END, partialTicks));
+        } finally {
+            igiRendering = previousRendering;
+        }
     }
 
     private static Framebuffer checkFramebufferSizes(Framebuffer framebuffer, int width, int height) {
@@ -166,16 +215,13 @@ public class HUDCaching {
 
     private static void drawTexturedRect(Tessellator tessellator, BufferBuilder buffer, float width, float height) {
         GlStateManager.enableTexture2D();
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+        // The owned texture's filter is set when its framebuffer is created or resized.
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
         buffer.pos(0, height, 0.0).tex(0, 0).endVertex();
         buffer.pos(width, height, 0.0).tex(1, 0).endVertex();
         buffer.pos(width, 0, 0.0).tex(1, 1).endVertex();
         buffer.pos(0, 0, 0.0).tex(0, 1).endVertex();
         tessellator.draw();
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
     }
 
     private static void drawTexturedModalRect(Tessellator tessellator, BufferBuilder buffer, int x, int y) {
