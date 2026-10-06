@@ -49,7 +49,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     private static final ThreadLocal<ObjectArrayList<ResourceLocation>> stellar_core$LOADING_MODELS = ThreadLocal.withInitial(ObjectArrayList::new);
 
     @Unique
-    private static volatile ICustomModelLoader[] stellar_core$loaderArray = new ICustomModelLoader[0];
+    private static volatile ICustomModelLoader[] stellar_core$loaderArray;
 
     @Unique
     private static final Map<ResourceLocation, ICustomModelLoader> stellar_core$loaderSelectionCache = new NonBlockingHashMap<>();
@@ -123,6 +123,17 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         );
     }
 
+
+    @Unique
+    private static ICustomModelLoader[] stellar_core$getLoaders() {
+        ICustomModelLoader[] array = stellar_core$loaderArray;
+        if (array == null) {
+            array = loaders.toArray(new ICustomModelLoader[0]);
+            stellar_core$loaderArray = array;
+        }
+        return array;
+    }
+
     /**
      * @author Kasumi_Nova
      * @reason Allow multithreaded model loading.
@@ -181,7 +192,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                 final ResourceLocation actual = getActualLocation(location);
                 ICustomModelLoader accepted = stellar_core$loaderSelectionCache.get(actual);
                 if (accepted == null && !stellar_core$noLoaderLocations.contains(actual)) {
-                    final ICustomModelLoader[] registeredLoaders = stellar_core$loaderArray;
+                    final ICustomModelLoader[] registeredLoaders = stellar_core$getLoaders();
                     for (final ICustomModelLoader loader : registeredLoaders) {
                         try {
                             if (loader.accepts(actual)) {

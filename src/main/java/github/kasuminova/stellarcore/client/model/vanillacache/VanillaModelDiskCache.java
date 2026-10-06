@@ -396,12 +396,35 @@ public final class VanillaModelDiskCache {
             try {
                 save(configDir, seed, models);
                 saveBlockstates(configDir, seed, blockstates);
+                dropPersistedCaptures(models.keySet(), blockstates.keySet());
             } catch (Throwable t) {
                 StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to save cache", t);
             }
         }, "StellarCore-VanillaModelDiskCache-Save");
         writer.setDaemon(true);
         writer.start();
+    }
+
+    /**
+     * Forget the captures that are now on disk.
+     *
+     * <p>A snapshot holds the raw bytes of a model or blockstate JSON. Keeping every
+     * one of them until the game exits costs, in a pack with tens of thousands of
+     * JSON models, hundreds of megabytes of {@code byte[]} that nothing reads again:
+     * once the file is written, the authoritative copy is the file, and a later
+     * reload re-populates {@link #diskView} from it via {@code prepareSync}.</p>
+     *
+     * <p>Only the keys that were actually written are dropped, never the whole map.
+     * {@link #saveAsync} writes on a background thread, and a mod reloading
+     * resources can capture new models while that write is in flight; those
+     * captures belong to the next save and must survive this one.</p>
+     */
+    private void dropPersistedCaptures(final Set<ResourceLocation> persistedModels,
+                                       final Set<ResourceLocation> persistedBlockstates) {
+        synchronized (this) {
+            live.keySet().removeAll(persistedModels);
+            liveBlockstates.keySet().removeAll(persistedBlockstates);
+        }
     }
 
     private void saveBlockstates(final File configDir,
