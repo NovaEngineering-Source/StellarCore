@@ -16,6 +16,11 @@ StellarCore is designed to work with other mods, but as a result there are parts
 
 **CensoredASM**
 - `resourceLocationCanonicalization` must be turned to false to use StellarCore's `ResourceLocationCanonicalisation` feature
+- Choose one vertex-data canonicalization implementation. If LoliASM's `LoliVertexDataPool` or another mod-provided vertex-data pool is active, set both StellarCore options below to `false`:
+    - `general.performance.vanilla.BakedQuadVertexDataCanonicalization`
+    - `general.performance.forge.UnpackedBakedQuadVertexDataCanonicalization`
+- Enable those two StellarCore options only when no other installed mod provides the same vertex-data pool. Enabling both implementations makes every baked quad's `int[]` vertex data get hashed and deduplicated twice, increasing model-loading allocations and GC pressure without improving the retained result.
+- StellarCore's `SimpleBakedModelCanonicalization` is a separate BakedQuad-object pool and may remain enabled; the two vertex-data options above do not replace it.
 
 **VintageFix**
 - `vintagefix.mixin.dynamic_resources` must be turned to false to use StellarCore's `ParallelModelLoader` feature
