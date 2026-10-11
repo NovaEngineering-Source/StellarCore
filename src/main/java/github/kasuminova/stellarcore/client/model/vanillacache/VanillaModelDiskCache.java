@@ -591,6 +591,11 @@ public final class VanillaModelDiskCache {
         prepared = false;
     }
 
+    public synchronized void releaseLoadedViews() {
+        diskView = null;
+        blockstateView = null;
+    }
+
     // ------------------------------------------------------------------------
     // Hit path — no IO
     // ------------------------------------------------------------------------

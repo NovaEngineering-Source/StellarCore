@@ -115,6 +115,7 @@ public class ClientProxy extends CommonProxy {
             } catch (Throwable ignored) {
                 // Disk cache must never crash the loading pipeline.
             }
+            diskCache.releaseLoadedViews();
         }
     }
 

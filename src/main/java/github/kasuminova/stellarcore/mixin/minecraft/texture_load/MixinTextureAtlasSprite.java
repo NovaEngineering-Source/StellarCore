@@ -36,19 +36,12 @@ public class MixinTextureAtlasSprite {
     private int[] modifyLoadSpriteFramesgetRGB(final BufferedImage instance,
                                                final int startX, final int startY, final int width, final int height,
                                                final int[] output, final int offset, final int size,
-                                               @Local(name = "aint") int[][] aint)
-    {
+                                               @Local(name = "aint") int[][] aint) {
         int[] cache = SpriteBufferedImageCache.INSTANCE.getRGBAndRemove((TextureAtlasSprite) (Object) this);
-        if (cache != null) {
-            int exceptedSize = instance.getWidth() * instance.getHeight();
-            if (cache.length != exceptedSize) {
-                return instance.getRGB(startX, startY, width, height, output, offset, size);
-            }
-
+        if (cache != null && cache.length == instance.getWidth() * instance.getHeight()) {
             aint[0] = cache;
             return cache;
         }
         return instance.getRGB(startX, startY, width, height, output, offset, size);
     }
-
 }

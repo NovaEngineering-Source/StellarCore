@@ -1,5 +1,6 @@
 package github.kasuminova.stellarcore.client.pool;
 
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.pool.AsyncCanonicalizePool;
 import github.kasuminova.stellarcore.common.pool.CanonicalizeTask;
 import github.kasuminova.stellarcore.common.util.StellarLog;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -30,9 +32,27 @@ public class BakedQuadPool extends AsyncCanonicalizePool<BakedQuad> {
         }, null));
     }
 
+    private static BakedQuad compact(final BakedQuad target) {
+        if (!StellarCoreConfig.PERFORMANCE.vanilla.compactPackedUnpackedBakedQuads
+            || !StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization
+            || target.getClass() != UnpackedBakedQuad.class) {
+            return target;
+        }
+        int[] vertexData = target.getVertexData();
+        if (vertexData == null || vertexData.length == 0) {
+            return target;
+        }
+        // MixinUnpackedBakedQuad queues this array for canonicalization while
+        // packing. Resolve it here before replacing the object, otherwise the
+        // later callback only updates the discarded UnpackedBakedQuad instance.
+        vertexData = StellarUnpackedDataPool.canonicalize(vertexData);
+        return new BakedQuad(vertexData, target.getTintIndex(), target.getFace(), target.getSprite(),
+            target.shouldApplyDiffuseLighting(), target.getFormat());
+    }
+
     @Override
     protected BakedQuad canonicalizeInternal(final BakedQuad target) {
-        return pool.addOrGet(target);
+        return pool.addOrGet(compact(target));
     }
 
     @Override

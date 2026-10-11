@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.client.model.ModelLoadFlight;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
+import github.kasuminova.stellarcore.client.model.ModelMapTransfer;
 import github.kasuminova.stellarcore.client.model.ParallelModelLoaderAsyncBlackList;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
@@ -387,26 +388,26 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         }
     }
 
+    @Unique
+    private static <K, V> Map<K, V> stellar_core$copyToDefault(final Map<K, V> source) {
+        final Map<K, V> copy = new Object2ObjectOpenHashMap<>(source.size());
+        ModelMapTransfer.copy(source, copy);
+        return copy;
+    }
+
     @Override
     public void stellar_core$toConcurrent() {
         if (stellar_core$concurrent) {
             return;
         }
-        stellar_core$cache = new NonBlockingHashMap<>(stellar_core$cache);
-        stellar_core$aliases = new NonBlockingHashMap<>(stellar_core$aliases);
+        final Map<ResourceLocation, IModel> oldCache = stellar_core$cache;
+        stellar_core$cache = new NonBlockingHashMap<>(oldCache);
+        final Map<ResourceLocation, ResourceLocation> oldAliases = stellar_core$aliases;
+        stellar_core$aliases = new NonBlockingHashMap<>(oldAliases);
         Set<ResourceLocation> oldTextures = stellar_core$textures;
         stellar_core$textures = new NonBlockingHashSet<>();
         stellar_core$textures.addAll(oldTextures);
         stellar_core$concurrent = true;
-    }
-
-    
-    @Override
-    public void stellar_core$writeToOriginalMap() {
-        for (final Map.Entry<ResourceLocation, IModel> entry : stellar_core$cache.entrySet()) {
-            //noinspection UseBulkOperation
-            cache.put(entry.getKey(), entry.getValue());
-        }
     }
 
     @Override
@@ -431,14 +432,9 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         stellar_core$concurrent = false;
     }
 
-    @Unique
-    private static <K, V> Map<K, V> stellar_core$copyToDefault(final Map<K, V> source) {
-        final Map<K, V> copy = new Object2ObjectOpenHashMap<>(source.size());
-        for (final Map.Entry<K, V> entry : source.entrySet()) {
-            //noinspection UseBulkOperation
-            copy.put(entry.getKey(), entry.getValue());
-        }
-        return copy;
+    @Override
+    public void stellar_core$writeToOriginalMap() {
+        ModelMapTransfer.copy(stellar_core$cache, cache);
     }
 
     @Unique

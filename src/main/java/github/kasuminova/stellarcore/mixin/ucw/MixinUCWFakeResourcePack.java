@@ -41,7 +41,7 @@ public abstract class MixinUCWFakeResourcePack implements IResourcePack {
     @Inject(method = "resourceExists", at = @At("HEAD"), cancellable = true, remap = false)
     public void stellar_core$restrictResourceExists(final ResourceLocation location, final CallbackInfoReturnable<Boolean> cir) {
         if (location != null && !this.getResourceDomains().contains(location.getNamespace())) {
-            cir.setReturnValue(false);
+            cir.setReturnValue(Boolean.FALSE);
         }
     }
 

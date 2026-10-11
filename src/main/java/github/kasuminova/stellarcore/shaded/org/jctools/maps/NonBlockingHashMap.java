@@ -13,14 +13,28 @@
  */
 package github.kasuminova.stellarcore.shaded.org.jctools.maps;
 
+import github.kasuminova.stellarcore.shaded.org.jctools.util.RangeUtil;
+
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.AbstractCollection;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.ConcurrentModificationException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-
-import github.kasuminova.stellarcore.shaded.org.jctools.util.RangeUtil;
+import java.util.function.BiConsumer;
 
 import static github.kasuminova.stellarcore.shaded.org.jctools.util.UnsafeAccess.UNSAFE;
 import static github.kasuminova.stellarcore.shaded.org.jctools.util.UnsafeAccess.fieldOffset;
@@ -1278,7 +1292,18 @@ public class NonBlockingHashMap<TypeK, TypeV>
   }
   public Object[] raw_array() { return new SnapshotV()._sskvs; }
 
-  /** Returns an enumeration of the values in this table.
+    public void forEachSnapshot(final BiConsumer<? super TypeK, ? super TypeV> action) {
+        Objects.requireNonNull(action);
+        final SnapshotV snapshot = new SnapshotV();
+        while (snapshot.hasNext()) {
+            final TypeV value = snapshot.next();
+            // SnapshotV.next() resolves the value through get(), so it follows
+            // an in-progress resize instead of reading a stale old table slot.
+            action.accept((TypeK) snapshot._prevK, value);
+        }
+    }
+
+    /** Returns an enumeration of the values in this table.
    *  @return an enumeration of the values in this table
    *  @see #values()  */
   public Enumeration<TypeV> elements() { return new SnapshotV(); }

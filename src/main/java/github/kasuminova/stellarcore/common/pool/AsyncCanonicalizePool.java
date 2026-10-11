@@ -58,7 +58,7 @@ public abstract class AsyncCanonicalizePool<T> extends AsyncCanonicalizePoolBase
 
         clearTask = CompletableFuture.runAsync(() -> {
             long start = System.currentTimeMillis();
-            while (locked.get() > 0) {
+            while (locked.get() > 0 || worker.hasPendingTasks()) {
                 if (System.currentTimeMillis() - start > CLEAR_TIMEOUT_MS) {
                     StellarLog.LOG.warn("Pool {} Wait for task completion timeout (over {}ms), force clearing.", getName(), CLEAR_TIMEOUT_MS);
                     break;

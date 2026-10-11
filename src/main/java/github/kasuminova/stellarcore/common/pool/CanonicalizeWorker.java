@@ -5,12 +5,14 @@ import github.kasuminova.stellarcore.shaded.org.jctools.queues.MpscUnboundedArra
 
 import java.lang.ref.WeakReference;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 
 public class CanonicalizeWorker<T> implements Runnable {
 
     private final Queue<WeakReference<DeferredCanonicalizable<T>>> deferedQueue = createConcurrentQueue();
     private final Queue<CanonicalizeTask<T>> queue = createConcurrentQueue();
+    private final AtomicInteger pendingTasks = new AtomicInteger();
     private final String name;
 
     private volatile Thread worker = null;
@@ -45,7 +47,12 @@ public class CanonicalizeWorker<T> implements Runnable {
     }
 
     public void offer(final CanonicalizeTask<T> task) {
+        pendingTasks.incrementAndGet();
         queue.offer(task);
+    }
+
+    public boolean hasPendingTasks() {
+        return pendingTasks.get() > 0;
     }
 
     public void defer(final DeferredCanonicalizable<T> canonicalizable) {
@@ -67,7 +74,11 @@ public class CanonicalizeWorker<T> implements Runnable {
             CanonicalizeTask<T> task;
             boolean executed = false;
             while ((task = queue.poll()) != null) {
-                task.execute();
+                try {
+                    task.execute();
+                } finally {
+                    pendingTasks.decrementAndGet();
+                }
                 executed = true;
             }
 

@@ -7,7 +7,11 @@ import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import net.minecraft.client.renderer.texture.*;
+import net.minecraft.client.renderer.texture.ITextureMapPopulator;
+import net.minecraft.client.renderer.texture.PngSizeInfo;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
@@ -81,10 +85,10 @@ public abstract class MixinTextureMap {
                 boolean hasAnimation = resource.getMetadata("animation") != null;
                 sprite.loadSprite(pngSizeInfo, hasAnimation);
 
-                // Cache BufferedImage
                 BufferedImage image = TextureUtil.readBufferedImage(resource.getInputStream());
-                int[] rgb = image.getRGB(0, 0, image.getWidth(), image.getHeight(), new int[image.getWidth() * image.getHeight()], 0, image.getWidth());
-                SpriteBufferedImageCache.INSTANCE.put(sprite, image, rgb);
+                int[] rgb = image.getRGB(0, 0, image.getWidth(), image.getHeight(),
+                    new int[image.getWidth() * image.getHeight()], 0, image.getWidth());
+                SpriteBufferedImageCache.INSTANCE.put(sprite, image.getWidth(), image.getHeight(), rgb);
                 SpriteBufferedImageCache.INSTANCE.put(sprite, resource);
 
                 stellar_core$cachedTextures.add(sprite);
@@ -239,7 +243,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
-    @SuppressWarnings({"MixinAnnotationTarget", "InvalidInjectorMethodSignature"})
+    @SuppressWarnings({"MixinAnnotationTarget"})
     private IMetadataSection redirectLoadTextureAtlasGetMetadata(final IResource instance, final String s) {
         if (instance != null) {
             return instance.getMetadata(s);
@@ -256,7 +260,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
-    @SuppressWarnings({"MixinAnnotationTarget", "InvalidInjectorMethodSignature"})
+    @SuppressWarnings({"MixinAnnotationTarget"})
     private void redirectLoadTextureAtlasLoadSprite(final TextureAtlasSprite instance, final PngSizeInfo sizeInfo, final boolean animations) throws Exception {
         if (!stellar_core$cachedTextures.contains(instance)) {
             instance.loadSprite(sizeInfo, animations);
@@ -272,7 +276,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
-    @SuppressWarnings({"MixinAnnotationTarget", "InvalidInjectorMethodSignature"})
+    @SuppressWarnings({"MixinAnnotationTarget"})
     private PngSizeInfo redirectLoadTextureAtlasMakeFromResource(final IResource pngsizeinfo) throws Throwable {
         if (pngsizeinfo != null) {
             return PngSizeInfo.makeFromResource(pngsizeinfo);
@@ -289,7 +293,7 @@ public abstract class MixinTextureMap {
             require = 0,
             expect = 0
     )
-    @SuppressWarnings({"MixinAnnotationTarget", "InvalidInjectorMethodSignature"})
+    @SuppressWarnings({"MixinAnnotationTarget"})
     private IResource redirectLoadTextureAtlasGetResource(final IResourceManager instance, final ResourceLocation resourceLocation) throws IOException {
         if (!stellar_core$cachedLocations.contains(resourceLocation)) {
             if (StellarCoreConfig.DEBUG.enableDebugLog) {

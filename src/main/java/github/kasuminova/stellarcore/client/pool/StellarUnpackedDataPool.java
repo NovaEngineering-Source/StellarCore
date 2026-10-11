@@ -25,6 +25,13 @@ public class StellarUnpackedDataPool {
 
     private static final VertexDataPool VERTEX_POOL = new VertexDataPool();
 
+    private static final List<UnpackedDataPool<?>> CURRENT_LEVEL1_POOLS =
+            Collections.singletonList(POOL_LEVEL1);
+    private static final List<UnpackedDataPool<?>> CURRENT_LEVEL2_POOLS =
+            Collections.unmodifiableList(Arrays.asList(POOL_LEVEL1, POOL_LEVEL2));
+    private static final List<UnpackedDataPool<?>> CURRENT_LEVEL3_POOLS =
+            Collections.unmodifiableList(Arrays.asList(POOL_LEVEL1, POOL_LEVEL2, POOL_LEVEL3));
+
     static {
         update();
     }
@@ -92,9 +99,9 @@ public class StellarUnpackedDataPool {
     private static List<UnpackedDataPool<?>> getCurrentPools() {
         int canonicalizationLevel = getLevel();
         return switch (canonicalizationLevel) {
-            case 1 -> Collections.singletonList(POOL_LEVEL1);
-            case 2 -> Arrays.asList(POOL_LEVEL1, POOL_LEVEL2);
-            case 3 -> Arrays.asList(POOL_LEVEL1, POOL_LEVEL2, POOL_LEVEL3);
+            case 1 -> CURRENT_LEVEL1_POOLS;
+            case 2 -> CURRENT_LEVEL2_POOLS;
+            case 3 -> CURRENT_LEVEL3_POOLS;
             default -> throw new IllegalStateException("Invalid canonicalization level: " + canonicalizationLevel);
         };
     }

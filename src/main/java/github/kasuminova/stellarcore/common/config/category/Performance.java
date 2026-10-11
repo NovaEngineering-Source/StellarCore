@@ -437,6 +437,15 @@ public class Performance {
         @Config.Name("SimpleBakedModelCanonicalization")
         public boolean simpleBakedModelCanonicalization = false;
 
+        @Config.Comment({
+                "(Client Performance | Experimental) Replace packed UnpackedBakedQuad objects after their unpacked data has been dropped.",
+                "Disabled by default because it trades model loading work for a smaller object footprint."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.compactPackedUnpackedBakedQuads")
+        @Config.Name("CompactPackedUnpackedBakedQuads")
+        public boolean compactPackedUnpackedBakedQuads = false;
+
         @Config.Comment("(Client Performance) Deduplicate BlockFaceUV `uvs` array to optimise memory usage.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.blockFaceUVsCanonicalization")

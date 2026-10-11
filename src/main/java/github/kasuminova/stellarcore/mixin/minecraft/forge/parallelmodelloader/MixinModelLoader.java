@@ -5,6 +5,7 @@ import com.google.common.collect.HashMultimap;
 import com.llamalad7.mixinextras.sugar.Local;
 import github.kasuminova.stellarcore.client.integration.railcraft.RCModelBaker;
 import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
+import github.kasuminova.stellarcore.client.model.ModelMapTransfer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
@@ -15,7 +16,10 @@ import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.BlockModelShapes;
-import net.minecraft.client.renderer.block.model.*;
+import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.BlockStateMapper;
 import net.minecraft.client.renderer.block.statemap.IStateMapper;
 import net.minecraft.client.renderer.block.statemap.StateMapperBase;
@@ -30,7 +34,11 @@ import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.client.model.ModelLoaderRegistryR;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.ProgressManager;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -39,7 +47,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -89,71 +102,11 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
     @Shadow(remap = false)
     protected abstract IModel getMissingModel();
 
-    @Redirect(method = "setupModelRegistry",
-        at = @At(
-            value = "INVOKE",
-            target = "Lcom/google/common/collect/HashMultimap;keySet()Ljava/util/Set;",
-            ordinal = 1,
-            remap = false
-        )
-    )
-    private Set<IModel> stellar_core$injectSetupModelRegistry(
-        final HashMultimap<IModel, ModelResourceLocation> instance,
-        @Local(name = "bakedModels") Map<IModel, IBakedModel> bakedModels,
-        @Local(name = "models") HashMultimap<IModel, ModelResourceLocation> models,
-        @Local(name = "bakeBar") ProgressManager.ProgressBar bakeBar,
-        @Local(name = "missingBaked") IBakedModel missingBaked) {
-        long startTime = System.currentTimeMillis();
-
-        final NonBlockingHashMap<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
-        DefaultTextureGetter textureGetter = new DefaultTextureGetter();
-        final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) bakeBar;
-        final ReentrantLock barLock = new ReentrantLock();
-        final AtomicInteger deferredSteps = new AtomicInteger();
-        final AtomicLong nextMessageNanos = new AtomicLong();
-        final AtomicReference<String> lastMessage = new AtomicReference<>("");
-        models.keySet().parallelStream().forEach((model) -> {
-            Set<ModelResourceLocation> locations = models.get(model);
-            if (barLock.tryLock()) {
-                try {
-                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1,
-                        stellar_core$bakeMessage(locations, nextMessageNanos, lastMessage));
-                } catch (Throwable t) {
-                    StellarLog.LOG.error("[StellarCore-ParallelModelLoader] Failed to step the bake bar for {}:", model, t);
-                } finally {
-                    barLock.unlock();
-                }
-            } else {
-                deferredSteps.incrementAndGet();
-            }
-
-            if (model == getMissingModel()) {
-                bakedModelsConcurrent.put(model, missingBaked);
-                return;
-            }
-
-            try {
-                IBakedModel loaded = RCModelBaker.load(locations, model, textureGetter);
-                if (loaded != null) {
-                    bakedModelsConcurrent.put(model, loaded);
-                    return;
-                }
-                bakedModelsConcurrent.put(model, stellar_core$bakeModel(model, textureGetter));
-            } catch (Throwable e) {
-                if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader || !(e instanceof Exception)) {
-                    FMLLog.log.error("Exception baking model for location(s) {}:", "[" + Joiner.on(", ").join(locations) + "]", e);
-                }
-                bakedModelsConcurrent.put(model, missingBaked);
-            }
-        });
-        progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0), bakeBar.getMessage());
-
-        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
-        for (final Map.Entry<IModel, IBakedModel> entry : bakedModelsConcurrent.entrySet()) {
-            //noinspection UseBulkOperation
-            bakedModels.put(entry.getKey(), entry.getValue());
-        }
-        return Collections.emptySet();
+    @Unique
+    private static <K, V> Map<K, V> stellar_core$copyToDefault(final Map<K, V> source) {
+        final Object2ObjectOpenHashMap<K, V> copy = new Object2ObjectOpenHashMap<>(source.size());
+        ModelMapTransfer.copy(source, copy);
+        return copy;
     }
 
     @Unique
@@ -259,14 +212,68 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         stellar_core$concurrent = false;
     }
 
-    @Unique
-    private static <K, V> Map<K, V> stellar_core$copyToDefault(final Map<K, V> source) {
-        final Object2ObjectOpenHashMap<K, V> copy = new Object2ObjectOpenHashMap<>(source.size());
-        for (final Map.Entry<K, V> entry : source.entrySet()) {
-            //noinspection UseBulkOperation
-            copy.put(entry.getKey(), entry.getValue());
-        }
-        return copy;
+    @Redirect(method = "setupModelRegistry",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/google/common/collect/HashMultimap;keySet()Ljava/util/Set;",
+            ordinal = 1,
+            remap = false
+        )
+    )
+    private Set<IModel> stellar_core$injectSetupModelRegistry(
+        final HashMultimap<IModel, ModelResourceLocation> instance,
+        @Local(name = "bakedModels") Map<IModel, IBakedModel> bakedModels,
+        @Local(name = "models") HashMultimap<IModel, ModelResourceLocation> models,
+        @Local(name = "bakeBar") ProgressManager.ProgressBar bakeBar,
+        @Local(name = "missingBaked") IBakedModel missingBaked) {
+        long startTime = System.currentTimeMillis();
+
+        final NonBlockingHashMap<IModel, IBakedModel> bakedModelsConcurrent = new NonBlockingHashMap<>();
+        DefaultTextureGetter textureGetter = new DefaultTextureGetter();
+        final StellarCoreProgressBar progressBar = (StellarCoreProgressBar) bakeBar;
+        final ReentrantLock barLock = new ReentrantLock();
+        final AtomicInteger deferredSteps = new AtomicInteger();
+        final AtomicLong nextMessageNanos = new AtomicLong();
+        final AtomicReference<String> lastMessage = new AtomicReference<>("");
+        models.keySet().parallelStream().forEach((model) -> {
+            Set<ModelResourceLocation> locations = models.get(model);
+            if (barLock.tryLock()) {
+                try {
+                    progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0) + 1,
+                        stellar_core$bakeMessage(locations, nextMessageNanos, lastMessage));
+                } catch (Throwable t) {
+                    StellarLog.LOG.error("[StellarCore-ParallelModelLoader] Failed to step the bake bar for {}:", model, t);
+                } finally {
+                    barLock.unlock();
+                }
+            } else {
+                deferredSteps.incrementAndGet();
+            }
+
+            if (model == getMissingModel()) {
+                bakedModelsConcurrent.put(model, missingBaked);
+                return;
+            }
+
+            try {
+                IBakedModel loaded = RCModelBaker.load(locations, model, textureGetter);
+                if (loaded != null) {
+                    bakedModelsConcurrent.put(model, loaded);
+                    return;
+                }
+                bakedModelsConcurrent.put(model, stellar_core$bakeModel(model, textureGetter));
+            } catch (Throwable e) {
+                if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader || !(e instanceof Exception)) {
+                    FMLLog.log.error("Exception baking model for location(s) {}:", "[" + Joiner.on(", ").join(locations) + "]", e);
+                }
+                bakedModelsConcurrent.put(model, missingBaked);
+            }
+        });
+        progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0), bakeBar.getMessage());
+
+        StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Baked {} models, took {}ms.", bakedModelsConcurrent.size(), System.currentTimeMillis() - startTime);
+        ModelMapTransfer.copy(bakedModelsConcurrent, bakedModels);
+        return Collections.emptySet();
     }
 
     @Redirect(
