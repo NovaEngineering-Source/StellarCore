@@ -239,7 +239,7 @@ dependencies {
     implementation(rfg.deobf("curse.maven:thermal-foundation-222880:2926428"))
     implementation(rfg.deobf("curse.maven:thermal-innovation-291737:2920441"))
     implementation(rfg.deobf("curse.maven:thermal-expansion-69163:2926431"))
-    compileOnly(rfg.deobf("curse.maven:botania-225643:3330934"))
+    implementation(rfg.deobf("curse.maven:botania-225643:3330934"))
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
     implementation(rfg.deobf("curse.maven:baubles-227083:2518667"))
     compileOnly(rfg.deobf("curse.maven:zenutil-401178:4394263"))

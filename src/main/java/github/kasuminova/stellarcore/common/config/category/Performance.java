@@ -522,7 +522,7 @@ public class Performance {
         @Config.Comment({
                 "(Client Performance | Experimental) Pack UnpackedBakedQuad into vertexData at construction,",
                 "intern the packed int[] and drop the unpacked float[][][] immediately.",
-                "Pipe() after packing uses LightUtil.putBakedQuad.",
+                "Packed pipe() follows LightUtil.putBakedQuad and preserves the homogeneous position coordinate.",
                 "Works in most cases, but may cause rendering issues with models in some mods."
         })
         @Config.RequiresMcRestart

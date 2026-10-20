@@ -5,6 +5,7 @@ import github.kasuminova.stellarcore.mixin.util.AccessorBakedQuad;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.renderer.vertex.VertexFormatElement;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.model.pipeline.IVertexConsumer;
 import net.minecraftforge.client.model.pipeline.LightUtil;
@@ -62,7 +63,7 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void injectInit(final float[][][] unpackedDataIn, final int tint, final EnumFacing orientation, final TextureAtlasSprite texture, final boolean applyDiffuseLighting, final VertexFormat formatIn, final CallbackInfo ci) {
+    private void injectInit(final float[][][] unpackedData, final int tint, final EnumFacing orientation, final TextureAtlasSprite texture, final boolean applyDiffuseLighting, final VertexFormat format, final CallbackInfo ci) {
         if ((Object) this.getClass() != UnpackedBakedQuad.class) {
             return;
         }
@@ -74,7 +75,7 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
         if (!stellar_core$dropped) {
             return;
         }
-        LightUtil.putBakedQuad(consumer, (BakedQuad) (Object) this);
+        stellar_core$putPackedQuad(consumer);
         ci.cancel();
     }
 
@@ -84,6 +85,53 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
             return;
         }
         stellar_core$packAndDrop();
+    }
+
+    /**
+     * Forge's packed pipe helper reconstructs a three-component POSITION with
+     * a fourth component of zero. UnpackedBakedQuad.Builder normally carries
+     * that component as one, and model transforms rely on it for translation.
+     * Keep the packed fast path, but restore the homogeneous coordinate before
+     * forwarding the data.
+     */
+    @Unique
+    private void stellar_core$putPackedQuad(final IVertexConsumer consumer) {
+        if (this.hasTintIndex()) {
+            consumer.setQuadTint(this.getTintIndex());
+        }
+        consumer.setTexture(this.getSprite());
+        consumer.setApplyDiffuseLighting(this.shouldApplyDiffuseLighting());
+        consumer.setQuadOrientation(this.getFace());
+
+        final VertexFormat formatFrom = consumer.getVertexFormat();
+        final VertexFormat formatTo = this.getFormat();
+        final int countTo = formatTo.getElementCount();
+        final int[] elementMap = LightUtil.mapFormats(formatFrom, formatTo);
+        final float[] data = new float[4];
+        for (int vertex = 0; vertex < 4; vertex++) {
+            for (int element = 0; element < formatFrom.getElementCount(); element++) {
+                final int sourceElement = elementMap[element];
+                if (sourceElement == countTo) {
+                    consumer.put(element);
+                    continue;
+                }
+                LightUtil.unpack(this.getVertexData(), data, formatTo, vertex, sourceElement);
+                final VertexFormatElement source = formatTo.getElement(sourceElement);
+                if (source.isPositionElement() && source.getElementCount() < 4) {
+                    data[3] = 1.0F;
+                }
+                consumer.put(element, data);
+            }
+        }
+    }
+
+    @Unique
+    private void stellar_core$dropUnpackedData() {
+        if ((Object) this.getClass() != UnpackedBakedQuad.class || stellar_core$dropped) {
+            return;
+        }
+        unpackedData = STELLAR_CORE$DROPPED_DATA;
+        stellar_core$dropped = true;
     }
 
     @Unique
@@ -107,13 +155,10 @@ public class MixinUnpackedBakedQuad extends BakedQuad {
                 }
             }
             packed = true;
-            if ((Object) this.getClass() == UnpackedBakedQuad.class) {
-                unpackedData = STELLAR_CORE$DROPPED_DATA;
-                stellar_core$dropped = true;
-            }
             ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(packedData);
             StellarUnpackedDataPool.canonicalizeAsync(packedData, canonicalized ->
                     ((AccessorBakedQuad) (Object) this).stellar_core$setVertexData(canonicalized));
+            stellar_core$dropUnpackedData();
         }
     }
 

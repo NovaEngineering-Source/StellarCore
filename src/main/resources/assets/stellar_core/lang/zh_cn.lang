@@ -126,7 +126,7 @@ stellar_core.config.performance.forge.unpackedBakedQuadDataCanonicalization.tool
 stellar_core.config.performance.forge.unpackedBakedQuadDataCanonicalizationLevel=UnpackedBakedQuad 规范化等级
 stellar_core.config.performance.forge.unpackedBakedQuadDataCanonicalizationLevel.tooltip=Adjust the optimisation level of the `UnpackedBakedQuadDataCanonicalization` option, the higher the level the better the results but the higher the probability of encountering problems, normally a setting of 2 is sufficient... Higher levels consume more CPU performance. This option can be adjusted while the game is running, but restarting the game is highly recommended.
 stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization=UnpackedBakedQuad 顶点数据规范化
-stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization.tooltip=(客户端性能 | 实验性) 在构造时把 UnpackedBakedQuad 打包成 vertexData，异步 intern 这份 int[]，并立刻丢掉 unpackedData 三维数组。打包之后 pipe() 走和原版 BakedQuad 相同的 LightUtil.putBakedQuad。多数情况可用，部分模组模型可能出现渲染异常。
+stellar_core.config.performance.forge.unpackedBakedQuadVertexDataCanonicalization.tooltip=(客户端性能 | 实验性) 在构造时把 UnpackedBakedQuad 打包成 vertexData，异步 intern 这份 int[]，并立刻丢掉 unpackedData 三维数组。packed pipe() 会恢复模型变换所需的位置齐次坐标。多数情况可用，部分模组模型可能出现渲染异常。
 stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT=释放空 Capability NBT
 stellar_core.config.performance.forge.deallocateEmptyCapabilityNBT.tooltip=When writing to Capability's NBT, if the returned NBT is empty, no content is written, which may help improve performance.
 stellar_core.config.performance.forge.oreDictionaryPrimitiveCollections=OreDictionary 原始类型集合
