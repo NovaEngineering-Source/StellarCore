@@ -5,12 +5,16 @@
     "minVersion": "0.8",
     "compatibilityLevel": "JAVA_8",
     "client": [
-        "AccessorBlockStateMapper",
-        "MixinModelBakery",
-        "MixinModelLoader",
-        "MixinModelLoaderRegistry",
-        "MixinModelManager",
-        "MixinModelRotation",
-        "MixinProgressBar"
+      "AccessorBlockStateMapper",
+      "MixinForgeVariantContext",
+      "MixinForgeVariantContextWriter",
+      "MixinModelBakery",
+      "MixinModelJsonDeserializers",
+      "MixinModelLoader",
+      "MixinModelLoaderRegistry",
+      "MixinModelManager",
+      "MixinModelRotation",
+      "MixinPrivateModelJsonDeserializers",
+      "MixinProgressBar"
     ]
 }

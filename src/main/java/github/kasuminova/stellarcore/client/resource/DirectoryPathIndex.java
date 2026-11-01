@@ -68,6 +68,12 @@ public final class DirectoryPathIndex {
         while (true) {
             final Index index = currentIndex(rootDirectory);
             if (!index.isRootDirectory()) {
+                if (negativeCachingEnabled) {
+                    if (index.isCurrent()) {
+                        return false;
+                    }
+                    continue;
+                }
                 return candidate(rootDirectory, relativePath, candidateFile).isFile();
             }
             if (index.contains(normalizedPath)) {

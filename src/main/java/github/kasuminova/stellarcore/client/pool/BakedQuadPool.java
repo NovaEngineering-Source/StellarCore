@@ -98,7 +98,12 @@ public class BakedQuadPool extends AsyncCanonicalizePool<BakedQuad> {
             TextureAtlasSprite sprite = o.getSprite();
             VertexFormat format = o.getFormat();
             boolean diffuseLighting = o.shouldApplyDiffuseLighting();
-            return Objects.hash(Arrays.hashCode(vertexData), tintIndex, face, sprite, format, diffuseLighting);
+            int hash = 31 + Arrays.hashCode(vertexData);
+            hash = 31 * hash + tintIndex;
+            hash = 31 * hash + Objects.hashCode(face);
+            hash = 31 * hash + Objects.hashCode(sprite);
+            hash = 31 * hash + Objects.hashCode(format);
+            return 31 * hash + Boolean.hashCode(diffuseLighting);
         }
 
         @Override

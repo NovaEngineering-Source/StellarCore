@@ -18,15 +18,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 
-@SuppressWarnings("InstantiationOfUtilityClass")
 @Mixin(value = L9Models.class, remap = false)
 public class MixinL9Models implements StellarCoreResourcePack {
 
     @Unique
-    private static final L9Models stellar_core$INSTANCE = new L9Models();
+    private static final Object stellar_core$NO_MODEL_TYPE = new Object();
 
     @Unique
-    private static volatile Map<String, Map<ResourceLocation, Boolean>> stellar_core$validTypeCache = null;
+    private static volatile Map<ResourceLocation, Object> stellar_core$validTypeCache = null;
 
     @SuppressWarnings("RedundantCast")
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -51,16 +50,19 @@ public class MixinL9Models implements StellarCoreResourcePack {
             cir.setReturnValue(Boolean.FALSE);
         }
 
-        cir.setReturnValue(stellar_core$getValidTypeCache().computeIfAbsent(type, (key) -> new NonBlockingHashMap<>())
-                .computeIfAbsent(resource, (key) -> {
-                    try {
-                        JsonObject model = ResourceUtils.getAsJson(resource).getAsJsonObject();
-                        return model.has("9s") && model.get("9s").getAsString().equals(type);
-                    } catch (Exception var3) {
-                        return false;
-                    }
-                })
-        );
+        final Object modelType = stellar_core$getValidTypeCache().computeIfAbsent(
+                resource, MixinL9Models::stellar_core$readModelType);
+        cir.setReturnValue(modelType != stellar_core$NO_MODEL_TYPE && modelType.equals(type));
+    }
+
+    @Unique
+    private static Object stellar_core$readModelType(final ResourceLocation resource) {
+        try {
+            final JsonObject model = ResourceUtils.getAsJson(resource).getAsJsonObject();
+            return model.has("9s") ? model.get("9s").getAsString() : stellar_core$NO_MODEL_TYPE;
+        } catch (Exception ignored) {
+            return stellar_core$NO_MODEL_TYPE;
+        }
     }
 
     @Override
@@ -84,7 +86,7 @@ public class MixinL9Models implements StellarCoreResourcePack {
     }
 
     @Unique
-    private static Map<String, Map<ResourceLocation, Boolean>> stellar_core$getValidTypeCache() {
+    private static Map<ResourceLocation, Object> stellar_core$getValidTypeCache() {
         if (stellar_core$validTypeCache == null) {
             synchronized (L9Models.class) {
                 if (stellar_core$validTypeCache == null) {

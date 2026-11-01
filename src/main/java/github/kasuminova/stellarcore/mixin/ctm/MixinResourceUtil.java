@@ -1,7 +1,9 @@
 package github.kasuminova.stellarcore.mixin.ctm;
 
+import github.kasuminova.stellarcore.client.integration.ctm.ConnectionPredicateCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +29,35 @@ public class MixinResourceUtil {
 
     @Unique
     private static IMetadataSectionCTM stellar_core$absent = null;
+
+    @Unique
+    private static final NonBlockingHashMap<String, ResourceLocation> stellar_core$absoluteLocations = new NonBlockingHashMap<>();
+
+    @Redirect(method = {
+            "getMetadata(Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;)Lteam/chisel/ctm/client/texture/IMetadataSectionCTM;",
+            "getResource(Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;)Lnet/minecraft/client/resources/IResource;"
+        }, at = @At(value = "INVOKE",
+            target = "Lteam/chisel/ctm/client/util/ResourceUtil;toResourceLocation(Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;)Lnet/minecraft/util/ResourceLocation;"), require = 1)
+    private static ResourceLocation stellar_core$reuseAbsoluteLocation(final TextureAtlasSprite sprite) {
+        final String name = sprite.getIconName();
+        ResourceLocation location = stellar_core$absoluteLocations.get(name);
+        if (location == null) {
+            location = ResourceUtil.spriteToAbsolute(new ResourceLocation(name));
+            final ResourceLocation previous = stellar_core$absoluteLocations.putIfAbsent(name, location);
+            if (previous != null) {
+                location = previous;
+            }
+        }
+        // The caller still invokes spriteToAbsolute; it is idempotent for an absolute location.
+        return location;
+    }
+
+    @Redirect(method = "invalidateCaches", at = @At(value = "INVOKE", target = "Ljava/util/Map;clear()V"), require = 1)
+    private static void stellar_core$clearLocations(final Map<?, ?> metadata) {
+        metadata.clear();
+        stellar_core$absoluteLocations.clear();
+        ConnectionPredicateCache.clear();
+    }
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void injectClinit(final CallbackInfo ci) {
