@@ -59,6 +59,11 @@ public abstract class MixinAbstractResourcePack implements StellarCoreResourcePa
             cir.setReturnValue(false);
             return;
         }
+        // LegacyV2Adapter overrides getPath() on locations whose internal path is empty.
+        // Their equals/hashCode collide across languages, so let the pack probe the real path.
+        if (location.getClass() != ResourceLocation.class) {
+            return;
+        }
         if (stellar_core$resourceExistsCache.contains(location)) {
             cir.setReturnValue(true);
             return;

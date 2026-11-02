@@ -34,7 +34,8 @@ public class MixinNormalResourceLoader implements StellarCoreResourcePack {
     @Inject(method = "resourceExists", at = @At("HEAD"), remap = true, cancellable = true)
     private void stellar_core$usePositiveCache(@Nullable final ResourceLocation rl,
                                                final CallbackInfoReturnable<Boolean> cir) {
-        if (stellar_core$cacheEnabled && rl != null
+        // LegacyV2Adapter's locations have identical equals/hashCode for different language paths.
+        if (stellar_core$cacheEnabled && rl != null && rl.getClass() == ResourceLocation.class
             && Boolean.TRUE.equals(stellar_core$resourceExistsCache.get(rl))) {
             cir.setReturnValue(true);
         }
@@ -43,7 +44,8 @@ public class MixinNormalResourceLoader implements StellarCoreResourcePack {
     @Inject(method = "resourceExists", at = @At("RETURN"), remap = true)
     private void stellar_core$rememberExisting(@Nullable final ResourceLocation rl,
                                                final CallbackInfoReturnable<Boolean> cir) {
-        if (stellar_core$cacheEnabled && rl != null && cir.getReturnValueZ()) {
+        if (stellar_core$cacheEnabled && rl != null && rl.getClass() == ResourceLocation.class
+            && cir.getReturnValueZ()) {
             stellar_core$resourceExistsCache.putIfAbsent(rl, Boolean.TRUE);
         }
     }

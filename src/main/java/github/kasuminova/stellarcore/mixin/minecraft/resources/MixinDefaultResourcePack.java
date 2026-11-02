@@ -54,7 +54,8 @@ public abstract class MixinDefaultResourcePack implements StellarCoreResourcePac
             cir.setReturnValue(false);
             return;
         }
-        if (!stellar_core$cacheEnabled) {
+        // Subclasses can override getPath() without updating the fields used by equals/hashCode.
+        if (!stellar_core$cacheEnabled || location.getClass() != ResourceLocation.class) {
             final Boolean probed = stellar_core$probeResourceExists(location);
             cir.setReturnValue(probed == null ? Boolean.FALSE : probed);
             return;
