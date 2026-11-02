@@ -125,7 +125,7 @@ tasks.jar.configure {
 //}
 
 // Create a new dependency type for runtime-only dependencies that don't get included in the maven publication
-val runtimeOnlyNonPublishable: Configuration by configurations.creating {
+val runtimeOnlyNonPublishable = configurations.create("runtimeOnlyNonPublishable") {
     description = "Runtime only dependencies that are not published alongside the jar"
     isCanBeConsumed = false
     isCanBeResolved = false
