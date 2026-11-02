@@ -1,3 +1,4 @@
+import org.jetbrains.gradle.ext.Gradle
 import org.jetbrains.gradle.ext.RunConfigurationContainer
 import java.util.Collections
 
