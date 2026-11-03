@@ -22,8 +22,6 @@ public final class MutableResourcePackBindings {
 
     private volatile Snapshot snapshot = Snapshot.empty();
 
-    private volatile ConcurrentMap<ResourceLocation, Boolean> discoverable = new ConcurrentHashMap<>();
-
     private static RefreshPlan buildPlan(final Snapshot current,
                                          final Snapshot next,
                                          final MetadataSerializer serializer,
@@ -66,7 +64,7 @@ public final class MutableResourcePackBindings {
     }
 
     private void applySnapshot(final Snapshot next) {
-        this.discoverable = new ConcurrentHashMap<>();
+        // Publish the packs and the answers derived from them as one generation.
         this.snapshot = next;
     }
 
@@ -116,22 +114,25 @@ public final class MutableResourcePackBindings {
         return buildPlan(current, new Snapshot(nextBindings), serializer, affected);
     }
 
-    
     public boolean canDiscover(final ResourceLocation location) {
-        final Binding[] probes = snapshot.mutableProbes;
+        final Snapshot current = snapshot;
+        final Binding[] probes = current.mutableProbes;
         if (probes.length == 0) {
             return false;
         }
 
-        final ConcurrentMap<ResourceLocation, Boolean> answers = this.discoverable;
+        // A subclass may override getPath/getNamespace without changing equals/hashCode.
+        if (location.getClass() != ResourceLocation.class) {
+            return probeMutablePacks(location, probes);
+        }
+        final ConcurrentMap<ResourceLocation, Boolean> answers = current.discoverable;
         final Boolean cached = answers.get(location);
         if (cached != null) {
             return cached;
         }
 
         final boolean discovered = probeMutablePacks(location, probes);
-        
-        
+        // A concurrent reload cannot put an old probe result into its new cache.
         answers.put(location, discovered);
         return discovered;
     }
@@ -205,6 +206,7 @@ public final class MutableResourcePackBindings {
 
         private final Binding[] bindings;
         private final Binding[] mutableProbes;
+        private final ConcurrentMap<ResourceLocation, Boolean> discoverable = new ConcurrentHashMap<>();
 
         private Snapshot(final Binding[] bindings) {
             this.bindings = bindings;
