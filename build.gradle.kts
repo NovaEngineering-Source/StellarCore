@@ -13,7 +13,7 @@ plugins {
 
 // Project properties
 group = "github.kasuminova.stellarcore"
-version = "1.6.7"
+version = "1.6.8"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -265,8 +265,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:brandonscore-231382:3051539"))
     compileOnly(rfg.deobf("curse.maven:draconicevolution-223565:3051542"))
     implementation(rfg.deobf("curse.maven:mantle-74924:2713386"))
-    implementation(rfg.deobf("curse.maven:tinkers-construct-74072:2902483"))
-    compileOnly(rfg.deobf("curse.maven:tinkers-antique-1242239:8666425"))
+    compileOnly(rfg.deobf("curse.maven:tinkers-construct-74072:2902483"))
+    implementation(rfg.deobf("curse.maven:tinkers-antique-1242239:8666425"))
     compileOnly(rfg.deobf("curse.maven:thermal-dynamics-227443:2920505"))
     compileOnly(rfg.deobf("curse.maven:armourers-workshop-229523:3101995"))
     compileOnly(rfg.deobf("curse.maven:avaritia-1-10-261348:3143349"))
@@ -292,12 +292,12 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:item-filters-309674:3003364"))
     compileOnly(rfg.deobf("curse.maven:ftb-quests-forge-289412:3156637"))
     compileOnly(rfg.deobf("curse.maven:ftb-utilities-forge-237102:3157548"))
-    compileOnly(rfg.deobf("curse.maven:tinkers-evolution-384589:4941753"))
+    implementation(rfg.deobf("curse.maven:tinkers-evolution-384589:9030702"))
     compileOnly(rfg.deobf("curse.maven:foamfix-optimization-mod-278494:3973967"))
     compileOnly(rfg.deobf("curse.maven:neverenoughanimation-1062347:5531863"))
     implementation(rfg.deobf("curse.maven:ctm-267602:2915363"))
     implementation(rfg.deobf("curse.maven:chisel-235279:2915375"))
-    compileOnly(rfg.deobf("curse.maven:libnine-322344:3509087"))
+    implementation(rfg.deobf("curse.maven:libnine-322344:3509087"))
     compileOnly(rfg.deobf("curse.maven:lazy-ae2-322347:3254160"))
     compileOnly(rfg.deobf("curse.maven:electroblobs-wizardry-265642:5354477"))
     compileOnly(rfg.deobf("curse.maven:ender-utilities-224320:2977010"))

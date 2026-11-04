@@ -8,6 +8,7 @@ import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.client.model.ModelMapTransfer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.mixin.util.ConcurrentResourceInjector;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreModelBakery;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreProgressBar;
@@ -15,6 +16,7 @@ import github.kasuminova.stellarcore.mixin.util.StellarCoreStateMapper;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockModelShapes;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelBakery;
@@ -26,6 +28,7 @@ import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
@@ -200,6 +203,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
             multipartModels = new NonBlockingHashMap<>(multipartModels);
             loadingExceptions = new NonBlockingHashMap<>(loadingExceptions);
             stellar_core$concurrent = true;
+            stellar_core$setResourceInjectorsConcurrent(true);
         }
     }
 
@@ -210,6 +214,23 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         multipartModels = stellar_core$copyToDefault(multipartModels);
         loadingExceptions = stellar_core$copyToDefault(loadingExceptions);
         stellar_core$concurrent = false;
+        stellar_core$setResourceInjectorsConcurrent(false);
+    }
+
+    @Unique
+    private static void stellar_core$setResourceInjectorsConcurrent(final boolean concurrent) {
+        final List<IResourcePack> resourcePacks = ((AccessorMinecraftDefaultResourcePacks) Minecraft.getMinecraft())
+            .stellar_core$getDefaultResourcePacks();
+        for (final IResourcePack resourcePack : resourcePacks) {
+            if (resourcePack instanceof ConcurrentResourceInjector) {
+                final ConcurrentResourceInjector injector = (ConcurrentResourceInjector) resourcePack;
+                if (concurrent) {
+                    injector.stellar_core$toConcurrent();
+                } else {
+                    injector.stellar_core$toDefault();
+                }
+            }
+        }
     }
 
     @Redirect(method = "setupModelRegistry",
