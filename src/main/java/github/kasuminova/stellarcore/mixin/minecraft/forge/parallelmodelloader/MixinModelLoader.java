@@ -8,6 +8,7 @@ import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.client.model.ModelMapTransfer;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
+import github.kasuminova.stellarcore.mixin.minecraft.forge.AccessorModelLoaderRegistry;
 import github.kasuminova.stellarcore.mixin.util.ConcurrentResourceInjector;
 import github.kasuminova.stellarcore.mixin.util.DefaultTextureGetter;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreModelBakery;
@@ -34,7 +35,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.client.model.ModelLoaderRegistryR;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.ProgressManager;
 import org.spongepowered.asm.mixin.Final;
@@ -222,8 +222,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         final List<IResourcePack> resourcePacks = ((AccessorMinecraftDefaultResourcePacks) Minecraft.getMinecraft())
             .stellar_core$getDefaultResourcePacks();
         for (final IResourcePack resourcePack : resourcePacks) {
-            if (resourcePack instanceof ConcurrentResourceInjector) {
-                final ConcurrentResourceInjector injector = (ConcurrentResourceInjector) resourcePack;
+            if (resourcePack instanceof ConcurrentResourceInjector injector) {
                 if (concurrent) {
                     injector.stellar_core$toConcurrent();
                 } else {
@@ -346,7 +345,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
                 } catch (Exception blockstateException) {
                     try {
                         model = ModelLoaderRegistry.getModel(file);
-                        ModelLoaderRegistryR.addAlias(memory, file);
+                        AccessorModelLoaderRegistry.stellar_core$addAlias(memory, file);
                     } catch (Exception normalException) {
                         exception = stellar_core$createItemLoadingException(
                             "Could not load item model either from the normal location " + file + " or from the blockstate",
@@ -359,7 +358,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
                     if (!StellarCoreConfig.FEATURES.vanilla.shutUpModelLoader) {
                         loadingExceptions.put(memory, exception);
                     }
-                    model = ModelLoaderRegistryR.getMissingModel(memory, exception);
+                    model = AccessorModelLoaderRegistry.stellar_core$getMissingModel(memory, exception);
                     failedVariants.put(memory, s);
                 }
                 stateModels.put(memory, model);
@@ -394,7 +393,7 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
             } catch (Exception blockstateException) {
                 try {
                     model = ModelLoaderRegistry.getModel(file);
-                    ModelLoaderRegistryR.addAlias(memory, file);
+                    AccessorModelLoaderRegistry.stellar_core$addAlias(memory, file);
                 } catch (Exception normalException) {
                     continue;
                 }
