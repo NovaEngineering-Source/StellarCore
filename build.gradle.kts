@@ -381,6 +381,18 @@ tasks.test {
     useJUnitPlatform()
 }
 
+// RFG adds Minecraft/LWJGL as provided dependencies. Client benchmarks need them for compilation
+// and for JMH's reflection generator/runtime, even though they are not shipped inside StellarCore.
+sourceSets.named("jmh") {
+    val minecraftClasspath = sourceSets.main.get().compileClasspath
+    compileClasspath += minecraftClasspath
+    runtimeClasspath += minecraftClasspath.filter { !it.name.startsWith("jabel-") }
+}
+
+tasks.named<Jar>("jmhJar") {
+    isZip64 = true
+}
+
 // Allow narrowing JMH runs from command line, e.g.:
 //   ./gradlew jmh -PjmhInclude=ParallelModelLoader
 // (value can be a full regex supported by JMH)

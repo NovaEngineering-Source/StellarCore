@@ -6,6 +6,7 @@ import com.github.lunatrius.ingameinfo.handler.ConfigurationHandler;
 import github.kasuminova.stellarcore.client.util.RenderUtils;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.mixin.util.IMixinInGameInfoCore;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -19,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 
 @Mixin(InGameInfoCore.class)
@@ -28,7 +28,9 @@ public class MixinInGameInfoCore implements IMixinInGameInfoCore {
     @Unique
     private final List<Runnable> stellar_core$postDrawList = new ObjectArrayList<>();
 
-    @Shadow(remap = false) @Final private List<Info> info;
+    @Shadow(remap = false)
+    @Final
+    private List<Info> info;
 
     @Unique
     private Framebuffer stellar_core$fbo = null;

@@ -128,6 +128,16 @@ public class Performance {
     public static class Vanilla {
 
         @Config.Comment({
+            "(Client Performance) Cull vanilla-style particle quads wholly outside the current view frustum.",
+            "Uses render size and interpolated position; custom particle renderers retain their own geometry.",
+            "Particle spawning and ticking are unchanged."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.particleCulling")
+        @Config.Name("ParticleCulling")
+        public boolean particleCulling = true;
+
+        @Config.Comment({
                 "(Client Performance | Experimental) A feature from Patcher mod, using protocol CC-BY-NC-SA 4.0, if there are any copyright issues, please contact me to remove it.",
                 "Dramatically improves performance by limiting the HUD to a specified FPS, may not be compatible with older devices.",
                 "May perform strangely with some HUD Mods."
