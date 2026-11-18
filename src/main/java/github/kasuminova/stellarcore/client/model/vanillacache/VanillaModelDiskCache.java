@@ -36,13 +36,18 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BooleanSupplier;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -105,10 +110,10 @@ public final class VanillaModelDiskCache {
             new ModelBlockAnimation(ImmutableMap.of(), ImmutableMap.of());
 
     /** Snapshots captured during this run, to be persisted by {@link #saveAsync}. */
-    private final Map<ResourceLocation, VanillaModelSnapshot> live = new ConcurrentHashMap<>();
+    private Map<ResourceLocation, VanillaModelSnapshot> live = new ConcurrentHashMap<>();
 
     /** Blockstates captured during this run, persisted alongside the models. */
-    private final Map<ResourceLocation, BlockstateSnapshot> liveBlockstates = new ConcurrentHashMap<>();
+    private Map<ResourceLocation, BlockstateSnapshot> liveBlockstates = new ConcurrentHashMap<>();
 
     /**
      * Vanilla-format model loads observed this session, and where their bytes
@@ -159,11 +164,67 @@ public final class VanillaModelDiskCache {
     private volatile CompletableFuture<Void> prepareFuture = null;
     private volatile boolean prepared = false;
 
+    /** All read/merge/replace operations run in submission order. */
+    private final ExecutorService saveExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        final Thread thread = new Thread(runnable, "StellarCore-VanillaModelDiskCache-Save");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private CompletableFuture<Void> saveFuture = CompletableFuture.completedFuture(null);
+    private boolean saveScheduled;
+    /** Only atomic file replacement and generation changes use this lock, never compression. */
+    private final Object commitLock = new Object();
+    private SaveRequest pendingRequest;
+    private SaveBatch inFlight;
+    private long commitRevision;
+    private long viewGeneration;
+    private File lastSaveDir;
+    private long reloadGeneration;
+    private long rejectionSeed;
+    private Set<ResourceLocation> rejectedModels = new HashSet<>();
+    private Set<ResourceLocation> rejectedBlockstates = new HashSet<>();
+
+    private final BooleanSupplier enabled;
+
     private VanillaModelDiskCache() {
+        this(() -> StellarCoreConfig.PERFORMANCE.forge.vanillaModelDiskCache, true);
+    }
+
+    VanillaModelDiskCache(final BooleanSupplier enabled) {
+        this(enabled, false);
+    }
+
+    private VanillaModelDiskCache(final BooleanSupplier enabled, final boolean installShutdownHook) {
+        this.enabled = enabled;
+        if (installShutdownHook) {
+            Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownWriter,
+                    "StellarCore-VanillaModelDiskCache-Shutdown"));
+        }
+    }
+
+    void shutdownWriter() {
+        synchronized (this) {
+            if (lastSaveDir != null && !saveExecutor.isShutdown()) {
+                saveAsync(lastSaveDir);
+            }
+            saveExecutor.shutdown();
+        }
+        try {
+            if (!saveExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Timed out waiting for cache save; "
+                        + "the previously committed files remain usable.");
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    synchronized CompletableFuture<Void> pendingSave() {
+        return saveFuture;
     }
 
     public boolean isEnabled() {
-        return StellarCoreConfig.PERFORMANCE.forge.vanillaModelDiskCache;
+        return enabled.getAsBoolean();
     }
 
     // ------------------------------------------------------------------------
@@ -182,11 +243,12 @@ public final class VanillaModelDiskCache {
      * because by then the work is already in flight and waiting is cheaper than
      * loading everything the slow way.</p>
      */
-    public void prepareAsync(final File configDir) {
+    public synchronized void prepareAsync(final File configDir) {
         if (!isEnabled() || prepared) {
             return;
         }
         prepared = true;
+        final long generation = reloadGeneration;
         prepareFuture = EnvironmentFingerprint.prewarmAsync()
                                               .thenAcceptAsync(seed -> {
                     if (seed == null) {
@@ -194,12 +256,7 @@ public final class VanillaModelDiskCache {
                                 + "unavailable; running without the model cache this session.");
                         return;
                     }
-                    loadedSeed = seed;
-                    readCacheFile(configDir, seed);
-                    // Clean up now rather than waiting for a write: a fully
-                    // cached run never writes, yet it is exactly the run that
-                    // should retire the previous environment's files.
-                    pruneStaleFiles(configDir, seed);
+                    prepareEnvironment(configDir, seed, generation);
                 }, runnable -> {
                     // The fingerprint thread becomes the cache reader too, so the
                     // pipeline costs one background thread in total.
@@ -242,84 +299,120 @@ public final class VanillaModelDiskCache {
         if (!isEnabled()) {
             return;
         }
-        final long newSeed = EnvironmentFingerprint.recomputeNow();
-        if (newSeed == 0L) {
-            return;
-        }
-        if (captureSeed != 0L && captureSeed != newSeed) {
-            // The environment this session captured models in no longer exists
-            // (the reload changed the pack set); the snapshots are stale.
-            live.clear();
-            liveBlockstates.clear();
-            captureSeed = 0L;
-        }
-        loadedSeed = newSeed;
-        prepared = true;
-        prepareFuture = CompletableFuture.completedFuture(null);
-        readCacheFile(configDir, newSeed);
-        pruneStaleFiles(configDir, newSeed);
+        prepareSync(configDir, EnvironmentFingerprint.recomputeNow());
     }
 
-    /** Whether the prepare pipeline has been started. */
+    // Separate fingerprint computation from the lifecycle for headless regression tests.
+    void prepareSync(final File configDir, final long newSeed) {
+        prepareEnvironment(configDir, newSeed, -1L);
+    }
+
+    private void prepareEnvironment(final File configDir, final long newSeed, final long expectedGeneration) {
+        final long generation;
+        final long revision;
+        final long views;
+        synchronized (commitLock) {
+            synchronized (this) {
+                if (expectedGeneration != -1L && expectedGeneration != reloadGeneration) {
+                    return;
+                }
+                generation = ++reloadGeneration;
+                revision = commitRevision;
+                views = viewGeneration;
+                diskView = null;
+                blockstateView = null;
+                environmentConfirmed = false;
+                if (newSeed == 0L || (captureSeed != 0L && captureSeed != newSeed)) {
+                    live.clear();
+                    liveBlockstates.clear();
+                    captureSeed = 0L;
+                }
+                if (rejectionSeed != newSeed) {
+                    rejectedModels.clear();
+                    rejectedBlockstates.clear();
+                    rejectionSeed = newSeed;
+                }
+                loadedSeed = newSeed;
+                prepared = true;
+            }
+        }
+        if (newSeed != 0L) {
+            final Map<ResourceLocation, VanillaModelSnapshot> models = readModels(configDir, newSeed);
+            final Map<ResourceLocation, BlockstateSnapshot> blockstates = readBlockstates(configDir, newSeed);
+            synchronized (this) {
+                if (generation != reloadGeneration) {
+                    return;
+                }
+                if (revision != commitRevision || views != viewGeneration) {
+                    prepareFuture = CompletableFuture.completedFuture(null);
+                    return;
+                }
+                if (models != null) {
+                    models.keySet().removeAll(rejectedModels);
+                }
+                if (blockstates != null) {
+                    blockstates.keySet().removeAll(rejectedBlockstates);
+                }
+                diskView = models;
+                blockstateView = blockstates;
+                environmentConfirmed = models != null || blockstates != null;
+            }
+            if (models != null) {
+                StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Loaded {} vanilla model snapshots from {}.",
+                        models.size(), cacheFile(configDir, newSeed).getName());
+            }
+            if (blockstates != null) {
+                StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Loaded {} blockstate snapshots from {}.",
+                        blockstates.size(), blockstateFile(configDir, newSeed).getName());
+            }
+            pruneStaleFiles(configDir, newSeed, generation);
+        }
+        synchronized (this) {
+            if (generation == reloadGeneration) {
+                prepareFuture = CompletableFuture.completedFuture(null);
+            }
+        }
+    }
+
+    /** Whether the prepare pipeline has finished. */
     public boolean isPrepared() {
         return prepareFuture != null && prepareFuture.isDone();
     }
 
-    /**
-     * Read and decode the cache file for {@code seed}. Failures are logged and
-     * leave the cache empty: a broken or missing file just means this session
-     * loads models normally and rewrites the cache at the end.
-     */
-    private void readCacheFile(final File configDir, final long seed) {
+    @Nullable
+    private Map<ResourceLocation, VanillaModelSnapshot> readModels(final File configDir, final long seed) {
         final File file = cacheFile(configDir, seed);
         if (!file.isFile()) {
-            StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] No cache for environment {}, will populate.",
-                    Long.toHexString(seed));
-            return;
+            return null;
         }
-        try (DataInputStream in = new DataInputStream(new BufferedInputStream(
-                new GZIPInputStream(new FileInputStream(file))))) {
+        try (InputStream raw = new FileInputStream(file);
+             DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(raw)))) {
             final VanillaModelDiskCacheFile.ReadResult result = VanillaModelDiskCacheFile.read(in, seed);
-            if (result == null) {
-                StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Cache file {} does not match this "
-                        + "environment, will regenerate.", file.getName());
-                return;
+            if (result != null) {
+                return result.entries;
             }
-            diskView = result.entries;
-            environmentConfirmed = true;
-            StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Loaded {} vanilla model snapshots from {}.",
-                    result.entries.size(), file.getName());
-        } catch (Throwable t) {
-            StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to read {}; ignoring it.",
-                    file.getAbsolutePath(), t);
+        } catch (IOException | RuntimeException t) {
+            StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to read {}; ignoring it.", file, t);
         }
-        readBlockstateFile(configDir, seed);
+        return null;
     }
 
-    /**
-     * Read and decode the blockstate cache for {@code seed}. Stored separately
-     * from the model cache so a corrupt blockstate file cannot take the model
-     * cache down with it; both share the environment fingerprint.
-     */
-    private void readBlockstateFile(final File configDir, final long seed) {
+    @Nullable
+    private Map<ResourceLocation, BlockstateSnapshot> readBlockstates(final File configDir, final long seed) {
         final File file = blockstateFile(configDir, seed);
         if (!file.isFile()) {
-            return;
+            return null;
         }
-        try (DataInputStream in = new DataInputStream(new BufferedInputStream(
-                new GZIPInputStream(new FileInputStream(file))))) {
+        try (InputStream raw = new FileInputStream(file);
+             DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(raw)))) {
             final BlockstateDiskCacheFile.ReadResult result = BlockstateDiskCacheFile.read(in, seed);
-            if (result == null) {
-                return;
+            if (result != null) {
+                return result.entries;
             }
-            blockstateView = result.entries;
-            environmentConfirmed = true;
-            StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Loaded {} blockstate snapshots from {}.",
-                    result.entries.size(), file.getName());
-        } catch (Throwable t) {
-            StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to read {}; ignoring it.",
-                    file.getAbsolutePath(), t);
+        } catch (IOException | RuntimeException t) {
+            StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to read {}; ignoring it.", file, t);
         }
+        return null;
     }
 
     /**
@@ -327,156 +420,193 @@ public final class VanillaModelDiskCache {
      * temp file plus an atomic move so an interrupted write can never leave a
      * half-written cache behind. No-op when nothing was captured.
      */
-    public void saveAsync(final File configDir) {
-        if (!isEnabled() || loadedSeed == 0L) {
+    public synchronized void saveAsync(final File configDir) {
+        if (!isEnabled() || loadedSeed == 0L || saveExecutor.isShutdown()
+                || (live.isEmpty() && liveBlockstates.isEmpty() && rejectedModels.isEmpty()
+                    && rejectedBlockstates.isEmpty() && inFlight == null)) {
             return;
         }
-        final long seed = loadedSeed;
-        final long attempts = captureAttempts.sum();
-        final Map<ResourceLocation, VanillaModelSnapshot> models;
-        final Map<ResourceLocation, BlockstateSnapshot> blockstates;
-        final boolean capturesValid;
-        synchronized (this) {
-            if (live.isEmpty() && liveBlockstates.isEmpty()) {
-                // Nothing to write, but retired environments may still need
-                // cleaning up.
-                pruneStaleFiles(configDir, seed);
-                return;
-            }
-            // Hits are never re-captured, so the views read for this exact
-            // environment must be merged back in: a save built from the capture
-            // maps alone would silently shrink the cache to whatever this run
-            // happened to load last.
-            capturesValid = captureSeed == 0L || captureSeed == seed;
-            models = new Object2ObjectOpenHashMap<>(
-                    Math.max(16, live.size() + (diskView == null ? 0 : diskView.size())) * 2);
-            if (diskView != null) {
-                models.putAll(diskView);
-            }
-            if (capturesValid) {
-                models.putAll(live);
-            }
-            blockstates = new Object2ObjectOpenHashMap<>(
-                    Math.max(16, liveBlockstates.size() + (blockstateView == null ? 0 : blockstateView.size())) * 2);
-            if (blockstateView != null) {
-                blockstates.putAll(blockstateView);
-            }
-            if (capturesValid) {
-                blockstates.putAll(liveBlockstates);
-            }
-            if (!capturesValid) {
-                // The reload that changed the environment already reloaded
-                // models under the new one; these can never be written.
-                live.clear();
-                liveBlockstates.clear();
-                captureSeed = 0L;
-            }
+        lastSaveDir = configDir;
+        pendingRequest = new SaveRequest(configDir, loadedSeed, reloadGeneration);
+        if (saveScheduled) {
+            return;
         }
-        if (capturesValid && attempts > 0L) {
-            final long tapped = captureTapped.sum();
-            final long reread = captureReread.sum();
-            final long misses = captureMisses.sum();
-            if (models.isEmpty()) {
-                // A session that clearly loaded models produced no snapshot at
-                // all. Writing the (merged) empty map would still be harmless,
-                // but this state means something is broken — say so, with the
-                // breakdown, instead of staying silent for release after release.
-                StellarLog.LOG.warn(
-                    "[StellarCore-VanillaModelDiskCache] {} vanilla models were loaded this session but none were captured "
-                  + "(tapped {}, re-read {}, unreadable {}); the model cache will remain empty until the capture reads work again.",
-                        attempts, tapped, reread, misses);
-            } else if (misses > 0L) {
-                StellarLog.LOG.info(
-                    "[StellarCore-VanillaModelDiskCache] {} of {} vanilla models could not be captured "
-                  + "(tapped {}, re-read {}); they will be loaded normally again next run.",
-                        misses, attempts, tapped, reread);
-            }
+        saveScheduled = true;
+        try {
+            saveFuture = CompletableFuture.runAsync(this::drainSaves, saveExecutor);
+        } catch (RejectedExecutionException shuttingDown) {
+            saveScheduled = false;
+            pendingRequest = null;
         }
-        final Thread writer = new Thread(() -> {
+    }
+
+    private void drainSaves() {
+        while (true) {
+            final SaveBatch batch;
+            synchronized (this) {
+                final SaveRequest request = pendingRequest;
+                pendingRequest = null;
+                if (request == null) {
+                    saveScheduled = false;
+                    return;
+                }
+                if (request.seed != loadedSeed || request.generation != reloadGeneration) {
+                    continue;
+                }
+                // Detach once, regardless of how often F3+T requests another save.
+                batch = new SaveBatch(request, live, liveBlockstates, rejectedModels, rejectedBlockstates);
+                inFlight = batch;
+                live = new ConcurrentHashMap<>();
+                liveBlockstates = new ConcurrentHashMap<>();
+                rejectedModels = new HashSet<>();
+                rejectedBlockstates = new HashSet<>();
+            }
+            boolean modelsSaved = false;
+            boolean blockstatesSaved = false;
             try {
-                save(configDir, seed, models);
-                saveBlockstates(configDir, seed, blockstates);
-                dropPersistedCaptures(models.keySet(), blockstates.keySet());
+                Map<ResourceLocation, VanillaModelSnapshot> models = readModels(batch.request.dir, batch.request.seed);
+                if (models == null) {
+                    models = new Object2ObjectOpenHashMap<>();
+                }
+                models.keySet().removeAll(batch.rejectedModels);
+                models.putAll(batch.models);
+                modelsSaved = saveModels(batch.request, models);
+
+                Map<ResourceLocation, BlockstateSnapshot> blockstates = readBlockstates(batch.request.dir, batch.request.seed);
+                if (blockstates == null) {
+                    blockstates = new Object2ObjectOpenHashMap<>();
+                }
+                blockstates.keySet().removeAll(batch.rejectedBlockstates);
+                blockstates.putAll(batch.blockstates);
+                blockstatesSaved = saveBlockstates(batch.request, blockstates);
+                if (modelsSaved && blockstatesSaved) {
+                    pruneStaleFiles(batch.request.dir, batch.request.seed, batch.request.generation);
+                }
             } catch (Throwable t) {
                 StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to save cache", t);
+            } finally {
+                synchronized (this) {
+                    // Failed/obsolete writes remain retryable only in the same resource environment.
+                    // New captures win over the detached older delta for a shared key.
+                    if (loadedSeed == batch.request.seed || (loadedSeed == 0L
+                            && (captureSeed == batch.request.seed || rejectionSeed == batch.request.seed))) {
+                        if (!modelsSaved) {
+                            batch.models.forEach(live::putIfAbsent);
+                            rejectedModels.addAll(batch.rejectedModels);
+                        }
+                        if (!blockstatesSaved) {
+                            batch.blockstates.forEach(liveBlockstates::putIfAbsent);
+                            rejectedBlockstates.addAll(batch.rejectedBlockstates);
+                        }
+                    }
+                    inFlight = null;
+                }
             }
-        }, "StellarCore-VanillaModelDiskCache-Save");
-        writer.setDaemon(true);
-        writer.start();
-    }
-
-    /**
-     * Forget the captures that are now on disk.
-     *
-     * <p>A snapshot holds the raw bytes of a model or blockstate JSON. Keeping every
-     * one of them until the game exits costs, in a pack with tens of thousands of
-     * JSON models, hundreds of megabytes of {@code byte[]} that nothing reads again:
-     * once the file is written, the authoritative copy is the file, and a later
-     * reload re-populates {@link #diskView} from it via {@code prepareSync}.</p>
-     *
-     * <p>Only the keys that were actually written are dropped, never the whole map.
-     * {@link #saveAsync} writes on a background thread, and a mod reloading
-     * resources can capture new models while that write is in flight; those
-     * captures belong to the next save and must survive this one.</p>
-     */
-    private void dropPersistedCaptures(final Set<ResourceLocation> persistedModels,
-                                       final Set<ResourceLocation> persistedBlockstates) {
-        synchronized (this) {
-            live.keySet().removeAll(persistedModels);
-            liveBlockstates.keySet().removeAll(persistedBlockstates);
         }
     }
 
-    private void saveBlockstates(final File configDir,
-                                 final long seed,
-                                 final Map<ResourceLocation, BlockstateSnapshot> blockstates) throws IOException {
-        if (blockstates.isEmpty()) {
-            return;
+    private boolean saveModels(final SaveRequest request,
+                               final Map<ResourceLocation, VanillaModelSnapshot> models) throws IOException {
+        final File file = cacheFile(request.dir, request.seed);
+        final File tmp = temporaryFile(file);
+        try {
+            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+                    new GZIPOutputStream(new FileOutputStream(tmp))))) {
+                VanillaModelDiskCacheFile.write(out, request.seed, models);
+            }
+            if (!commit(request, tmp, file)) {
+                return false;
+            }
+            StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Wrote {} entries to {}.",
+                    models.size(), file.getName());
+            return true;
+        } finally {
+            if (tmp.isFile()) {
+                Files.deleteIfExists(tmp.toPath());
+            }
         }
-        final File file = blockstateFile(configDir, seed);
+    }
+
+    private boolean saveBlockstates(final SaveRequest request,
+                                    final Map<ResourceLocation, BlockstateSnapshot> blockstates) throws IOException {
+        final File file = blockstateFile(request.dir, request.seed);
+        final File tmp = temporaryFile(file);
+        try {
+            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+                    new GZIPOutputStream(new FileOutputStream(tmp))))) {
+                BlockstateDiskCacheFile.write(out, request.seed, blockstates);
+            }
+            if (!commit(request, tmp, file)) {
+                return false;
+            }
+            StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Wrote {} blockstate snapshots to {}.",
+                    blockstates.size(), file.getName());
+            return true;
+        } finally {
+            if (tmp.isFile()) {
+                Files.deleteIfExists(tmp.toPath());
+            }
+        }
+    }
+
+    private static File temporaryFile(final File file) throws IOException {
         final File parent = file.getParentFile();
         if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
             throw new IOException("cannot create config dir " + parent);
         }
-        final File tmp = new File(parent, file.getName() + ".tmp");
-        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
-                new GZIPOutputStream(new FileOutputStream(tmp))))) {
-            BlockstateDiskCacheFile.write(out, seed, blockstates);
-        }
-        try {
-            Files.move(tmp.toPath(), file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException fallback) {
-            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
-        environmentConfirmed = true;
-        StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Wrote {} blockstate snapshots to {}.",
-                blockstates.size(), file.getName());
+        return new File(parent, file.getName() + ".tmp");
     }
 
-    private void save(final File configDir,
-                      final long seed,
-                      final Map<ResourceLocation, VanillaModelSnapshot> snapshot) throws IOException {
-        final File file = cacheFile(configDir, seed);
-        final File parent = file.getParentFile();
-        if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
-            throw new IOException("cannot create config dir " + parent);
+    private boolean commit(final SaveRequest request, final File tmp, final File file) throws IOException {
+        synchronized (commitLock) {
+            synchronized (this) {
+                if (request.generation != reloadGeneration || request.seed != loadedSeed) {
+                    return false;
+                }
+            }
+            // The only file IO serialized with invalidation: one atomic replacement.
+            try {
+                Files.move(tmp.toPath(), file.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException fallback) {
+                Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            synchronized (this) {
+                environmentConfirmed = true;
+                commitRevision++;
+            }
+            return true;
         }
-        final File tmp = new File(parent, file.getName() + ".tmp");
-        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
-                new GZIPOutputStream(new FileOutputStream(tmp))))) {
-            VanillaModelDiskCacheFile.write(out, seed, snapshot);
+    }
+
+    private static final class SaveRequest {
+        final File dir;
+        final long seed;
+        final long generation;
+
+        SaveRequest(final File dir, final long seed, final long generation) {
+            this.dir = dir;
+            this.seed = seed;
+            this.generation = generation;
         }
-        try {
-            Files.move(tmp.toPath(), file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException fallback) {
-            Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    private static final class SaveBatch {
+        final SaveRequest request;
+        final Map<ResourceLocation, VanillaModelSnapshot> models;
+        final Map<ResourceLocation, BlockstateSnapshot> blockstates;
+        final Set<ResourceLocation> rejectedModels;
+        final Set<ResourceLocation> rejectedBlockstates;
+
+        SaveBatch(final SaveRequest request, final Map<ResourceLocation, VanillaModelSnapshot> models,
+                  final Map<ResourceLocation, BlockstateSnapshot> blockstates,
+                  final Set<ResourceLocation> rejectedModels, final Set<ResourceLocation> rejectedBlockstates) {
+            this.request = request;
+            this.models = models;
+            this.blockstates = blockstates;
+            this.rejectedModels = rejectedModels;
+            this.rejectedBlockstates = rejectedBlockstates;
         }
-        environmentConfirmed = true;
-        StellarLog.LOG.info("[StellarCore-VanillaModelDiskCache] Wrote {} entries to {}.",
-                snapshot.size(), file.getName());
-        pruneStaleFiles(configDir, seed);
     }
 
     /**
@@ -488,7 +618,7 @@ public final class VanillaModelDiskCache {
      * writes anything, yet it is precisely the run that must retire the previous
      * environment's files.</p>
      */
-    private void pruneStaleFiles(final File configDir, final long seed) {
+    private void pruneStaleFiles(final File configDir, final long seed, final long generation) {
         if (!environmentConfirmed) {
             // Nothing has corroborated this fingerprint, so files named after
             // other fingerprints are not known to be foreign. Leaving them costs
@@ -512,8 +642,15 @@ public final class VanillaModelDiskCache {
                     if (name.equals(keepModel) || name.equals(keepBlockstate)) {
                         continue;
                     }
-                    if (removeIfExpired(path, name, now)) {
-                        removed++;
+                    synchronized (commitLock) {
+                        synchronized (this) {
+                            if (generation != reloadGeneration || seed != loadedSeed || !environmentConfirmed) {
+                                return;
+                            }
+                        }
+                        if (removeIfExpired(path, name, now)) {
+                            removed++;
+                        }
                     }
                 }
             } catch (Throwable ignored) {
@@ -561,13 +698,6 @@ public final class VanillaModelDiskCache {
     }
 
     /**
-     * Drop everything known about the current environment. Called when a resource
-     * reload starts, because the reload may legitimately change which packs are
-     * active; {@link #prepareSync} then re-reads the file for the newly computed
-     * fingerprint, so a reload that changed nothing inherits the cache and one
-     * that changed models does not.
-     */
-    /**
      * Drop everything known about the current environment's *views*. Called when
      * a resource reload starts, because the reload may legitimately change which
      * packs are active; {@link #prepareSync} then re-reads the file for the newly
@@ -583,15 +713,21 @@ public final class VanillaModelDiskCache {
      * {@link #prepareSync}, where the fresh fingerprint is known.</p>
      */
     public void onModelCacheCleared() {
-        environmentConfirmed = false;
-        diskView = null;
-        blockstateView = null;
-        loadedSeed = 0L;
-        prepareFuture = null;
-        prepared = false;
+        synchronized (commitLock) {
+            synchronized (this) {
+                reloadGeneration++;
+                environmentConfirmed = false;
+                diskView = null;
+                blockstateView = null;
+                loadedSeed = 0L;
+                prepareFuture = null;
+                prepared = false;
+            }
+        }
     }
 
     public synchronized void releaseLoadedViews() {
+        viewGeneration++;
         diskView = null;
         blockstateView = null;
     }
@@ -626,7 +762,12 @@ public final class VanillaModelDiskCache {
         } catch (Throwable t) {
             StellarLog.LOG.debug("[StellarCore-VanillaModelDiskCache] Discarding unparsable entry {}: {}",
                     key, t.toString());
-            view.remove(key, snapshot);
+            synchronized (this) {
+                if (view == diskView && view.remove(key, snapshot)) {
+                    rejectionSeed = loadedSeed;
+                    rejectedModels.add(key);
+                }
+            }
             return null;
         }
     }
@@ -660,7 +801,12 @@ public final class VanillaModelDiskCache {
         } catch (Throwable t) {
             StellarLog.LOG.debug("[StellarCore-VanillaModelDiskCache] Discarding unparsable armature for {}: {}",
                     key, t.toString());
-            view.remove(key, snapshot);
+            synchronized (this) {
+                if (view == diskView && view.remove(key, snapshot)) {
+                    rejectionSeed = loadedSeed;
+                    rejectedModels.add(key);
+                }
+            }
             return null;
         }
     }
@@ -695,7 +841,12 @@ public final class VanillaModelDiskCache {
         } catch (Throwable t) {
             StellarLog.LOG.debug("[StellarCore-VanillaModelDiskCache] Discarding unparsable blockstate {}: {}",
                     blockstateLocation, t.toString());
-            view.remove(blockstateLocation, snapshot);
+            synchronized (this) {
+                if (view == blockstateView && view.remove(blockstateLocation, snapshot)) {
+                    rejectionSeed = loadedSeed;
+                    rejectedBlockstates.add(blockstateLocation);
+                }
+            }
             return null;
         }
     }
@@ -704,10 +855,14 @@ public final class VanillaModelDiskCache {
      * Record the parts a blockstate was assembled from. Parts must be in pack
      * priority order, matching what {@code getAllResources} returned.
      */
-    public void captureBlockstate(final ResourceLocation blockstateLocation, final byte[][] parts) {
+    public synchronized void captureBlockstate(final ResourceLocation blockstateLocation, final byte[][] parts) {
         if (!isEnabled() || parts == null || parts.length == 0) {
             return;
         }
+        if (loadedSeed == 0L) {
+            return;
+        }
+        captureSeed = loadedSeed;
         liveBlockstates.put(blockstateLocation, new BlockstateSnapshot(blockstateLocation, parts));
     }
 
@@ -740,8 +895,16 @@ public final class VanillaModelDiskCache {
         if (!isEnabled()) {
             return;
         }
+        final long generation;
+        final long seed;
+        synchronized (this) {
+            generation = reloadGeneration;
+            seed = loadedSeed;
+        }
+        if (seed == 0L) {
+            return;
+        }
         captureAttempts.increment();
-        captureSeed = loadedSeed;
         try {
             final ResourceLocation key = normalize(location);
             final byte[] tappedModel = ModelCapture.modelJson();
@@ -756,7 +919,13 @@ public final class VanillaModelDiskCache {
             } else {
                 captureReread.increment();
             }
-            live.put(key, new VanillaModelSnapshot(key, modelJson, armatureJson(location, manager)));
+            final VanillaModelSnapshot snapshot = new VanillaModelSnapshot(key, modelJson, armatureJson(location, manager));
+            synchronized (this) {
+                if (generation == reloadGeneration && seed == loadedSeed) {
+                    captureSeed = seed;
+                    live.put(key, snapshot);
+                }
+            }
         } catch (Throwable ignored) {
             captureMisses.increment();
         }

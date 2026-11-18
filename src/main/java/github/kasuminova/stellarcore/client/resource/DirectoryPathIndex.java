@@ -60,13 +60,18 @@ public final class DirectoryPathIndex {
     public static boolean contains(@Nullable final File rootDirectory,
                                    @Nullable final String relativePath,
                                    @Nullable final File candidateFile) {
+        return contains(rootDirectory, relativePath, candidateFile, null);
+    }
+
+    private static boolean contains(@Nullable final File rootDirectory, @Nullable final String relativePath,
+                                    @Nullable final File candidateFile, @Nullable final Handle handle) {
         if (rootDirectory == null || !isSafeRelativePath(relativePath)) {
             return false;
         }
 
         final String normalizedPath = normalizePath(relativePath);
         while (true) {
-            final Index index = currentIndex(rootDirectory);
+            final Index index = handle == null ? currentIndex(rootDirectory) : handle.currentIndex();
             if (!index.isRootDirectory()) {
                 if (negativeCachingEnabled) {
                     if (index.isCurrent()) {
@@ -96,6 +101,38 @@ public final class DirectoryPathIndex {
             if (index.addIfCurrent(normalizedPath)) {
                 return true;
             }
+        }
+    }
+
+    /** A reusable root binding; hot lookups do not normalize the root or search the global map. */
+    public static Handle bind(final File rootDirectory) {
+        return new Handle(rootDirectory);
+    }
+
+    public static final class Handle {
+        private final File root;
+        private volatile Index index;
+
+        private Handle(final File root) {
+            this.root = root;
+        }
+
+        private Index currentIndex() {
+            final Index current = index;
+            if (current != null && current.isCurrent()) {
+                return current;
+            }
+            final Index replacement = DirectoryPathIndex.currentIndex(root);
+            index = replacement;
+            return replacement;
+        }
+
+        public boolean contains(@Nullable final String relativePath) {
+            return DirectoryPathIndex.contains(root, relativePath, null, this);
+        }
+
+        public void prewarmAsync() {
+            currentIndex().ensureInitializedAsync();
         }
     }
 
