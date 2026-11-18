@@ -55,7 +55,9 @@ public class ClientEventHandler {
         clientTick++;
         HUDCaching.releaseUnusedFramebuffer();
 
-        StellarUnpackedDataPool.update();
+        if (StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization) {
+            StellarUnpackedDataPool.update();
+        }
 
         if (clientTick % 5 == 0) {
             TitleUtils.checkTitleState();

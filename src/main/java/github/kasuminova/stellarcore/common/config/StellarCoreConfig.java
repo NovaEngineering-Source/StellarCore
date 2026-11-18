@@ -36,9 +36,7 @@ public class StellarCoreConfig {
     @Config.Name("Features")
     public static final Features FEATURES = new Features();
 
-    /*
-        必须在最后加载。
-     */
+    // 必须在最后加载。
     static {
         ConfigAnytime.register(StellarCoreConfig.class);
     }
@@ -51,8 +49,7 @@ public class StellarCoreConfig {
             EntityForceUpdateManager.INSTANCE.reload();
             if (FMLLaunchHandler.side().isClient()) {
                 ParallelModelLoaderAsyncBlackList.INSTANCE.reload();
-                // Pool does not reference minecraft class, so is safety.
-                if (StellarUnpackedDataPool.update()) {
+                if (PERFORMANCE.forge.unpackedBakedQuadDataCanonicalization && StellarUnpackedDataPool.update()) {
                     StellarUnpackedDataPool.reset();
                 }
             }

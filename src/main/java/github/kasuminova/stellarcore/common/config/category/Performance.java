@@ -13,6 +13,12 @@ public class Performance {
     @Config.Name("Forge")
     public final Forge forge = new Forge();
 
+    /** These three startup options are the producers for StellarUnpackedDataPool. */
+    public boolean usesQuadDataPools() {
+        return vanilla.bakedQuadVertexDataCanonicalization || forge.unpackedBakedQuadDataCanonicalization
+                || forge.unpackedBakedQuadVertexDataCanonicalization;
+    }
+
     @Config.LangKey("stellar_core.config.performance.appliedEnergistics")
     @Config.Name("AppliedEnergistics")
     public final AppliedEnergistics appliedEnergistics = new AppliedEnergistics();

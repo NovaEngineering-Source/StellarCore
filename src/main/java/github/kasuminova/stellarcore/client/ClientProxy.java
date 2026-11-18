@@ -101,8 +101,13 @@ public class ClientProxy extends CommonProxy {
         super.loadComplete();
 
         TitleUtils.setRandomTitle();
-        StellarUnpackedDataPool.reset();
-        BakedQuadPool.INSTANCE.clear();
+        // Looking up an unused pool just to clear it starts its workers.
+        if (StellarCoreConfig.PERFORMANCE.usesQuadDataPools()) {
+            StellarUnpackedDataPool.reset();
+        }
+        if (StellarCoreConfig.PERFORMANCE.vanilla.simpleBakedModelCanonicalization) {
+            BakedQuadPool.INSTANCE.clear();
+        }
         BlockFaceUVsPool.INSTANCE.clear();
 
         // Persist any vanilla JSON model snapshots captured during this run in the
