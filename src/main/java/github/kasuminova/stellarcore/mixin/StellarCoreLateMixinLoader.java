@@ -31,6 +31,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_biomesoplenty.json",          "biomesoplenty");
         addModdedMixinCFG("mixins.stellar_core_bloodmagic.json",             "bloodmagic");
         addModdedMixinCFG("mixins.stellar_core_botania.json",                "botania");
+        addModdedMixinCFG("mixins.stellar_core_buildcraft.json",             "buildcraftlib", () -> StellarCoreConfig.BUG_FIXES.buildCraft.spriteFluidFrozen);
         addModdedMixinCFG("mixins.stellar_core_cfm.json",                    "cfm", () -> StellarCoreConfig.BUG_FIXES.mrCrayfishFurniture.imageCache);
         addModdedMixinCFG("mixins.stellar_core_chisel.json",                 "chisel");
         addModdedMixinCFG("mixins.stellar_core_cofhcore.json",               "cofhcore");

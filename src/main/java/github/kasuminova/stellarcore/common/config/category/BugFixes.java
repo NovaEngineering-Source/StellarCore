@@ -36,6 +36,10 @@ public class BugFixes {
     @Config.Name("Botania")
     public final Botania botania = new Botania();
 
+    @Config.LangKey("stellar_core.config.bugfixes.buildCraft")
+    @Config.Name("BuildCraft")
+    public final BuildCraft buildCraft = new BuildCraft();
+
     @Config.LangKey("stellar_core.config.bugfixes.coFHCore")
     @Config.Name("CoFHCore")
     public final CoFHCore coFHCore = new CoFHCore();
@@ -260,6 +264,19 @@ public class BugFixes {
         @Config.LangKey("stellar_core.config.bugfixes.botania.autoCleanManaNetworkHandler")
         @Config.Name("AutoCleanManaNetworkHandler")
         public boolean manaNetworkHandler = true;
+
+    }
+
+    public static class BuildCraft {
+
+        @Config.Comment({
+                "(Client Only) Load the source texture and its dependencies before BuildCraft creates a frozen fluid sprite.",
+                "Prevents missing frames and crashes when custom fluid textures read mipmaps that have not been generated yet."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.bugfixes.buildCraft.spriteFluidFrozenFixes")
+        @Config.Name("SpriteFluidFrozenFixes")
+        public boolean spriteFluidFrozen = true;
 
     }
 

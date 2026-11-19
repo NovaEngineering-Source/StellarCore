@@ -186,6 +186,20 @@ repositories {
     mavenCentral()
 }
 
+val buildCraftRaw = configurations.create("buildCraftRaw") {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+
+// BC 8.0.0 bundles duplicate discovery caches, which RFG cannot copy into its remapped jar.
+val prepareBuildCraftDependency = tasks.register<Jar>("prepareBuildCraftDependency") {
+    archiveFileName.set("buildcraft-61811-6376391.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("dependencies/buildcraft"))
+    from(provider { zipTree(buildCraftRaw.singleFile) })
+    exclude("META-INF/fml_cache_annotation.json", "META-INF/fml_cache_class_versions.json")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 dependencies {
     annotationProcessor("com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
     compileOnly("com.github.bsideup.jabel:jabel-javac-plugin:0.4.2")
@@ -261,6 +275,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:ore-excavation-250898:2897369"))
     compileOnly(rfg.deobf("curse.maven:techguns-244201:2958103"))
     compileOnly(rfg.deobf("curse.maven:biomes-o-plenty-220318:3558882"))
+    add(buildCraftRaw.name, "curse.maven:buildcraft-61811:6376391")
+    compileOnly(rfg.deobf(files(prepareBuildCraftDependency.flatMap { it.archiveFile })))
     compileOnly(rfg.deobf("curse.maven:more-electric-tools-366298:3491973"))
     compileOnly(rfg.deobf("curse.maven:brandonscore-231382:3051539"))
     compileOnly(rfg.deobf("curse.maven:draconicevolution-223565:3051542"))
