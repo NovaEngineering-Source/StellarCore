@@ -22,7 +22,7 @@ public class NBTTagBackingMap extends Object2ObjectOpenHashMap<String, NBTBase> 
     }
 
     public NBTTagBackingMap() {
-        super(4);
+        super(2);
     }
 
     public NBTTagBackingMap(final Map<String, NBTBase> m) {

@@ -5,4 +5,6 @@ import net.minecraft.util.ResourceLocation;
 public interface StellarCoreModelBakery {
 
     void stellar_core$invalidateBlockDefinition(final ResourceLocation location);
+
+    void stellar_core$releaseLoadingScratch();
 }

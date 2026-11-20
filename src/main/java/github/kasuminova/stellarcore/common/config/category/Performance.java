@@ -494,6 +494,15 @@ public class Performance {
     public static class Forge {
 
         @Config.Comment({
+            "(Client Memory) Start per-item metadata maps at one entry instead of allocating space for 16.",
+            "Maps retain their normal fastutil type and grow for items with more metadata variants."
+        })
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.itemModelMesherCapacity")
+        @Config.Name("ItemModelMesherCapacity")
+        public boolean itemModelMesherCapacity = true;
+
+        @Config.Comment({
                 "(Client/Server Performance) ASMDataTable Annotation Map builds use half of the CPU instead of all of it,",
                 "helping to improve the computer freezing problem at game startup, but potentially causing the game to take longer to load."
         })
@@ -799,6 +808,7 @@ public class Performance {
                 "to improve the performance of EnderIO Machines overall, with a slight increase in memory usage."
         })
         @Config.LangKey("stellar_core.config.performance.enderCore.thingsImprovements")
+        @Config.RequiresMcRestart
         @Config.Name("ThingsImprovements")
         public boolean things = true;
 
@@ -1008,6 +1018,7 @@ public class Performance {
                 "This feature requires Vanilla#ResourceExistStateCache option."
         })
         @Config.LangKey("stellar_core.config.performance.libNine.l9ModelsIsOfTypeCache")
+        @Config.RequiresMcRestart
         @Config.Name("L9ModelsIsOfTypeCache")
         public boolean l9ModelsIsOfTypeCache = true;
 

@@ -6,7 +6,9 @@ import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import net.minecraft.client.renderer.texture.ITextureMapPopulator;
 import net.minecraft.client.renderer.texture.PngSizeInfo;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -122,8 +124,8 @@ public abstract class MixinTextureMap {
 
     @Inject(method = "loadTextureAtlas", at = @At("RETURN"))
     private void injectLoadTextureTail(final IResourceManager resourceManager, final CallbackInfo ci) {
-        stellar_core$cachedTextures.clear();
-        stellar_core$cachedLocations.clear();
+        stellar_core$cachedTextures = ReferenceSets.emptySet();
+        stellar_core$cachedLocations = ObjectSets.emptySet();
         SpriteBufferedImageCache.INSTANCE.clear();
     }
 

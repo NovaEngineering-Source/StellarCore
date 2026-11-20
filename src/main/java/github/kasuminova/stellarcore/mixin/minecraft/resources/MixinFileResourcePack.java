@@ -2,6 +2,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.resources;
 
 import github.kasuminova.stellarcore.client.resource.ZipEntryIndex;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreFileResourcePackAccessor;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.AbstractResourcePack;
 import net.minecraft.client.resources.FileResourcePack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipFile;
 
@@ -60,7 +60,7 @@ public abstract class MixinFileResourcePack extends AbstractResourcePack impleme
                 return;
             }
             if (stellar_core$resourceDomainsZip == zipFile && stellar_core$resourceDomains != null) {
-                cir.setReturnValue(new HashSet<>(stellar_core$resourceDomains));
+                cir.setReturnValue(new ObjectOpenHashSet<>(stellar_core$resourceDomains));
                 return;
             }
             final Set<String> indexed = ZipEntryIndex.lookupResourceDomains(this.resourcePackFile);
@@ -72,8 +72,8 @@ public abstract class MixinFileResourcePack extends AbstractResourcePack impleme
                 this.logNameNotLowercase(namespace);
             }
             stellar_core$resourceDomainsZip = zipFile;
-            stellar_core$resourceDomains = new HashSet<>(indexed);
-            cir.setReturnValue(new HashSet<>(indexed));
+            stellar_core$resourceDomains = new ObjectOpenHashSet<>(indexed);
+            cir.setReturnValue(new ObjectOpenHashSet<>(indexed));
         }
     }
 
@@ -82,7 +82,7 @@ public abstract class MixinFileResourcePack extends AbstractResourcePack impleme
         synchronized (stellar_core$zipFileLock) {
             if (this.resourcePackZipFile != null) {
                 this.stellar_core$resourceDomainsZip = this.resourcePackZipFile;
-                this.stellar_core$resourceDomains = new HashSet<>(cir.getReturnValue());
+                this.stellar_core$resourceDomains = new ObjectOpenHashSet<>(cir.getReturnValue());
             }
         }
     }

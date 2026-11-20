@@ -5,7 +5,11 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.nbt.NBTBase;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -15,7 +19,7 @@ public class NBTTagBackingList extends FakeArrayList<NBTBase> {
     private StellarNBTTagList changeHandler = null;
 
     public NBTTagBackingList(final int initialCapacity) {
-        super(new ObjectArrayList<>(), initialCapacity);
+        super(new ObjectArrayList<>(initialCapacity));
     }
 
     public NBTTagBackingList() {

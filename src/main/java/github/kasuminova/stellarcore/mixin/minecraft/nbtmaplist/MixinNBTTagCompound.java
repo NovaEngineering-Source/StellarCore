@@ -4,10 +4,22 @@ import github.kasuminova.stellarcore.common.util.NBTTagBackingMap;
 import github.kasuminova.stellarcore.mixin.util.StellarNBTTagCompound;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import net.minecraft.crash.CrashReport;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTPrimitive;
+import net.minecraft.nbt.NBTSizeTracker;
+import net.minecraft.nbt.NBTTagByteArray;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagIntArray;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.ReportedException;
 import net.minecraftforge.common.util.Constants;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -143,8 +155,12 @@ public abstract class MixinNBTTagCompound extends NBTBase implements StellarNBTT
         }
 
         // Copy values.
-        for (final Object2ObjectMap.Entry<String, NBTBase> entry : cloned.object2ObjectEntrySet()) {
-            entry.setValue(entry.getValue().copy());
+        if (!cloned.isEmpty()) {
+            final var entries = cloned.object2ObjectEntrySet().fastIterator();
+            while (entries.hasNext()) {
+                final Object2ObjectMap.Entry<String, NBTBase> entry = entries.next();
+                entry.setValue(entry.getValue().copy());
+            }
         }
 
         return copied;

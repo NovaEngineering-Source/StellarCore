@@ -12,7 +12,12 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -166,6 +171,16 @@ public abstract class MixinModelBakery implements StellarCoreModelBakery {
             return;
         }
         this.blockDefinitions.remove(this.getBlockstateLocation(location));
+    }
+
+    @Override
+    public void stellar_core$releaseLoadingScratch() {
+        // getVariantNames remains callable after baking; retain its registered names.
+        variants.clear();
+        multipartVariantMap.clear();
+        stellar_core$definitionResourceCounts.clear();
+        // Keep blockDefinitions: VariantLoader still needs their multipart
+        // identities when a model is first requested after the bake event.
     }
 
 }

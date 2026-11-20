@@ -43,6 +43,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_draconicevolution.json",      "draconicevolution");
         addModdedMixinCFG("mixins.stellar_core_ebwizardry.json",             "ebwizardry");
         addModdedMixinCFG("mixins.stellar_core_endercore.json",              "endercore");
+        addModdedMixinCFG("mixins.stellar_core_endercore_things.json", "endercore", () -> StellarCoreConfig.PERFORMANCE.enderCore.things);
         addModdedMixinCFG("mixins.stellar_core_enderio.json",                "enderio");
         addModdedMixinCFG("mixins.stellar_core_enderioconduits.json",        "enderio", "enderioconduits");
         addModdedMixinCFG("mixins.stellar_core_enderioconduits_energy.json", "enderio", "enderioconduits");
@@ -64,6 +65,8 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
         addModdedMixinCFG("mixins.stellar_core_threng.json",                 "threng");
         addModdedMixinCFG("mixins.stellar_core_legendarytooltips.json",      "legendarytooltips");
         addModdedMixinCFG("mixins.stellar_core_libnine.json",                "libnine", () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
+        addModdedMixinCFG("mixins.stellar_core_libnine_modeltype_cache.json", "libnine", () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader
+            && StellarCoreConfig.PERFORMANCE.vanilla.resourceExistStateCache && StellarCoreConfig.PERFORMANCE.libNine.l9ModelsIsOfTypeCache);
         addModdedMixinCFG("mixins.stellar_core_mek_top.json",          new String[]{"mekanism", "theoneprobe"}, () -> StellarCoreConfig.FEATURES.mekanism.topSupport);
         addMixinCFG      ("mixins.stellar_core_mekanism.json",                      () -> Mods.MEK.loaded() && !Mods.MEKCEU.loaded());
         addModdedMixinCFG("mixins.stellar_core_mets.json",                   "mets");

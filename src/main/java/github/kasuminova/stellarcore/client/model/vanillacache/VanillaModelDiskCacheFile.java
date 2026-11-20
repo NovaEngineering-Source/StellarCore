@@ -110,7 +110,7 @@ public final class VanillaModelDiskCacheFile {
         }
 
         final Map<ResourceLocation, VanillaModelSnapshot> entries =
-                new Object2ObjectOpenHashMap<>(Math.max(16, count * 2));
+            new Object2ObjectOpenHashMap<>(count);
         for (int i = 0; i < count; i++) {
             final String locationText = in.readUTF();
 

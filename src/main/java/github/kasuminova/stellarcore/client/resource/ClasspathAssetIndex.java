@@ -1,6 +1,9 @@
 package github.kasuminova.stellarcore.client.resource;
 
 import github.kasuminova.stellarcore.common.util.StellarEnvironment;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.resources.DefaultResourcePack;
 import net.minecraft.util.ResourceLocation;
 
@@ -11,11 +14,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -99,7 +99,7 @@ public final class ClasspathAssetIndex {
     }
 
     private static ClasspathSources computeClasspathSources() {
-        final LinkedHashSet<File> files = new LinkedHashSet<>();
+        final ObjectLinkedOpenHashSet<File> files = new ObjectLinkedOpenHashSet<>();
 
         final ClassLoader cl = DefaultResourcePack.class.getClassLoader();
         if (cl instanceof URLClassLoader) {
@@ -128,8 +128,8 @@ public final class ClasspathAssetIndex {
             }
         }
 
-        final List<File> jarFiles = new ArrayList<>();
-        final List<File> directoryRoots = new ArrayList<>();
+        final List<File> jarFiles = new ObjectArrayList<>();
+        final List<File> directoryRoots = new ObjectArrayList<>();
         for (File file : files) {
             if (file == null) {
                 continue;
@@ -277,13 +277,19 @@ public final class ClasspathAssetIndex {
             if (normalized.indexOf('\\') >= 0) {
                 normalized = normalized.replace('\\', '/');
             }
-            while (!normalized.isEmpty() && normalized.charAt(0) == '/') {
-                normalized = normalized.substring(1);
+            int start = 0;
+            while (start < normalized.length() && normalized.charAt(start) == '/') {
+                start++;
+            }
+            if (start != 0) {
+                normalized = normalized.substring(start);
             }
 
-            final String assetsPrefix = "assets/" + namespace + "/";
-            if (normalized.startsWith(assetsPrefix)) {
-                normalized = normalized.substring(assetsPrefix.length());
+            final int namespaceEnd = "assets/".length() + namespace.length();
+            if (normalized.length() > namespaceEnd && normalized.startsWith("assets/")
+                && normalized.charAt(namespaceEnd) == '/'
+                && normalized.regionMatches("assets/".length(), namespace, 0, namespace.length())) {
+                normalized = normalized.substring(namespaceEnd + 1);
             }
 
             return normalized;
@@ -356,7 +362,7 @@ public final class ClasspathAssetIndex {
             final Set<String> found = scanJars(prefix, sources.jarFiles);
             this.jarPaths = Collections.unmodifiableSet(found);
 
-            final List<File> namespaceRoots = new ArrayList<>();
+            final List<File> namespaceRoots = new ObjectArrayList<>();
             if (!sources.directoryRoots.isEmpty()) {
                 final String base = "assets" + File.separatorChar + namespace;
                 for (File root : sources.directoryRoots) {
@@ -371,13 +377,13 @@ public final class ClasspathAssetIndex {
 
         private Set<String> scanJars(final String prefix, final List<File> jarFiles) {
             if (jarFiles == null || jarFiles.isEmpty()) {
-                return new HashSet<>();
+                return new ObjectOpenHashSet<>();
             }
 
             final int threads = ClasspathAssetIndex.executorThreads();
             final int taskCount = threads <= 1 ? 1 : Math.min(threads, jarFiles.size());
             if (taskCount <= 1) {
-                final Set<String> found = new HashSet<>();
+                final Set<String> found = new ObjectOpenHashSet<>();
                 for (File jarFile : jarFiles) {
                     scanJar(jarFile, found, prefix);
                 }
@@ -385,11 +391,11 @@ public final class ClasspathAssetIndex {
             }
 
             final Executor exec = ClasspathAssetIndex.executor();
-            final List<CompletableFuture<Set<String>>> tasks = new ArrayList<>(taskCount);
+            final List<CompletableFuture<Set<String>>> tasks = new ObjectArrayList<>(taskCount);
             for (int taskId = 0; taskId < taskCount; taskId++) {
                 final int start = taskId;
                 tasks.add(CompletableFuture.supplyAsync(() -> {
-                    final Set<String> local = new HashSet<>();
+                    final Set<String> local = new ObjectOpenHashSet<>();
                     for (int i = start; i < jarFiles.size(); i += taskCount) {
                         scanJar(jarFiles.get(i), local, prefix);
                     }
@@ -397,15 +403,20 @@ public final class ClasspathAssetIndex {
                 }, exec));
             }
 
-            final Set<String> found = new HashSet<>();
+            Set<String> found = null;
             for (CompletableFuture<Set<String>> task : tasks) {
                 try {
-                    found.addAll(task.join());
+                    final Set<String> local = task.join();
+                    if (found == null) {
+                        found = local;
+                    } else {
+                        found.addAll(local);
+                    }
                 } catch (Throwable ignored) {
                     this.initFailed = true;
                 }
             }
-            return found;
+            return found == null ? new ObjectOpenHashSet<>() : found;
         }
 
         private void scanJar(final File jarFile, final Set<String> found, final String prefix) {

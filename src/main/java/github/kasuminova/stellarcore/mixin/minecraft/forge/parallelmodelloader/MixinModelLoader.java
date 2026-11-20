@@ -32,6 +32,7 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.IRegistry;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
@@ -100,6 +101,19 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         multipartDefinitions = new NonBlockingHashMap<>();
         multipartModels = new NonBlockingHashMap<>();
         loadingExceptions = new NonBlockingHashMap<>();
+    }
+
+    @Inject(method = "onPostBakeEvent", at = @At("RETURN"), remap = false, require = 1)
+    private void stellar_core$releaseLoadingState(final IRegistry<ModelResourceLocation, IBakedModel> registry,
+                                                  final CallbackInfo ci) {
+        // ModelBakeEvent (including CTM's joined workers) and Forge's missing-model
+        // diagnostics have finished. The registry now owns all runtime baked models.
+        // Replace rather than clear fastutil tables so their peak capacity is released.
+        stateModels = new Object2ObjectOpenHashMap<>(0);
+        loadingExceptions = new Object2ObjectOpenHashMap<>(0);
+        stellar_core$releaseLoadingScratch();
+        // multipartDefinitions/multipartModels and missingModel are also used by
+        // late VariantLoader/VanillaLoader requests; keep their existing identities.
     }
 
     @Shadow(remap = false)
@@ -181,7 +195,8 @@ public abstract class MixinModelLoader extends ModelBakery implements StellarCor
         });
         progressBar.stellar_core$stepBatch(deferredSteps.getAndSet(0), blockBar.getMessage());
 
-        stellar_core$toDefault();
+        // loadItemModels follows immediately and uses the same concurrent tables.
+        // Convert once after both loading phases instead of copying them twice.
         StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Loaded {} block models, took {}ms.", blocks.size(), System.currentTimeMillis() - startTime);
         return Collections.emptyIterator();
     }

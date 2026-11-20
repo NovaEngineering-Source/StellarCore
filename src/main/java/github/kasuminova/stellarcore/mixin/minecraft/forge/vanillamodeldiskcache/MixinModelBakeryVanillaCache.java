@@ -34,7 +34,7 @@ public abstract class MixinModelBakeryVanillaCache {
     private void stellar_core$serveFromDiskCache(final ResourceLocation location,
                                                  final CallbackInfoReturnable<ModelBlock> cir) {
         final VanillaModelDiskCache cache = VanillaModelDiskCache.INSTANCE;
-        if (!cache.isEnabled() || stellarCore$isBuiltin(location)) {
+        if (stellarCore$isBuiltin(location)) {
             return;
         }
         try {
@@ -56,7 +56,7 @@ public abstract class MixinModelBakeryVanillaCache {
     private void stellar_core$captureSnapshot(final ResourceLocation location,
                                               final CallbackInfoReturnable<ModelBlock> cir) {
         final VanillaModelDiskCache cache = VanillaModelDiskCache.INSTANCE;
-        if (!cache.isEnabled() || stellarCore$isBuiltin(location)) {
+        if (stellarCore$isBuiltin(location)) {
             return;
         }
         if (cir.getReturnValue() == null) {

@@ -1,18 +1,24 @@
 package github.kasuminova.stellarcore.common.pool;
 
 import github.kasuminova.stellarcore.common.util.StellarLog;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NBTTagByte;
+import net.minecraft.nbt.NBTTagDouble;
+import net.minecraft.nbt.NBTTagFloat;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagLong;
+import net.minecraft.nbt.NBTTagShort;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class NBTTagPrimitivePool {
 
     private static final NBTTagByte  [] TAG_BYTES   = new NBTTagByte  [256];
-    private static final NBTTagShort [] TAG_SHORTS  = new NBTTagShort [65536];
-    private static final NBTTagInt   [] TAG_INTS    = new NBTTagInt   [65536];
-    private static final NBTTagLong  [] TAG_LONGS   = new NBTTagLong  [65536];
-    private static final NBTTagFloat [] TAG_FLOATS  = new NBTTagFloat [65536];
-    private static final NBTTagDouble[] TAG_DOUBLES = new NBTTagDouble[65536];
+    private static final AtomicReferenceArray<NBTTagShort> TAG_SHORTS = new AtomicReferenceArray<>(65536);
+    private static final AtomicReferenceArray<NBTTagInt> TAG_INTS = new AtomicReferenceArray<>(65536);
+    private static final AtomicReferenceArray<NBTTagLong> TAG_LONGS = new AtomicReferenceArray<>(65536);
+    private static final AtomicReferenceArray<NBTTagFloat> TAG_FLOATS = new AtomicReferenceArray<>(65536);
+    private static final AtomicReferenceArray<NBTTagDouble> TAG_DOUBLES = new AtomicReferenceArray<>(65536);
 
     private static final float EPSILON = 0.0000001F;
 
@@ -24,11 +30,6 @@ public class NBTTagPrimitivePool {
     static {
         final long start = System.currentTimeMillis();
         Arrays.setAll(TAG_BYTES,   i -> new NBTTagByte  ((byte)  (i - BYTE_OFFSET)));
-        Arrays.setAll(TAG_SHORTS,  i -> new NBTTagShort ((short) (i - SHORT_OFFSET)));
-        Arrays.setAll(TAG_INTS,    i -> new NBTTagInt   (i - SHORT_OFFSET));
-        Arrays.setAll(TAG_LONGS,   i -> new NBTTagLong  (i - SHORT_OFFSET));
-        Arrays.setAll(TAG_FLOATS,  i -> new NBTTagFloat (i - SHORT_OFFSET));
-        Arrays.setAll(TAG_DOUBLES, i -> new NBTTagDouble(i - SHORT_OFFSET));
         StellarLog.LOG.info("[StellarCore-NBTTagPrimitivePool] PrimitiveType NBTTagPrimitivePool initialized, took {}ms.", System.currentTimeMillis() - start);
     }
 
@@ -41,63 +42,82 @@ public class NBTTagPrimitivePool {
     }
 
     public static NBTTagShort getTagShort(final NBTTagShort tag) {
-        return TAG_SHORTS[tag.getShort() + SHORT_OFFSET];
+        final short value = tag.getShort();
+        final int index = value + SHORT_OFFSET;
+        final NBTTagShort cached = TAG_SHORTS.get(index);
+        return cached == null ? publish(TAG_SHORTS, index, new NBTTagShort(value)) : cached;
     }
 
     public static NBTTagShort getTagShort(final short s) {
-        return TAG_SHORTS[s + SHORT_OFFSET];
+        final int index = s + SHORT_OFFSET;
+        final NBTTagShort cached = TAG_SHORTS.get(index);
+        return cached == null ? publish(TAG_SHORTS, index, new NBTTagShort(s)) : cached;
     }
 
     public static NBTTagInt getTagInt(final NBTTagInt tag) {
         final int value = tag.getInt();
-        return value < MINIMUM || value > MAXIMUM
-                ? tag
-                : TAG_INTS[value + SHORT_OFFSET];
+        if (value < MINIMUM || value > MAXIMUM) return tag;
+        final int index = value + SHORT_OFFSET;
+        final NBTTagInt cached = TAG_INTS.get(index);
+        return cached == null ? publish(TAG_INTS, index, new NBTTagInt(value)) : cached;
     }
 
     public static NBTTagInt getTagInt(final int i) {
-        return i < MINIMUM || i > MAXIMUM
-                ? new NBTTagInt(i)
-                : TAG_INTS[i + SHORT_OFFSET];
+        if (i < MINIMUM || i > MAXIMUM) return new NBTTagInt(i);
+        final int index = i + SHORT_OFFSET;
+        final NBTTagInt cached = TAG_INTS.get(index);
+        return cached == null ? publish(TAG_INTS, index, new NBTTagInt(i)) : cached;
     }
 
     public static NBTTagLong getTagLong(final NBTTagLong tag) {
         final long value = tag.getLong();
-        return value < MINIMUM || value > MAXIMUM
-                ? tag
-                : TAG_LONGS[(int) (value + SHORT_OFFSET)];
+        if (value < MINIMUM || value > MAXIMUM) return tag;
+        final int index = (int) value + SHORT_OFFSET;
+        final NBTTagLong cached = TAG_LONGS.get(index);
+        return cached == null ? publish(TAG_LONGS, index, new NBTTagLong(value)) : cached;
     }
 
     public static NBTTagLong getTagLong(final long l) {
-        return l < MINIMUM || l > MAXIMUM
-                ? new NBTTagLong(l)
-                : TAG_LONGS[(int) (l + SHORT_OFFSET)];
+        if (l < MINIMUM || l > MAXIMUM) return new NBTTagLong(l);
+        final int index = (int) l + SHORT_OFFSET;
+        final NBTTagLong cached = TAG_LONGS.get(index);
+        return cached == null ? publish(TAG_LONGS, index, new NBTTagLong(l)) : cached;
     }
 
     public static NBTTagFloat getTagFloat(final NBTTagFloat tag) {
         final float value = tag.getFloat();
-        return isFloatInteger(value)
-                ? value < MINIMUM || value > MAXIMUM ? tag : TAG_FLOATS[((int) value + SHORT_OFFSET)]
-                : tag;
+        if (!isFloatInteger(value) || value < MINIMUM || value > MAXIMUM) return tag;
+        final int index = (int) value + SHORT_OFFSET;
+        final NBTTagFloat cached = TAG_FLOATS.get(index);
+        return cached == null ? publish(TAG_FLOATS, index, new NBTTagFloat((int) value)) : cached;
     }
 
     public static NBTTagFloat getTagFloat(final float f) {
-        return isFloatInteger(f) 
-                ? f < MINIMUM || f > MAXIMUM ? new NBTTagFloat(f) : TAG_FLOATS[((int) f + SHORT_OFFSET)] 
-                : new NBTTagFloat(f);
+        if (!isFloatInteger(f) || f < MINIMUM || f > MAXIMUM) return new NBTTagFloat(f);
+        final int index = (int) f + SHORT_OFFSET;
+        final NBTTagFloat cached = TAG_FLOATS.get(index);
+        return cached == null ? publish(TAG_FLOATS, index, new NBTTagFloat((int) f)) : cached;
     }
 
     public static NBTTagDouble getTagDouble(final NBTTagDouble tag) {
         final double value = tag.getDouble();
-        return isDoubleInteger(value) 
-                ? value < MINIMUM || value > MAXIMUM ? tag : TAG_DOUBLES[((int) value + SHORT_OFFSET)]
-                : tag;
+        if (!isDoubleInteger(value) || value < MINIMUM || value > MAXIMUM) return tag;
+        final int index = (int) value + SHORT_OFFSET;
+        final NBTTagDouble cached = TAG_DOUBLES.get(index);
+        return cached == null ? publish(TAG_DOUBLES, index, new NBTTagDouble((int) value)) : cached;
     }
 
     public static NBTTagDouble getTagDouble(final double d) {
-        return isDoubleInteger(d)
-                ? d < MINIMUM || d > MAXIMUM ? new NBTTagDouble(d)
-                : TAG_DOUBLES[((int) d + SHORT_OFFSET)] : new NBTTagDouble(d);
+        if (!isDoubleInteger(d) || d < MINIMUM || d > MAXIMUM) return new NBTTagDouble(d);
+        final int index = (int) d + SHORT_OFFSET;
+        final NBTTagDouble cached = TAG_DOUBLES.get(index);
+        return cached == null ? publish(TAG_DOUBLES, index, new NBTTagDouble((int) d)) : cached;
+    }
+
+    private static <T> T publish(final AtomicReferenceArray<T> pool, final int index, final T tag) {
+        // Startup NBT parsing can run concurrently. Publish only the requested
+        // constants, preserving one shared instance and safe visibility of its data.
+        return pool.compareAndSet(index, null, tag) ? tag : pool.get(index);
     }
 
     public static boolean isFloatInteger(float value) {

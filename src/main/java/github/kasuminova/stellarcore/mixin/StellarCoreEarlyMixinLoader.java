@@ -26,6 +26,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",           () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
         addMixinCFG("mixins.stellar_core_minecraft_bakedmodel.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.simpleBakedModelCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_bakedquad.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.bakedQuadVertexDataCanonicalization);
+        addMixinCFG("mixins.stellar_core_minecraft_ctm_scope.json", () -> StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler || StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addMixinCFG("mixins.stellar_core_minecraft_blockfaceuv.json",            () -> StellarCoreConfig.PERFORMANCE.vanilla.blockFaceUVsCanonicalization);
         addMixinCFG("mixins.stellar_core_minecraft_blockpart.json",              () -> StellarCoreConfig.PERFORMANCE.vanilla.blockPartDataStructure);
         addMixinCFG("mixins.stellar_core_minecraft_blockstateimpl.json",         () -> StellarCoreConfig.PERFORMANCE.vanilla.blockStateImplementationHashCodeCache);
@@ -69,6 +70,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_bakedquad_vertexdata.json",       () -> StellarCoreConfig.PERFORMANCE.forge.unpackedBakedQuadVertexDataCanonicalization);
         addMixinCFG("mixins.stellar_core_forge_capability.json",                 () -> StellarCoreConfig.PERFORMANCE.forge.deallocateEmptyCapabilityNBT);
         addMixinCFG("mixins.stellar_core_forge_chunkmanager.json",               () -> StellarCoreConfig.PERFORMANCE.forge.chunkManager);
+        addMixinCFG("mixins.stellar_core_forge_itemmodel.json", () -> StellarCoreConfig.PERFORMANCE.forge.itemModelMesherCapacity);
         addMixinCFG("mixins.stellar_core_forge_modelloader.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader);
         addMixinCFG("mixins.stellar_core_forge_objmodel.json",                   () -> StellarCoreConfig.PERFORMANCE.forge.objModelVariantCache);
         addMixinCFG("mixins.stellar_core_forge_vanillamodel.json",               () -> StellarCoreConfig.PERFORMANCE.forge.vanillaModelVariantCache);

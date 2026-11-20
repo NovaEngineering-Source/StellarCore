@@ -15,8 +15,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public final class MutableResourcePackBindings {
 
@@ -88,28 +86,31 @@ public final class MutableResourcePackBindings {
             if (!binding.mutable || currentDomains.containsKey(binding.pack)) {
                 continue;
             }
-            currentDomains.put(binding.pack, new ObjectLinkedOpenHashSet<>(binding.pack.getResourceDomains()));
+            currentDomains.put(binding.pack, binding.pack.getResourceDomains());
         }
 
-        final ObjectLinkedOpenHashSet<String> affected = new ObjectLinkedOpenHashSet<>();
-        final Binding[] nextBindings = new Binding[bindings.length];
+        ObjectLinkedOpenHashSet<String> affected = null;
+        Binding[] nextBindings = null;
         for (int i = 0; i < bindings.length; i++) {
             final Binding binding = bindings[i];
             final Set<String> liveDomains = currentDomains.get(binding.pack);
-            if (liveDomains == null) {
-                nextBindings[i] = binding;
+            if (liveDomains == null || binding.namespaces.containsAll(liveDomains)) {
                 continue;
             }
-            final ObjectLinkedOpenHashSet<String> discovered = new ObjectLinkedOpenHashSet<>(liveDomains);
-            discovered.removeAll(binding.namespaces);
-            if (discovered.isEmpty()) {
-                nextBindings[i] = binding;
-                continue;
+            if (nextBindings == null) {
+                nextBindings = bindings.clone();
+                affected = new ObjectLinkedOpenHashSet<>();
             }
             final ObjectLinkedOpenHashSet<String> updated = new ObjectLinkedOpenHashSet<>(binding.namespaces);
-            updated.addAll(discovered);
+            for (final String namespace : liveDomains) {
+                if (updated.add(namespace)) {
+                    affected.add(namespace);
+                }
+            }
             nextBindings[i] = new Binding(binding.pack, updated, true);
-            affected.addAll(discovered);
+        }
+        if (nextBindings == null) {
+            return RefreshPlan.empty(current);
         }
         return buildPlan(current, new Snapshot(nextBindings), serializer, affected);
     }
@@ -121,20 +122,10 @@ public final class MutableResourcePackBindings {
             return false;
         }
 
-        // A subclass may override getPath/getNamespace without changing equals/hashCode.
-        if (location.getClass() != ResourceLocation.class) {
-            return probeMutablePacks(location, probes);
-        }
-        final ConcurrentMap<ResourceLocation, Boolean> answers = current.discoverable;
-        final Boolean cached = answers.get(location);
-        if (cached != null) {
-            return cached;
-        }
-
-        final boolean discovered = probeMutablePacks(location, probes);
-        // A concurrent reload cannot put an old probe result into its new cache.
-        answers.put(location, discovered);
-        return discovered;
+        // The resource manager caches unsuccessful attachment probes. Successful
+        // probes immediately publish a new snapshot, so a second per-location
+        // cache here only duplicates those keys and concurrent-map entries.
+        return probeMutablePacks(location, probes);
     }
 
     private static boolean probeMutablePacks(final ResourceLocation location, final Binding[] probes) {
@@ -206,22 +197,25 @@ public final class MutableResourcePackBindings {
 
         private final Binding[] bindings;
         private final Binding[] mutableProbes;
-        private final ConcurrentMap<ResourceLocation, Boolean> discoverable = new ConcurrentHashMap<>();
 
         private Snapshot(final Binding[] bindings) {
             this.bindings = bindings;
-            final Reference2ObjectOpenHashMap<IResourcePack, ObjectLinkedOpenHashSet<String>> shared =
+            final Reference2ObjectOpenHashMap<IResourcePack, Binding> shared =
                 new Reference2ObjectOpenHashMap<>();
             for (final Binding binding : bindings) {
                 if (!binding.mutable) {
                     continue;
                 }
-                final ObjectLinkedOpenHashSet<String> common = shared.get(binding.pack);
+                final Binding common = shared.get(binding.pack);
                 if (common == null) {
-                    shared.put(binding.pack, new ObjectLinkedOpenHashSet<>(binding.namespaces));
+                    shared.put(binding.pack, binding);
                     continue;
                 }
-                common.retainAll(binding.namespaces);
+                if (!binding.namespaces.containsAll(common.namespaces)) {
+                    final ObjectLinkedOpenHashSet<String> intersection = new ObjectLinkedOpenHashSet<>(common.namespaces);
+                    intersection.retainAll(binding.namespaces);
+                    shared.put(binding.pack, new Binding(binding.pack, intersection, true));
+                }
             }
             if (shared.isEmpty()) {
                 this.mutableProbes = NO_BINDINGS;
@@ -229,8 +223,8 @@ public final class MutableResourcePackBindings {
             }
             final Binding[] probes = new Binding[shared.size()];
             int index = 0;
-            for (Map.Entry<IResourcePack, ObjectLinkedOpenHashSet<String>> entry : shared.entrySet()) {
-                probes[index++] = new Binding(entry.getKey(), entry.getValue(), true);
+            for (final Binding binding : shared.values()) {
+                probes[index++] = binding;
             }
             this.mutableProbes = probes;
         }

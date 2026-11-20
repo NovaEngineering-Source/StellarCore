@@ -69,7 +69,7 @@ public class MixinNBTTagList implements StellarNBTTagList {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(final CallbackInfo ci) {
         if (stellar_core$CREATE_TAG_LIST.get() == Boolean.TRUE) {
-            stellar_core$setTagList(new NBTTagBackingList(4));
+            stellar_core$setTagList(new NBTTagBackingList());
             this.stellar_core$uid = stellar_core$UID.incrementAndGet();
         }
     }
@@ -116,9 +116,12 @@ public class MixinNBTTagList implements StellarNBTTagList {
         accessor.stellar_core$setUID(this.stellar_core$uid);
         accessor.stellar_core$setUnique(false);
 
-        NBTTagBackingList copiedTagList = new NBTTagBackingList(this.tagList.size() + 1);
-        // Copy tags, use unwrappedIterator to avoid trigger changeHandler.
-        ((NBTTagBackingList) (this.tagList)).unwrappedIterator().forEachRemaining(tag -> copiedTagList.add(tag.copy()));
+        final int size = this.tagList.size();
+        NBTTagBackingList copiedTagList = new NBTTagBackingList(size);
+        // Reading the private backing list does not expose mutable child tags.
+        for (int i = 0; i < size; i++) {
+            copiedTagList.add(this.tagList.get(i).copy());
+        }
         // Overwrite tagMap.
         accessor.stellar_core$setTagList(copiedTagList);
 
@@ -155,7 +158,7 @@ public class MixinNBTTagList implements StellarNBTTagList {
             // Merge uid.
             accessor.stellar_core$setUID(this.stellar_core$uid);
         }
-        cir.setReturnValue(tagList.equals(accessor.stellar_core$getTagList()));
+        cir.setReturnValue(equals);
     }
 
     /**

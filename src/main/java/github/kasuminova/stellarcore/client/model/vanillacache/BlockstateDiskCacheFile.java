@@ -69,7 +69,7 @@ public final class BlockstateDiskCacheFile {
         }
 
         final Map<ResourceLocation, BlockstateSnapshot> entries =
-                new Object2ObjectOpenHashMap<>(Math.max(16, count * 2));
+            new Object2ObjectOpenHashMap<>(count);
         for (int i = 0; i < count; i++) {
             final String locationText = in.readUTF();
             final int partCount = in.readInt();

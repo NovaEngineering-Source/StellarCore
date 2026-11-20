@@ -1,7 +1,8 @@
 package github.kasuminova.stellarcore.mixin.ctm;
 
 import github.kasuminova.stellarcore.client.integration.ctm.ConnectionPredicateCache;
-import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
+import github.kasuminova.stellarcore.client.integration.ctm.CtmLoadCacheLifecycle;
+import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
 import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashMap;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.ResourceLocation;
@@ -61,12 +62,9 @@ public class MixinResourceUtil {
 
     @Inject(method = "<clinit>", at = @At("RETURN"))
     private static void injectClinit(final CallbackInfo ci) {
-        if (!StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader
-            && !StellarCoreConfig.PERFORMANCE.ctm.textureMetadataHandler) {
-            return;
-        }
         stellar_core$absent = new IMetadataSectionCTM.V1();
         metadataCache = new NonBlockingHashMap<>();
+        ResourceExistingCache.addResourcePack(CtmLoadCacheLifecycle.INSTANCE);
     }
 
     @Redirect(

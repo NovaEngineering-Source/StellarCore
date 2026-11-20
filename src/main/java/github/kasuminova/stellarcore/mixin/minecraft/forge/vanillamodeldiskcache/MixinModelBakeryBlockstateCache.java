@@ -23,9 +23,6 @@ public abstract class MixinModelBakeryBlockstateCache {
                                                  final ResourceLocation fileIn,
                                                  final CallbackInfoReturnable<ModelBlockDefinition> cir) {
         final VanillaModelDiskCache cache = VanillaModelDiskCache.INSTANCE;
-        if (!cache.isEnabled()) {
-            return;
-        }
         try {
             final ModelBlockDefinition cached = cache.tryBuildBlockstate(fileIn, location);
             if (cached != null) {
@@ -49,10 +46,6 @@ public abstract class MixinModelBakeryBlockstateCache {
                                                           final ResourceLocation location,
                                                           final IResource resource,
                                                           final Operation<ModelBlockDefinition> original) {
-        final VanillaModelDiskCache cache = VanillaModelDiskCache.INSTANCE;
-        if (!cache.isEnabled()) {
-            return original.call(bakery, location, resource);
-        }
         try {
             return original.call(bakery, location, new TeeingResource(resource));
         } catch (Throwable t) {
@@ -70,9 +63,6 @@ public abstract class MixinModelBakeryBlockstateCache {
             return;
         }
         final VanillaModelDiskCache cache = VanillaModelDiskCache.INSTANCE;
-        if (!cache.isEnabled()) {
-            return;
-        }
         try {
             cache.captureBlockstate(fileIn, parts);
         } catch (Throwable ignored) {

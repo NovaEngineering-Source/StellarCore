@@ -14,7 +14,6 @@ import github.kasuminova.stellarcore.shaded.org.jctools.maps.NonBlockingHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ICustomModelLoader;
@@ -23,6 +22,7 @@ import net.minecraftforge.client.model.ItemLayerModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,17 +30,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings({"StaticVariableMayNotBeInitialized", "SynchronizeOnNonFinalField"})
 @Mixin(value = ModelLoaderRegistry.class, remap = false)
@@ -84,6 +82,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
 
     @Final
     @Shadow
+    @Mutable
     private static Map<ResourceLocation, IModel> cache;
 
     @Final
@@ -107,11 +106,6 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
 
     @Shadow
     private static IResourceManager manager;
-
-    @Shadow
-    public static IModel getModel(final ResourceLocation location) {
-        return null;
-    }
 
     @Inject(method = "registerLoader", at = @At("RETURN"), remap = false)
     private static void injectRegisterLoader(final ICustomModelLoader loader, final CallbackInfo ci) {
@@ -139,12 +133,11 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
      * @author Kasumi_Nova
      * @reason Allow multithreaded model loading.
      */
-    @Inject(method = "getModel", at = @At("HEAD"), cancellable = true, remap = false)
-    private static void getModel(final ResourceLocation location, final CallbackInfoReturnable<IModel> cir) throws Exception {
+    @Overwrite
+    public static IModel getModel(final ResourceLocation location) throws Exception {
         final IModel cached = stellar_core$cache.get(location);
         if (cached != null) {
-            cir.setReturnValue(cached);
-            return;
+            return cached;
         }
 
         final ObjectArrayList<ResourceLocation> loadingModels = stellar_core$LOADING_MODELS.get();
@@ -160,8 +153,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             if (existing.owner == Thread.currentThread()) {
                 throw new ModelLoaderRegistry.LoaderException("reentrant model load for " + location);
             }
-            cir.setReturnValue(stellar_core$awaitFlight(location, existing));
-            return;
+            return stellar_core$awaitFlight(location, existing);
         }
 
         final ModelLoadFlight flight = new ModelLoadFlight(Thread.currentThread(), stellar_core$MODEL_GENERATION.get());
@@ -170,8 +162,7 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
             if (previous.owner == Thread.currentThread()) {
                 throw new ModelLoaderRegistry.LoaderException("reentrant model load for " + location);
             }
-            cir.setReturnValue(stellar_core$awaitFlight(location, previous));
-            return;
+            return stellar_core$awaitFlight(location, previous);
         }
 
         IModel model = null;
@@ -267,13 +258,10 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                     getModelOrMissing(dep);
                 }
             }
-            cir.setReturnValue(model);
-        } catch (Exception exception) {
+            return model;
+        } catch (Exception | Error exception) {
             failure = exception;
             throw exception;
-        } catch (Error error) {
-            failure = error;
-            throw error;
         } finally {
             try {
                 final ResourceLocation popLoc = loadingModels.pop();
@@ -410,26 +398,18 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
         stellar_core$concurrent = true;
     }
 
-    @Override
-    public void stellar_core$toDefault() {
-        if (!stellar_core$concurrent) {
-            return;
-        }
-        if (StellarCoreConfig.PERFORMANCE.vanilla.wipeModelCache) {
-            long startTime = System.currentTimeMillis();
-            int removed = stellar_core$wipeCache();
-            StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Removed {} (Before: {}) model cache, took {}ms.", 
-                    removed, cache.size(), System.currentTimeMillis() - startTime
-            );
-            stellar_core$cache = stellar_core$copyToDefault(stellar_core$cache);
+    @Unique
+    private static Map<ResourceLocation, IModel> stellar_core$copyRetainedModels(final Map<ResourceLocation, IModel> source) {
+        final Map<ResourceLocation, IModel> retained = new Object2ObjectOpenHashMap<>();
+        final BiConsumer<ResourceLocation, IModel> copy = (key, model) -> {
+            if (!stellar_core$shouldRemove(key)) retained.put(key, model);
+        };
+        if (source instanceof NonBlockingHashMap<?, ?>) {
+            ((NonBlockingHashMap<ResourceLocation, IModel>) source).forEachSnapshot(copy);
         } else {
-            stellar_core$cache = stellar_core$copyToDefault(cache);
+            source.forEach(copy);
         }
-        cache.clear();
-        AsyncUnsafeModels.clear();
-        stellar_core$aliases = stellar_core$copyToDefault(stellar_core$aliases);
-        stellar_core$textures = new ObjectOpenHashSet<>();
-        stellar_core$concurrent = false;
+        return retained;
     }
 
     @Override
@@ -438,16 +418,31 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     }
 
     @Unique
-    private static int stellar_core$wipeCache() {
-        AtomicInteger removeCount = new AtomicInteger();
-        ReferenceOpenHashSet<ResourceLocation> tmpSet = new ReferenceOpenHashSet<>(stellar_core$cache.keySet());
-        (tmpSet.size() > 15_000 ? tmpSet.parallelStream() : tmpSet.stream())
-                .filter(MixinModelLoaderRegistry::stellar_core$shouldRemove)
-                .forEach(key -> {
-                    stellar_core$cache.remove(key);
-                    removeCount.incrementAndGet();
-                });
-        return removeCount.get();
+    private static IModel stellar_core$awaitFlight(final ResourceLocation location, final ModelLoadFlight flight) throws ModelLoaderRegistry.LoaderException {
+        final Thread current = Thread.currentThread();
+        synchronized (stellar_core$waitingFor) {
+            if (stellar_core$hasWaitCycle(current, flight.owner)) {
+                throw new ModelLoaderRegistry.LoaderException("circular in-flight model dependency while loading " + location);
+            }
+            stellar_core$waitingFor.put(current, flight.owner);
+        }
+        try {
+            return flight.future.get();
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new ModelLoaderRegistry.LoaderException("interrupted while waiting for model " + location, interrupted);
+        } catch (ExecutionException failure) {
+            final Throwable cause = failure.getCause();
+            if (cause instanceof ModelLoaderRegistry.LoaderException loaderFailure) {
+                throw loaderFailure;
+            }
+            if (cause instanceof RuntimeException runtimeFailure) {
+                throw runtimeFailure;
+            }
+            throw new ModelLoaderRegistry.LoaderException("failed while waiting for model " + location, cause);
+        } finally {
+            stellar_core$waitingFor.remove(current, flight.owner);
+        }
     }
 
     @Unique
@@ -497,42 +492,47 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
     }
 
     @Unique
-    private static IModel stellar_core$awaitFlight(final ResourceLocation location, final ModelLoadFlight flight) throws ModelLoaderRegistry.LoaderException {
-        final Thread current = Thread.currentThread();
-        if (stellar_core$hasWaitCycle(current, flight.owner)) {
-            throw new ModelLoaderRegistry.LoaderException("circular in-flight model dependency while loading " + location);
-        }
-        stellar_core$waitingFor.put(current, flight.owner);
-        try {
-            return flight.future.get();
-        } catch (InterruptedException interrupted) {
-            Thread.currentThread().interrupt();
-            throw new ModelLoaderRegistry.LoaderException("interrupted while waiting for model " + location, interrupted);
-        } catch (ExecutionException failure) {
-            final Throwable cause = failure.getCause();
-            if (cause instanceof ModelLoaderRegistry.LoaderException loaderFailure) {
-                throw loaderFailure;
-            }
-            if (cause instanceof RuntimeException runtimeFailure) {
-                throw runtimeFailure;
-            }
-            throw new ModelLoaderRegistry.LoaderException("failed while waiting for model " + location, cause);
-        } finally {
-            stellar_core$waitingFor.remove(current, flight.owner);
-        }
-    }
-
-    @Unique
     private static boolean stellar_core$hasWaitCycle(final Thread current, final Thread owner) {
         Thread cursor = owner;
-        final Set<Thread> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-        while (cursor != null && visited.add(cursor)) {
+        // All edge additions hold waitingFor through check-and-publish, so the
+        // existing graph is acyclic. Concurrent removals cannot introduce a cycle.
+        while (cursor != null) {
             if (cursor == current) {
                 return true;
             }
             cursor = stellar_core$waitingFor.get(cursor);
         }
         return false;
+    }
+
+    @Override
+    public void stellar_core$toDefault() {
+        if (!stellar_core$concurrent) {
+            return;
+        }
+        if (StellarCoreConfig.PERFORMANCE.vanilla.wipeModelCache) {
+            long startTime = System.currentTimeMillis();
+            final Map<ResourceLocation, IModel> source = stellar_core$cache;
+            stellar_core$cache = stellar_core$copyRetainedModels(source);
+            final int removed = source.size() - stellar_core$cache.size();
+            StellarLog.LOG.info("[StellarCore-ParallelModelLoader] Removed {} (Before: {}) model cache, took {}ms.",
+                    removed, cache.size(), System.currentTimeMillis() - startTime
+            );
+        } else {
+            stellar_core$cache = stellar_core$copyToDefault(stellar_core$cache);
+        }
+        // This is only the ModelBakeEvent compatibility mirror. Drop its peak
+        // table as well as the completed-flight keys/tombstones after the join.
+        cache = new Object2ObjectOpenHashMap<>(0);
+        stellar_core$inFlight.clear();
+        stellar_core$waitingFor.clear();
+        AsyncUnsafeModels.clear();
+        stellar_core$aliases = stellar_core$copyToDefault(stellar_core$aliases);
+        stellar_core$textures = new ObjectOpenHashSet<>();
+        // The bake barrier has joined its workers. Runtime loads may lazily
+        // select a loader again without retaining the startup table's keys or capacity.
+        stellar_core$clearLoaderSelectionCache();
+        stellar_core$concurrent = false;
     }
 
     @Unique

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.block.model.ModelBlock;
 import net.minecraft.client.renderer.block.model.ModelBlockDefinition;
@@ -34,14 +36,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -109,11 +108,9 @@ public final class VanillaModelDiskCache {
     private static final ModelBlockAnimation EMPTY_ANIMATION =
             new ModelBlockAnimation(ImmutableMap.of(), ImmutableMap.of());
 
-    /** Snapshots captured during this run, to be persisted by {@link #saveAsync}. */
-    private Map<ResourceLocation, VanillaModelSnapshot> live = new ConcurrentHashMap<>();
-
-    /** Blockstates captured during this run, persisted alongside the models. */
-    private Map<ResourceLocation, BlockstateSnapshot> liveBlockstates = new ConcurrentHashMap<>();
+    @Nullable
+    private final BooleanSupplier enabledForTests;
+    private final boolean startupEnabled;
 
     /**
      * Vanilla-format model loads observed this session, and where their bytes
@@ -181,21 +178,24 @@ public final class VanillaModelDiskCache {
     private File lastSaveDir;
     private long reloadGeneration;
     private long rejectionSeed;
-    private Set<ResourceLocation> rejectedModels = new HashSet<>();
-    private Set<ResourceLocation> rejectedBlockstates = new HashSet<>();
-
-    private final BooleanSupplier enabled;
+    /** Snapshots captured during this run, to be persisted by {@link #saveAsync}. */
+    private Map<ResourceLocation, VanillaModelSnapshot> live = new Object2ObjectOpenHashMap<>();
+    /** Blockstates captured during this run, persisted alongside the models. */
+    private Map<ResourceLocation, BlockstateSnapshot> liveBlockstates = new Object2ObjectOpenHashMap<>();
+    private Set<ResourceLocation> rejectedModels = new ObjectOpenHashSet<>();
+    private Set<ResourceLocation> rejectedBlockstates = new ObjectOpenHashSet<>();
 
     private VanillaModelDiskCache() {
-        this(() -> StellarCoreConfig.PERFORMANCE.forge.vanillaModelDiskCache, true);
+        this(null, true);
     }
 
     VanillaModelDiskCache(final BooleanSupplier enabled) {
         this(enabled, false);
     }
 
-    private VanillaModelDiskCache(final BooleanSupplier enabled, final boolean installShutdownHook) {
-        this.enabled = enabled;
+    private VanillaModelDiskCache(@Nullable final BooleanSupplier enabled, final boolean installShutdownHook) {
+        this.enabledForTests = enabled;
+        this.startupEnabled = enabled == null && StellarCoreConfig.PERFORMANCE.forge.vanillaModelDiskCache;
         if (installShutdownHook) {
             Runtime.getRuntime().addShutdownHook(new Thread(this::shutdownWriter,
                     "StellarCore-VanillaModelDiskCache-Shutdown"));
@@ -223,8 +223,23 @@ public final class VanillaModelDiskCache {
         return saveFuture;
     }
 
-    public boolean isEnabled() {
-        return enabled.getAsBoolean();
+    /**
+     * The armature JSON for {@code location}, or {@code null} when the model has
+     * none.
+     *
+     * <p>Normally answered by the tap on Forge's own armature lookup, which also
+     * reports the case a tap cannot see any other way: the lookup failed with
+     * "file not found", so the model demonstrably has no armature. Without a tap
+     * the file is read here, as it always was — a missing armature then records
+     * as absent, exactly as before.</p>
+     */
+    @Nullable
+    private static byte[] armatureJson(final ResourceLocation location, final IResourceManager manager) {
+        final byte[] tapped = ModelCapture.armatureJsonForCache();
+        if (tapped != null || ModelCapture.armatureAbsent()) {
+            return tapped;
+        }
+        return manager == null ? null : readResourceBytes(manager, armatureLocation(location));
     }
 
     // ------------------------------------------------------------------------
@@ -440,69 +455,8 @@ public final class VanillaModelDiskCache {
         }
     }
 
-    private void drainSaves() {
-        while (true) {
-            final SaveBatch batch;
-            synchronized (this) {
-                final SaveRequest request = pendingRequest;
-                pendingRequest = null;
-                if (request == null) {
-                    saveScheduled = false;
-                    return;
-                }
-                if (request.seed != loadedSeed || request.generation != reloadGeneration) {
-                    continue;
-                }
-                // Detach once, regardless of how often F3+T requests another save.
-                batch = new SaveBatch(request, live, liveBlockstates, rejectedModels, rejectedBlockstates);
-                inFlight = batch;
-                live = new ConcurrentHashMap<>();
-                liveBlockstates = new ConcurrentHashMap<>();
-                rejectedModels = new HashSet<>();
-                rejectedBlockstates = new HashSet<>();
-            }
-            boolean modelsSaved = false;
-            boolean blockstatesSaved = false;
-            try {
-                Map<ResourceLocation, VanillaModelSnapshot> models = readModels(batch.request.dir, batch.request.seed);
-                if (models == null) {
-                    models = new Object2ObjectOpenHashMap<>();
-                }
-                models.keySet().removeAll(batch.rejectedModels);
-                models.putAll(batch.models);
-                modelsSaved = saveModels(batch.request, models);
-
-                Map<ResourceLocation, BlockstateSnapshot> blockstates = readBlockstates(batch.request.dir, batch.request.seed);
-                if (blockstates == null) {
-                    blockstates = new Object2ObjectOpenHashMap<>();
-                }
-                blockstates.keySet().removeAll(batch.rejectedBlockstates);
-                blockstates.putAll(batch.blockstates);
-                blockstatesSaved = saveBlockstates(batch.request, blockstates);
-                if (modelsSaved && blockstatesSaved) {
-                    pruneStaleFiles(batch.request.dir, batch.request.seed, batch.request.generation);
-                }
-            } catch (Throwable t) {
-                StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to save cache", t);
-            } finally {
-                synchronized (this) {
-                    // Failed/obsolete writes remain retryable only in the same resource environment.
-                    // New captures win over the detached older delta for a shared key.
-                    if (loadedSeed == batch.request.seed || (loadedSeed == 0L
-                            && (captureSeed == batch.request.seed || rejectionSeed == batch.request.seed))) {
-                        if (!modelsSaved) {
-                            batch.models.forEach(live::putIfAbsent);
-                            rejectedModels.addAll(batch.rejectedModels);
-                        }
-                        if (!blockstatesSaved) {
-                            batch.blockstates.forEach(liveBlockstates::putIfAbsent);
-                            rejectedBlockstates.addAll(batch.rejectedBlockstates);
-                        }
-                    }
-                    inFlight = null;
-                }
-            }
-        }
+    public boolean isEnabled() {
+        return enabledForTests == null ? startupEnabled : enabledForTests.getAsBoolean();
     }
 
     private boolean saveModels(final SaveRequest request,
@@ -736,6 +690,71 @@ public final class VanillaModelDiskCache {
     // Hit path — no IO
     // ------------------------------------------------------------------------
 
+    private void drainSaves() {
+        while (true) {
+            final SaveBatch batch;
+            synchronized (this) {
+                final SaveRequest request = pendingRequest;
+                pendingRequest = null;
+                if (request == null) {
+                    saveScheduled = false;
+                    return;
+                }
+                if (request.seed != loadedSeed || request.generation != reloadGeneration) {
+                    continue;
+                }
+                // Detach once, regardless of how often F3+T requests another save.
+                batch = new SaveBatch(request, live, liveBlockstates, rejectedModels, rejectedBlockstates);
+                inFlight = batch;
+                live = new Object2ObjectOpenHashMap<>();
+                liveBlockstates = new Object2ObjectOpenHashMap<>();
+                rejectedModels = new ObjectOpenHashSet<>();
+                rejectedBlockstates = new ObjectOpenHashSet<>();
+            }
+            boolean modelsSaved = false;
+            boolean blockstatesSaved = false;
+            try {
+                Map<ResourceLocation, VanillaModelSnapshot> models = readModels(batch.request.dir, batch.request.seed);
+                if (models == null) {
+                    models = new Object2ObjectOpenHashMap<>();
+                }
+                models.keySet().removeAll(batch.rejectedModels);
+                models.putAll(batch.models);
+                modelsSaved = saveModels(batch.request, models);
+
+                Map<ResourceLocation, BlockstateSnapshot> blockstates = readBlockstates(batch.request.dir, batch.request.seed);
+                if (blockstates == null) {
+                    blockstates = new Object2ObjectOpenHashMap<>();
+                }
+                blockstates.keySet().removeAll(batch.rejectedBlockstates);
+                blockstates.putAll(batch.blockstates);
+                blockstatesSaved = saveBlockstates(batch.request, blockstates);
+                if (modelsSaved && blockstatesSaved) {
+                    pruneStaleFiles(batch.request.dir, batch.request.seed, batch.request.generation);
+                }
+            } catch (Throwable t) {
+                StellarLog.LOG.warn("[StellarCore-VanillaModelDiskCache] Failed to save cache", t);
+            } finally {
+                synchronized (this) {
+                    // Failed/obsolete writes remain retryable only in the same resource environment.
+                    // New captures win over the detached older delta for a shared key.
+                    if (loadedSeed == batch.request.seed || (loadedSeed == 0L
+                            && (captureSeed == batch.request.seed || rejectionSeed == batch.request.seed))) {
+                        if (!modelsSaved) {
+                            batch.models.forEach(live::putIfAbsent);
+                            rejectedModels.addAll(batch.rejectedModels);
+                        }
+                        if (!blockstatesSaved) {
+                            batch.blockstates.forEach(liveBlockstates::putIfAbsent);
+                            rejectedBlockstates.addAll(batch.rejectedBlockstates);
+                        }
+                    }
+                    inFlight = null;
+                }
+            }
+        }
+    }
+
     /**
      * Return the cached {@link ModelBlock} for {@code location}, or {@code null}
      * to let the caller run the normal loader.
@@ -751,7 +770,10 @@ public final class VanillaModelDiskCache {
             return null;
         }
         final ResourceLocation key = normalize(location);
-        final VanillaModelSnapshot snapshot = view.get(key);
+        final VanillaModelSnapshot snapshot;
+        synchronized (this) {
+            snapshot = view.get(key);
+        }
         if (snapshot == null) {
             return null;
         }
@@ -787,7 +809,10 @@ public final class VanillaModelDiskCache {
             return null;
         }
         final ResourceLocation key = normalize(location);
-        final VanillaModelSnapshot snapshot = view.get(key);
+        final VanillaModelSnapshot snapshot;
+        synchronized (this) {
+            snapshot = view.get(key);
+        }
         if (snapshot == null) {
             return null;
         }
@@ -812,6 +837,21 @@ public final class VanillaModelDiskCache {
     }
 
     /**
+     * Record the parts a blockstate was assembled from. Parts must be in pack
+     * priority order, matching what {@code getAllResources} returned.
+     */
+    public synchronized void captureBlockstate(final ResourceLocation blockstateLocation, final byte[][] parts) {
+        if (!isEnabled() || parts == null || parts.length == 0) {
+            return;
+        }
+        if (loadedSeed == 0L) {
+            return;
+        }
+        captureSeed = loadedSeed;
+        liveBlockstates.put(blockstateLocation, new BlockstateSnapshot(blockstateLocation, parts));
+    }
+
+    /**
      * Build the cached blockstate for {@code blockstateLocation}, or return
      * {@code null} to let the caller run the normal loader.
      *
@@ -827,12 +867,15 @@ public final class VanillaModelDiskCache {
         if (view == null) {
             return null;
         }
-        final BlockstateSnapshot snapshot = view.get(blockstateLocation);
+        final BlockstateSnapshot snapshot;
+        synchronized (this) {
+            snapshot = view.get(blockstateLocation);
+        }
         if (snapshot == null) {
             return null;
         }
         try {
-            final List<ModelBlockDefinition> parts = new ArrayList<>(snapshot.parts.length);
+            final List<ModelBlockDefinition> parts = new ObjectArrayList<>(snapshot.parts.length);
             for (final byte[] part : snapshot.parts) {
                 parts.add(ModelBlockDefinition.parseFromReader(
                         new StringReader(new String(part, StandardCharsets.UTF_8)), ownerLocation));
@@ -851,20 +894,9 @@ public final class VanillaModelDiskCache {
         }
     }
 
-    /**
-     * Record the parts a blockstate was assembled from. Parts must be in pack
-     * priority order, matching what {@code getAllResources} returned.
-     */
-    public synchronized void captureBlockstate(final ResourceLocation blockstateLocation, final byte[][] parts) {
-        if (!isEnabled() || parts == null || parts.length == 0) {
-            return;
-        }
-        if (loadedSeed == 0L) {
-            return;
-        }
-        captureSeed = loadedSeed;
-        liveBlockstates.put(blockstateLocation, new BlockstateSnapshot(blockstateLocation, parts));
-    }
+    // ------------------------------------------------------------------------
+    // Capture path
+    // ------------------------------------------------------------------------
 
     /**
      * Whether this location is currently served from the cache. Used by the
@@ -872,12 +904,12 @@ public final class VanillaModelDiskCache {
      */
     public boolean knows(final ResourceLocation location) {
         final Map<ResourceLocation, VanillaModelSnapshot> view = diskView;
-        return view != null && view.containsKey(normalize(location));
+        if (view == null) return false;
+        final ResourceLocation key = normalize(location);
+        synchronized (this) {
+            return view.containsKey(key);
+        }
     }
-
-    // ------------------------------------------------------------------------
-    // Capture path
-    // ------------------------------------------------------------------------
 
     /**
      * Record the raw JSON backing a model the normal loader just produced. Runs
@@ -907,7 +939,7 @@ public final class VanillaModelDiskCache {
         captureAttempts.increment();
         try {
             final ResourceLocation key = normalize(location);
-            final byte[] tappedModel = ModelCapture.modelJson();
+            final byte[] tappedModel = ModelCapture.modelJsonForCache();
             final byte[] modelJson = tappedModel != null ? tappedModel
                     : manager == null ? null : readResourceBytes(manager, modelJsonLocation(location));
             if (modelJson == null || modelJson.length == 0) {
@@ -929,25 +961,6 @@ public final class VanillaModelDiskCache {
         } catch (Throwable ignored) {
             captureMisses.increment();
         }
-    }
-
-    /**
-     * The armature JSON for {@code location}, or {@code null} when the model has
-     * none.
-     *
-     * <p>Normally answered by the tap on Forge's own armature lookup, which also
-     * reports the case a tap cannot see any other way: the lookup failed with
-     * "file not found", so the model demonstrably has no armature. Without a tap
-     * the file is read here, as it always was — a missing armature then records
-     * as absent, exactly as before.</p>
-     */
-    @Nullable
-    private static byte[] armatureJson(final ResourceLocation location, final IResourceManager manager) {
-        final byte[] tapped = ModelCapture.armatureJson();
-        if (tapped != null || ModelCapture.armatureAbsent()) {
-            return tapped;
-        }
-        return manager == null ? null : readResourceBytes(manager, armatureLocation(location));
     }
 
     // ------------------------------------------------------------------------

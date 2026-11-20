@@ -1,12 +1,13 @@
 package github.kasuminova.stellarcore.client.model.vanillacache;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayDeque;
-import java.util.Deque;
 
 /**
  * The bytes the model loader is reading right now, for the model it is loading
@@ -36,20 +37,13 @@ import java.util.Deque;
  */
 public final class ModelCapture {
 
-    /**
-     * Scopes are closed by a RETURN injection, which an exception escaping the
-     * model loader skips — and the loader fails plenty of models on purpose. A
-     * leaked scope is therefore expected, but a stack this deep means the pops
-     * are not keeping up, so it is dropped rather than grown. Dropping it costs
-     * nothing but the fallback read of the models still on it.
-     */
-    private static final int MAX_DEPTH = 16;
+    private static final ThreadLocal<ObjectArrayList<ModelCapture>> SCOPES =
+        ThreadLocal.withInitial(ObjectArrayList::new);
 
-    private static final ThreadLocal<Deque<ModelCapture>> SCOPES =
-            ThreadLocal.withInitial(ArrayDeque::new);
-
-    private final ByteArrayOutputStream modelJson = new ByteArrayOutputStream(8192);
-    private final ByteArrayOutputStream armatureJson = new ByteArrayOutputStream(1024);
+    @Nullable
+    private CaptureBuffer modelJson;
+    @Nullable
+    private CaptureBuffer armatureJson;
 
     /** Whether the loader's own armature lookup reported the file missing. */
     private boolean armatureAbsent = false;
@@ -64,18 +58,14 @@ public final class ModelCapture {
      * a scope and every tap below degrades to a pass-through.</p>
      */
     public static void begin() {
-        final Deque<ModelCapture> scopes = SCOPES.get();
-        if (scopes.size() >= MAX_DEPTH) {
-            scopes.clear();
-        }
-        scopes.push(new ModelCapture());
+        SCOPES.get().add(new ModelCapture());
     }
 
     /** Close the innermost scope. Tolerates a stack left empty by a leaked pop. */
     public static void end() {
-        final Deque<ModelCapture> scopes = SCOPES.get();
+        final ObjectArrayList<ModelCapture> scopes = SCOPES.get();
         if (!scopes.isEmpty()) {
-            scopes.pop();
+            scopes.remove(scopes.size() - 1);
         }
     }
 
@@ -85,12 +75,12 @@ public final class ModelCapture {
 
     /** Tap a model JSON stream, or return it untouched outside a scope. */
     public static InputStream teeModelJson(@Nullable final InputStream delegate) {
-        return tap(delegate, sink(false));
+        return tap(delegate, false);
     }
 
     /** Tap an armature stream, or return it untouched outside a scope. */
     public static InputStream teeArmature(@Nullable final InputStream delegate) {
-        return tap(delegate, sink(true));
+        return tap(delegate, true);
     }
 
     /**
@@ -110,6 +100,19 @@ public final class ModelCapture {
     @Nullable
     public static byte[] armatureJson() {
         return drain(true);
+    }
+
+    /**
+     * Cache snapshots treat these arrays as immutable; transfer a full buffer without copying.
+     */
+    @Nullable
+    static byte[] modelJsonForCache() {
+        return drainForCache(false);
+    }
+
+    @Nullable
+    static byte[] armatureJsonForCache() {
+        return drainForCache(true);
     }
 
     /**
@@ -136,15 +139,8 @@ public final class ModelCapture {
 
     @Nullable
     private static ModelCapture current() {
-        return SCOPES.get().peek();
-    }
-
-    private static ByteArrayOutputStream sink(final boolean armature) {
-        final ModelCapture scope = current();
-        if (scope == null) {
-            return null;
-        }
-        return armature ? scope.armatureJson : scope.modelJson;
+        final ObjectArrayList<ModelCapture> scopes = SCOPES.get();
+        return scopes.isEmpty() ? null : scopes.get(scopes.size() - 1);
     }
 
     @Nullable
@@ -154,32 +150,81 @@ public final class ModelCapture {
             return null;
         }
         final ByteArrayOutputStream buffer = armature ? scope.armatureJson : scope.modelJson;
-        return buffer.size() == 0 ? null : buffer.toByteArray();
+        return buffer == null || buffer.size() == 0 ? null : buffer.toByteArray();
     }
 
     @Nullable
-    private static InputStream tap(@Nullable final InputStream delegate, @Nullable final ByteArrayOutputStream sink) {
-        if (delegate == null || sink == null) {
+    private static byte[] drainForCache(final boolean armature) {
+        final ModelCapture scope = current();
+        if (scope == null) {
+            return null;
+        }
+        final CaptureBuffer buffer = armature ? scope.armatureJson : scope.modelJson;
+        return buffer == null || buffer.size() == 0 ? null : buffer.bytesForCache();
+    }
+
+    @Nullable
+    private static InputStream tap(@Nullable final InputStream delegate, final boolean armature) {
+        // Missing armatures and cache hits never need a capture array.
+        final ModelCapture scope = current();
+        if (delegate == null || scope == null) {
             return delegate;
         }
         return new FilterInputStream(delegate) {
+            @Nullable
+            private CaptureBuffer buffer;
+
+            private CaptureBuffer buffer(final int firstReadLength) {
+                if (buffer == null) {
+                    buffer = scope.sink(armature, firstReadLength);
+                }
+                return buffer;
+            }
+
             @Override
             public int read() throws IOException {
-                final int value = super.read();
+                final int value = in.read();
                 if (value >= 0) {
-                    sink.write(value);
+                    buffer(1).write(value);
                 }
                 return value;
             }
 
             @Override
-            public int read(final byte[] buffer, final int offset, final int length) throws IOException {
-                final int read = super.read(buffer, offset, length);
+            public int read(@Nonnull final byte[] buffer, final int offset, final int length) throws IOException {
+                final int read = in.read(buffer, offset, length);
                 if (read > 0) {
-                    sink.write(buffer, offset, read);
+                    buffer(read).write(buffer, offset, read);
                 }
                 return read;
             }
         };
     }
+
+    private CaptureBuffer sink(final boolean armature, final int firstReadLength) {
+        if (armature) {
+            if (armatureJson == null) {
+                armatureJson = new CaptureBuffer(firstReadLength);
+            }
+            return armatureJson;
+        }
+        if (modelJson == null) {
+            modelJson = new CaptureBuffer(firstReadLength);
+        }
+        return modelJson;
+    }
+
+    private static final class CaptureBuffer extends ByteArrayOutputStream {
+        private CaptureBuffer(final int firstReadLength) {
+            super(Math.max(256, firstReadLength));
+        }
+
+        private byte[] bytesForCache() {
+            // A later append to a full buffer must grow it before writing, so
+            // previously published arrays remain unchanged. Partially full
+            // buffers still need a compact copy; reset is never exposed.
+            return count == buf.length ? buf : toByteArray();
+        }
+    }
+
 }
