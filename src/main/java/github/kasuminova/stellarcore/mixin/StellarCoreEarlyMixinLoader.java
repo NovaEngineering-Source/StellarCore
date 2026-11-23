@@ -62,7 +62,9 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_minecraft_selector.json",                () -> StellarCoreConfig.PERFORMANCE.vanilla.selectorPredicateCache);
         addMixinCFG("mixins.stellar_core_minecraft_stitcher.json",               () -> StellarCoreConfig.PERFORMANCE.vanilla.stitcherCache);
         addMixinCFG("mixins.stellar_core_minecraft_texture_load.json",           () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad);
-        addMixinCFG("mixins.stellar_core_minecraft_texturemap_concurrent.json",  () -> StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader || StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad || StellarCoreConfig.PERFORMANCE.tConstruct.parallelMaterialTextureGen);
+        addMixinCFG("mixins.stellar_core_minecraft_texturemap_concurrent.json",  StellarCoreEarlyMixinLoader::needsConcurrentSpriteRegistry);
+        // OptiFine replaces the Forge load tracker, but still needs the concurrent sprite registry.
+        addMixinCFG("mixins.stellar_core_minecraft_texturemap_forge.json",       () -> needsConcurrentSpriteRegistry() && !isClassPresent("optifine.OptiFineClassTransformer"));
         addMixinCFG("mixins.stellar_core_forge.json",                            () -> StellarCoreConfig.PERFORMANCE.customLoadingScreen.splashProgress);
         addMixinCFG("mixins.stellar_core_forge_asmdatatable.json",               () -> StellarCoreConfig.PERFORMANCE.forge.asmDataTable);
         addMixinCFG("mixins.stellar_core_forge_asmmodparser.json",               () -> StellarCoreConfig.PERFORMANCE.forge.asmModParser);
@@ -79,6 +81,12 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_registry.json",                   () -> StellarCoreConfig.FEATURES.vanilla.forgeRegistryRemoveList.length > 0);
         addMixinCFG("mixins.stellar_core_hudcaching.json",                       () -> StellarCoreConfig.PERFORMANCE.vanilla.hudCaching);
         addMixinCFG("mixins.stellar_core_ebwizardry_early.json",                 () -> StellarCoreConfig.PERFORMANCE.ebWizardry.dispenserCastingData && !Mods.TICK_CENTRAL.loaded());
+    }
+
+    private static boolean needsConcurrentSpriteRegistry() {
+        return StellarCoreConfig.PERFORMANCE.vanilla.parallelModelLoader
+                || StellarCoreConfig.PERFORMANCE.vanilla.parallelTextureLoad
+                || StellarCoreConfig.PERFORMANCE.tConstruct.parallelMaterialTextureGen;
     }
 
     private static void addMixinCFG(final String mixinConfig) {
