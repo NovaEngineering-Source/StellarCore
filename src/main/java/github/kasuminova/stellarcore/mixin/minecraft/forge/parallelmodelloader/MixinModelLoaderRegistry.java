@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.forge.parallelmodelloader;
 
 import com.google.common.base.Joiner;
+import github.kasuminova.stellarcore.client.integration.libnine.L9ModelSelection;
 import github.kasuminova.stellarcore.client.model.AsyncUnsafeModels;
 import github.kasuminova.stellarcore.client.model.ModelLoadFlight;
 import github.kasuminova.stellarcore.client.model.ModelLoaderRegistryRef;
@@ -185,16 +186,18 @@ public abstract class MixinModelLoaderRegistry implements ConcurrentModelLoaderR
                 ICustomModelLoader accepted = stellar_core$loaderSelectionCache.get(actual);
                 if (accepted == null && !stellar_core$noLoaderLocations.contains(actual)) {
                     final ICustomModelLoader[] registeredLoaders = stellar_core$getLoaders();
-                    for (final ICustomModelLoader loader : registeredLoaders) {
-                        try {
-                            if (loader.accepts(actual)) {
-                                if (accepted != null) {
-                                    throw new ModelLoaderRegistry.LoaderException(String.format("2 loaders (%s and %s) want to load the same model %s", accepted, loader, location));
+                    try (L9ModelSelection ignored = L9ModelSelection.open()) {
+                        for (final ICustomModelLoader loader : registeredLoaders) {
+                            try {
+                                if (loader.accepts(actual)) {
+                                    if (accepted != null) {
+                                        throw new ModelLoaderRegistry.LoaderException(String.format("2 loaders (%s and %s) want to load the same model %s", accepted, loader, location));
+                                    }
+                                    accepted = loader;
                                 }
-                                accepted = loader;
+                            } catch (Exception e) {
+                                throw new ModelLoaderRegistry.LoaderException(String.format("Exception checking if model %s can be loaded with loader %s, skipping", location, loader), e);
                             }
-                        } catch (Exception e) {
-                            throw new ModelLoaderRegistry.LoaderException(String.format("Exception checking if model %s can be loaded with loader %s, skipping", location, loader), e);
                         }
                     }
 

@@ -1,23 +1,20 @@
 package github.kasuminova.stellarcore.mixin.libnine;
 
 import com.google.gson.stream.JsonReader;
-import github.kasuminova.stellarcore.client.integration.libnine.L9ModScanner;
+import github.kasuminova.stellarcore.client.integration.libnine.L9ModelSelection;
 import github.kasuminova.stellarcore.client.integration.libnine.L9ModelTypeReader;
 import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreResourcePack;
 import io.github.phantamanta44.libnine.client.model.L9Models;
 import io.github.phantamanta44.libnine.util.helper.ResourceUtils;
+import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Mixin(value = L9Models.class, remap = false)
 public class MixinL9Models implements StellarCoreResourcePack {
@@ -25,13 +22,10 @@ public class MixinL9Models implements StellarCoreResourcePack {
     @Unique
     private static final Object stellar_core$NO_MODEL_TYPE = new Object();
 
-    @Unique
-    private static volatile Map<ResourceLocation, Object> stellar_core$validTypeCache = null;
-
-    @SuppressWarnings("RedundantCast")
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void injectInit(final CallbackInfo ci) {
-        ResourceExistingCache.addResourcePack((StellarCoreResourcePack) (Object) this);
+    static {
+        // L9Models.registerModels() is static and constructs its two loaders, never an L9Models.
+        // Register one persistent owner when the optional LibNine mixin is initialized.
+        ResourceExistingCache.addResourcePack((StellarCoreResourcePack) (Object) new L9Models());
     }
 
     /**
@@ -41,46 +35,36 @@ public class MixinL9Models implements StellarCoreResourcePack {
      */
     @Overwrite
     public static boolean isOfType(final ResourceLocation resource, final String type) {
-        final Map<ResourceLocation, Object> cache = stellar_core$validTypeCache;
-        if (cache == null) {
-            final Object modelType = stellar_core$readModelType(resource);
-            return modelType != stellar_core$NO_MODEL_TYPE && modelType.equals(type);
-        }
-
-        if (!L9ModScanner.isValidMod(resource.getNamespace())) {
-            return false;
-        }
-
-        final Object modelType = cache.computeIfAbsent(
-            resource, MixinL9Models::stellar_core$readModelType);
-        return modelType != stellar_core$NO_MODEL_TYPE && modelType.equals(type);
+        final Object modelType = L9ModelSelection.read(resource, MixinL9Models::stellar_core$readModelType);
+        return modelType != null && modelType != stellar_core$NO_MODEL_TYPE && modelType.equals(type);
     }
 
     @Unique
-    private static Object stellar_core$readModelType(final ResourceLocation resource) {
-        try (JsonReader reader = new JsonReader(new InputStreamReader(ResourceUtils.getResource(resource).getInputStream()))) {
+    private static Object stellar_core$readModelType(final ResourceLocation location) {
+        try (IResource resource = ResourceUtils.getResource(location)) {
+            final JsonReader reader = new JsonReader(new InputStreamReader(resource.getInputStream()));
             final String type = L9ModelTypeReader.read(reader);
             return type != null ? type : stellar_core$NO_MODEL_TYPE;
-        } catch (Exception ignored) {
+        } catch (FileNotFoundException missing) {
             return stellar_core$NO_MODEL_TYPE;
+        } catch (Exception invalid) {
+            return null;
         }
     }
 
     @Override
     public void stellar_core$onReload() {
-        if (stellar_core$validTypeCache != null) {
-            stellar_core$validTypeCache = new ConcurrentHashMap<>();
-        }
+        L9ModelSelection.reload();
     }
 
     @Override
     public void stellar_core$disableCache() {
-        stellar_core$validTypeCache = null;
+        L9ModelSelection.disable();
     }
 
     @Override
     public void stellar_core$enableCache() {
-        stellar_core$validTypeCache = new ConcurrentHashMap<>();
+        L9ModelSelection.enable();
     }
 
     @Override
