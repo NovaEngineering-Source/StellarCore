@@ -133,6 +133,12 @@ public class Performance {
 
     public static class Vanilla {
 
+        @Config.Comment("(Memory) Start the texture upload buffer at 256 KiB and upload complete row slices; wide textures grow the buffer.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.textureUploadBuffer")
+        @Config.Name("TextureUploadBuffer")
+        public boolean textureUploadBuffer = true;
+
         @Config.Comment({
             "(Client Performance) Cull vanilla-style particle quads wholly outside the current view frustum.",
             "Uses render size and interpolated position; custom particle renderers retain their own geometry.",

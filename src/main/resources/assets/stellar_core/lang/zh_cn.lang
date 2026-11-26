@@ -468,3 +468,4 @@ stellar_core.config.bugfixes.thermalDynamics.fluidDuplicateFixes=流体复制修
 stellar_core.config.bugfixes.thermalDynamics.fluidDuplicateFixes.tooltip=Fix a fluid duplication issue where they would only appear on Super-Laminar FluidDuct.
 stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes=背包过滤器修复
 stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes.tooltip=The problem with stopping a backpack from replicating is that this probably does the same thing as UniversalTweaks.
+stellar_core.config.performance.vanilla.textureUploadBuffer=降低纹理上传缓冲的初始内存占用
