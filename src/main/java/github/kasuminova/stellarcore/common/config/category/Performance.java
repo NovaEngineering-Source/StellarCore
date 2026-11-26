@@ -511,6 +511,12 @@ public class Performance {
 
     public static class Forge {
 
+        @Config.Comment("(Load Time | Memory) Parse language files without per-line lists or unnecessary format matchers, preserving Forge escaped properties.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.languageLoading")
+        @Config.Name("LanguageLoading")
+        public boolean languageLoading = true;
+
         @Config.Comment("(Memory) Release the 16 MiB upload buffer after the splash thread finishes, restoring it if splash starts again.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.forge.releaseSplashUploadBuffer")

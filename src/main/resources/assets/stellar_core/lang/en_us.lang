@@ -474,3 +474,4 @@ stellar_core.config.performance.forge.releaseSplashUploadBuffer=Release texture 
 stellar_core.config.performance.enderIO.mobFilter=Avoid entity NBT copies in mob obelisk filters
 stellar_core.config.performance.enderIO.alloyRecipeIndex=Compact alloy recipe indexes and deduplicate item alternatives
 stellar_core.config.performance.vanilla.geckoResourceScan=Reuse domain prefixes during GeckoLib resource discovery
+stellar_core.config.performance.forge.languageLoading=Reduce temporary allocations while loading language files
