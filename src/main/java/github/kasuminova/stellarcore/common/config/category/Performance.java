@@ -157,7 +157,7 @@ public class Performance {
         @Config.Name("TessellatorInitialCapacity")
         public boolean tessellatorInitialCapacity = true;
 
-        @Config.Comment("(Memory) Start the texture upload buffer at 256 KiB and upload complete row slices; wide textures grow the buffer.")
+        @Config.Comment("(Memory) Start the texture upload buffer at 256 KiB and upload complete row slices; wide textures grow the buffer. Disabled with OptiFine.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.textureUploadBuffer")
         @Config.Name("TextureUploadBuffer")

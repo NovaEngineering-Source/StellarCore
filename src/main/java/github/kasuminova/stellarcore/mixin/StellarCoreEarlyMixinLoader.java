@@ -25,7 +25,8 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
         addMixinCFG("mixins.stellar_core_forge_language_loading.json", () -> StellarCoreConfig.PERFORMANCE.forge.languageLoading);
         addMixinCFG("mixins.stellar_core_forge_splash_upload_buffer.json", () -> StellarCoreConfig.PERFORMANCE.forge.releaseSplashUploadBuffer);
         addMixinCFG("mixins.stellar_core_minecraft_tessellator_capacity.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.tessellatorInitialCapacity);
-        addMixinCFG("mixins.stellar_core_minecraft_texture_upload_buffer.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.textureUploadBuffer);
+        addMixinCFG("mixins.stellar_core_minecraft_texture_upload_buffer.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.textureUploadBuffer
+                && !isClassPresent("optifine.OptiFineClassTransformer"));
 
         addMixinCFG("mixins.stellar_core_minecraft_advancements.json",           () -> StellarCoreConfig.FEATURES.vanilla.asyncAdvancementSerialize);
         addMixinCFG("mixins.stellar_core_minecraft_bakedmodel.json",             () -> StellarCoreConfig.PERFORMANCE.vanilla.simpleBakedModelCanonicalization);
