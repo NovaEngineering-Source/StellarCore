@@ -476,3 +476,4 @@ stellar_core.config.performance.enderIO.alloyRecipeIndex=Compact alloy recipe in
 stellar_core.config.performance.vanilla.geckoResourceScan=Reuse domain prefixes during GeckoLib resource discovery
 stellar_core.config.performance.forge.languageLoading=Reduce temporary allocations while loading language files
 stellar_core.config.performance.enderUtilities.nullifierModel=Compose Nullifier models without retaining model-loading data
+stellar_core.config.performance.vanilla.geckoAnimationQueues=Reuse GeckoLib bone animation queues and reduce sampling allocations

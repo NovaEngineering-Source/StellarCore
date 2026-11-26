@@ -133,6 +133,12 @@ public class Performance {
 
     public static class Vanilla {
 
+        @Config.Comment("(Client Performance) Reuse GeckoLib bone axis queues and sample keyframes without temporary keyframe-location objects.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.geckoAnimationQueues")
+        @Config.Name("GeckoAnimationQueues")
+        public boolean geckoAnimationQueues = true;
+
         @Config.Comment("(Load Time) Reuse domain prefixes while scanning GeckoLib animation and model resources without changing discovery order.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.geckoResourceScan")
