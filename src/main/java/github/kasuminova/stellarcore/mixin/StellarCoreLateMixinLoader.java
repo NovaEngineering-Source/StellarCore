@@ -21,6 +21,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
+        addModdedMixinCFG("mixins.stellar_core_geckolib_animation_trackers.json", "geckolib3", () -> StellarCoreConfig.PERFORMANCE.vanilla.geckoAnimationTrackers);
         addModdedMixinCFG("mixins.stellar_core_geckolib_animation_queues.json", "geckolib3", () -> StellarCoreConfig.PERFORMANCE.vanilla.geckoAnimationQueues);
         addModdedMixinCFG("mixins.stellar_core_enderutilities_nullifier.json", "enderutilities", () -> StellarCoreConfig.PERFORMANCE.enderUtilities.nullifierModel);
         addModdedMixinCFG("mixins.stellar_core_geckolib_resource_scan.json", "geckolib3", () -> StellarCoreConfig.PERFORMANCE.vanilla.geckoResourceScan);

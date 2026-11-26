@@ -133,6 +133,12 @@ public class Performance {
 
     public static class Vanilla {
 
+        @Config.Comment("(Client Performance) Reuse GeckoLib dirty trackers within nested and exception-safe animation calls, without retaining bones between calls.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.geckoAnimationTrackers")
+        @Config.Name("GeckoAnimationTrackers")
+        public boolean geckoAnimationTrackers = true;
+
         @Config.Comment("(Client Performance) Reuse GeckoLib bone axis queues and sample keyframes without temporary keyframe-location objects.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.geckoAnimationQueues")

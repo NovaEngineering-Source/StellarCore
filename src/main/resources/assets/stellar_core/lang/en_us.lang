@@ -477,3 +477,4 @@ stellar_core.config.performance.vanilla.geckoResourceScan=Reuse domain prefixes 
 stellar_core.config.performance.forge.languageLoading=Reduce temporary allocations while loading language files
 stellar_core.config.performance.enderUtilities.nullifierModel=Compose Nullifier models without retaining model-loading data
 stellar_core.config.performance.vanilla.geckoAnimationQueues=Reuse GeckoLib bone animation queues and reduce sampling allocations
+stellar_core.config.performance.vanilla.geckoAnimationTrackers=Reuse GeckoLib animation dirty trackers without retaining idle bone references
