@@ -842,6 +842,12 @@ public class Performance {
 
     public static class EnderIO {
 
+        @Config.Comment("(Load Time | Memory) Index alloy inputs as unordered item multisets instead of storing every input permutation.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.enderIO.alloyRecipeIndex")
+        @Config.Name("AlloyRecipeIndex")
+        public boolean alloyRecipeIndex = true;
+
         @Config.Comment("(Server Performance) Compare captured mob IDs without constructing CapturedMob objects or copying entity NBT for obelisk filters.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.enderIO.mobFilter")
