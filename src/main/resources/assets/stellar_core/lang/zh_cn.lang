@@ -473,3 +473,4 @@ stellar_core.config.performance.vanilla.tessellatorInitialCapacity=降低全局�
 stellar_core.config.performance.forge.releaseSplashUploadBuffer=释放启动画面结束后的纹理上传缓冲
 stellar_core.config.performance.enderIO.mobFilter=避免生物方尖碑过滤时复制实体NBT
 stellar_core.config.performance.enderIO.alloyRecipeIndex=压缩合金炉配方索引并减少重复候选展开
+stellar_core.config.performance.vanilla.geckoResourceScan=复用GeckoLib资源扫描的域名前缀
