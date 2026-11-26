@@ -133,6 +133,12 @@ public class Performance {
 
     public static class Vanilla {
 
+        @Config.Comment("(Memory) Start the global and tile-entity tessellators at 64 KiB each; normal BufferBuilder growth is preserved.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.vanilla.tessellatorInitialCapacity")
+        @Config.Name("TessellatorInitialCapacity")
+        public boolean tessellatorInitialCapacity = true;
+
         @Config.Comment("(Memory) Start the texture upload buffer at 256 KiB and upload complete row slices; wide textures grow the buffer.")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.textureUploadBuffer")
