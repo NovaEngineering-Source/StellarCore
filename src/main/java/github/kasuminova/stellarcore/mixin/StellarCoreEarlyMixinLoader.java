@@ -22,6 +22,7 @@ public class StellarCoreEarlyMixinLoader implements IFMLLoadingPlugin {
 
     static {
         StellarEnvironment.init();
+        addMixinCFG("mixins.stellar_core_forge_splash_upload_buffer.json", () -> StellarCoreConfig.PERFORMANCE.forge.releaseSplashUploadBuffer);
         addMixinCFG("mixins.stellar_core_minecraft_tessellator_capacity.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.tessellatorInitialCapacity);
         addMixinCFG("mixins.stellar_core_minecraft_texture_upload_buffer.json", () -> StellarCoreConfig.PERFORMANCE.vanilla.textureUploadBuffer);
 

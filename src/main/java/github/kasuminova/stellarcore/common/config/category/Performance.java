@@ -505,6 +505,12 @@ public class Performance {
 
     public static class Forge {
 
+        @Config.Comment("(Memory) Release the 16 MiB upload buffer after the splash thread finishes, restoring it if splash starts again.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.forge.releaseSplashUploadBuffer")
+        @Config.Name("ReleaseSplashUploadBuffer")
+        public boolean releaseSplashUploadBuffer = true;
+
         @Config.Comment({
             "(Client Memory) Start per-item metadata maps at one entry instead of allocating space for 16.",
             "Maps retain their normal fastutil type and grow for items with more metadata variants."

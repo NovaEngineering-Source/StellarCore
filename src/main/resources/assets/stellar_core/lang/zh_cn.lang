@@ -470,3 +470,4 @@ stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes=背包
 stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes.tooltip=The problem with stopping a backpack from replicating is that this probably does the same thing as UniversalTweaks.
 stellar_core.config.performance.vanilla.textureUploadBuffer=降低纹理上传缓冲的初始内存占用
 stellar_core.config.performance.vanilla.tessellatorInitialCapacity=降低全局和方块实体渲染缓冲初始容量
+stellar_core.config.performance.forge.releaseSplashUploadBuffer=释放启动画面结束后的纹理上传缓冲
