@@ -716,6 +716,12 @@ public class Performance {
 
     public static class EnderUtilities {
 
+        @Config.Comment("(Memory) Compose Nullifier item models from baked geometry without retaining the model loader or unbaked model tables.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.enderUtilities.nullifierModel")
+        @Config.Name("NullifierModel")
+        public boolean nullifierModel = true;
+
         @Config.Comment("(Server Performance) Improvements to the way UtilItemModular loads items to slightly improve performance.")
         @Config.LangKey("stellar_core.config.performance.enderUtilities.utilItemModularImprovements")
         @Config.Name("UtilItemModularImprovements")

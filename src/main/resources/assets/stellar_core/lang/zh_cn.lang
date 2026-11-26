@@ -475,3 +475,4 @@ stellar_core.config.performance.enderIO.mobFilter=避免生物方尖碑过滤时
 stellar_core.config.performance.enderIO.alloyRecipeIndex=压缩合金炉配方索引并减少重复候选展开
 stellar_core.config.performance.vanilla.geckoResourceScan=复用GeckoLib资源扫描的域名前缀
 stellar_core.config.performance.forge.languageLoading=减少语言文件加载中的临时对象分配
+stellar_core.config.performance.enderUtilities.nullifierModel=重写Nullifier模型并解除对模型加载数据的持有

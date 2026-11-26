@@ -475,3 +475,4 @@ stellar_core.config.performance.enderIO.mobFilter=Avoid entity NBT copies in mob
 stellar_core.config.performance.enderIO.alloyRecipeIndex=Compact alloy recipe indexes and deduplicate item alternatives
 stellar_core.config.performance.vanilla.geckoResourceScan=Reuse domain prefixes during GeckoLib resource discovery
 stellar_core.config.performance.forge.languageLoading=Reduce temporary allocations while loading language files
+stellar_core.config.performance.enderUtilities.nullifierModel=Compose Nullifier models without retaining model-loading data
