@@ -21,6 +21,7 @@ public class StellarCoreLateMixinLoader implements ILateMixinLoader {
     private static final Map<String, BooleanSupplier> MIXIN_CONFIGS = new LinkedHashMap<>();
 
     static {
+        addModdedMixinCFG("mixins.stellar_core_enderio_mob_filter.json", "enderio", () -> StellarCoreConfig.PERFORMANCE.enderIO.mobFilter && isClassPresent("crazypants.enderio.machines.machine.obelisk.base.AbstractMobObeliskEntity"));
         addModdedMixinCFG("mixins.stellar_core_advancedrocketry.json",       "advancedrocketry");
         addModdedMixinCFG("mixins.stellar_core_ae.json",                     "appliedenergistics2", () -> !modLoaded("ae2"));
         addModdedMixinCFG("mixins.stellar_core_armourers_workshop.json",     "armourers_workshop");

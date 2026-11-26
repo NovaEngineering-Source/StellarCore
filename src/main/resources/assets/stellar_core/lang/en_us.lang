@@ -471,3 +471,4 @@ stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes.toolti
 stellar_core.config.performance.vanilla.textureUploadBuffer=Reduce initial texture upload buffer memory
 stellar_core.config.performance.vanilla.tessellatorInitialCapacity=Reduce initial global and tile-entity tessellator buffers
 stellar_core.config.performance.forge.releaseSplashUploadBuffer=Release texture upload storage after the splash screen finishes
+stellar_core.config.performance.enderIO.mobFilter=Avoid entity NBT copies in mob obelisk filters

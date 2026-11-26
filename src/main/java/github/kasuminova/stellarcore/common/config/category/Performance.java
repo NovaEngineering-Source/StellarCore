@@ -842,6 +842,12 @@ public class Performance {
 
     public static class EnderIO {
 
+        @Config.Comment("(Server Performance) Compare captured mob IDs without constructing CapturedMob objects or copying entity NBT for obelisk filters.")
+        @Config.RequiresMcRestart
+        @Config.LangKey("stellar_core.config.performance.enderIO.mobFilter")
+        @Config.Name("MobFilter")
+        public boolean mobFilter = true;
+
         @Config.Comment("(Server Performance) Removing some unnecessary parts to improve performance, may affect the use of the Profiler.")
         @Config.LangKey("stellar_core.config.performance.enderIO.itemToolsImprovements")
         @Config.Name("ItemToolsImprovements")

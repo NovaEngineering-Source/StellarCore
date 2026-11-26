@@ -218,6 +218,8 @@ dependencies {
     testCompileOnly("me.eigenraven.java8unsupported:java-8-unsupported-shim:1.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
+    testImplementation(rfg.deobf("curse.maven:ender-io-64578:4674244"))
+    testImplementation(rfg.deobf("curse.maven:endercore-231868:4671384"))
 
     // Mixins
 //    implementation("zone.rong:mixinbooter:7.1")
