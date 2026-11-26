@@ -3,6 +3,7 @@ package github.kasuminova.stellarcore.mixin.minecraft.resources;
 import github.kasuminova.stellarcore.client.resource.DirectoryPathIndex;
 import github.kasuminova.stellarcore.client.resource.ResourceExistingCache;
 import github.kasuminova.stellarcore.client.resource.ZipEntryIndex;
+import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.MutableResourcePackBindings;
 import github.kasuminova.stellarcore.common.util.PublishedState;
 import github.kasuminova.stellarcore.mixin.util.StellarCoreMutableResourceManager;
@@ -31,7 +32,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +59,6 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     private MetadataSerializer rmMetadataSerializer;
     @Unique
     private volatile PublishedState stellar_core$publishedState = PublishedState.empty();
-    @Unique
-    private final Set<ResourceLocation> stellar_core$unclaimedResources = new NonBlockingHashSet<>();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void stellar_core$init(final MetadataSerializer rmMetadataSerializerIn, final CallbackInfo ci) {
@@ -89,7 +87,6 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
             this.domainResourceManagers = emptyManagers;
             this.setResourceDomains = emptyDomains;
             this.stellar_core$publishedState = PublishedState.empty();
-            this.stellar_core$unclaimedResources.clear();
         }
         try {
             ResourceExistingCache.clear();
@@ -145,7 +142,6 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
             }
             this.stellar_core$bindings.commit(bindingsPlan);
             this.stellar_core$publishedState = publishedPlan;
-            stellar_core$invalidateUnclaimed(namespaces);
         }
     }
 
@@ -206,18 +202,13 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
     @Unique
     private FallbackResourceManager stellar_core$attachOnMiss(final ResourceLocation location,
                                                               final FallbackResourceManager observed) {
-        if (this.stellar_core$unclaimedResources.contains(location)) {
-            return stellar_core$observedOrCurrent(location, observed);
-        }
-        if (!this.stellar_core$bindings.canDiscover(location)) {
-            this.stellar_core$unclaimedResources.add(location);
+        if (!this.stellar_core$bindings.canDiscover(location, StellarCoreConfig.PERFORMANCE.vanilla.skipCoveredResourceNamespaces)) {
             return stellar_core$observedOrCurrent(location, observed);
         }
         synchronized (this) {
             final MutableResourcePackBindings.RefreshPlan plan =
                 this.stellar_core$bindings.discoverResource(this.rmMetadataSerializer, location);
             if (plan.isEmpty()) {
-                this.stellar_core$unclaimedResources.add(location);
                 return stellar_core$observedOrCurrent(location, observed);
             }
             stellar_core$publish(plan);
@@ -255,29 +246,6 @@ public abstract class MixinSimpleReloadableResourceManager implements StellarCor
         this.domainResourceManagers = nextWorkingManagers;
         this.setResourceDomains = nextWorkingDomains;
         this.stellar_core$publishedState = next;
-        stellar_core$invalidateUnclaimed(plan.namespaces());
-    }
-
-    @Unique
-    private void stellar_core$invalidateUnclaimed(final Set<String> namespaces) {
-        if (namespaces.isEmpty() || this.stellar_core$unclaimedResources.isEmpty()) {
-            return;
-        }
-        final List<ResourceLocation> stale = new ArrayList<>();
-        boolean clean = true;
-        for (final ResourceLocation location : this.stellar_core$unclaimedResources) {
-            if (namespaces.contains(location.getNamespace())) {
-                stale.add(location);
-                continue;
-            }
-            clean = false;
-        }
-        if (clean) {
-            this.stellar_core$unclaimedResources.clear();
-            return;
-        }
-        //noinspection SlowAbstractSetRemoveAll
-        this.stellar_core$unclaimedResources.removeAll(stale);
     }
 
     @Unique

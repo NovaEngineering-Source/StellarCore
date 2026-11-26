@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class MutableResourcePackBindings {
 
@@ -115,17 +116,23 @@ public final class MutableResourcePackBindings {
         return buildPlan(current, new Snapshot(nextBindings), serializer, affected);
     }
 
-    public boolean canDiscover(final ResourceLocation location) {
-        final Snapshot current = snapshot;
-        final Binding[] probes = current.mutableProbes;
-        if (probes.length == 0) {
-            return false;
-        }
-
-        // The resource manager caches unsuccessful attachment probes. Successful
-        // probes immediately publish a new snapshot, so a second per-location
-        // cache here only duplicates those keys and concurrent-map entries.
-        return probeMutablePacks(location, probes);
+    public boolean canDiscover(final ResourceLocation location, final boolean skipCoveredNamespaces) {
+        Snapshot current;
+        boolean found;
+        do {
+            current = snapshot;
+            if (skipCoveredNamespaces && (current.mutableProbes.length == 0
+                || current.coveredNamespaces.contains(location.getNamespace()))) {
+                found = false;
+            } else if (current.unclaimed.contains(location)) {
+                found = false;
+            } else {
+                found = probeMutablePacks(location, current.mutableProbes);
+                if (!found) current.unclaimed.add(location);
+            }
+            // A lookup that raced pack publication cannot poison the next generation.
+        } while (current != snapshot);
+        return found;
     }
 
     private static boolean probeMutablePacks(final ResourceLocation location, final Binding[] probes) {
@@ -155,6 +162,7 @@ public final class MutableResourcePackBindings {
             anyDiscovered |= exists;
         }
         if (!anyDiscovered) {
+            current.unclaimed.add(location);
             return RefreshPlan.empty(current);
         }
 
@@ -193,10 +201,11 @@ public final class MutableResourcePackBindings {
 
     private static final class Snapshot {
         private static final Binding[] NO_BINDINGS = new Binding[0];
-        private static final Snapshot EMPTY = new Snapshot(NO_BINDINGS);
 
         private final Binding[] bindings;
         private final Binding[] mutableProbes;
+        private final Set<String> coveredNamespaces;
+        private final Set<ResourceLocation> unclaimed = ConcurrentHashMap.newKeySet();
 
         private Snapshot(final Binding[] bindings) {
             this.bindings = bindings;
@@ -219,6 +228,7 @@ public final class MutableResourcePackBindings {
             }
             if (shared.isEmpty()) {
                 this.mutableProbes = NO_BINDINGS;
+                this.coveredNamespaces = Collections.emptySet();
                 return;
             }
             final Binding[] probes = new Binding[shared.size()];
@@ -227,10 +237,16 @@ public final class MutableResourcePackBindings {
                 probes[index++] = binding;
             }
             this.mutableProbes = probes;
+            // Only namespaces bound by every mutable pack are impossible attachment candidates.
+            final Set<String> covered = new ObjectLinkedOpenHashSet<>(probes[0].namespaces);
+            for (int i = 1; i < probes.length && !covered.isEmpty(); i++) {
+                covered.retainAll(probes[i].namespaces);
+            }
+            this.coveredNamespaces = covered;
         }
 
         private static Snapshot empty() {
-            return EMPTY;
+            return new Snapshot(NO_BINDINGS);
         }
     }
 

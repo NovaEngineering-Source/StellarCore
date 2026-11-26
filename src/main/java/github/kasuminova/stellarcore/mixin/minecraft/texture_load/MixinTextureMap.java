@@ -1,6 +1,7 @@
 package github.kasuminova.stellarcore.mixin.minecraft.texture_load;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import github.kasuminova.stellarcore.client.texture.AtlasPngReader;
 import github.kasuminova.stellarcore.client.texture.SpriteBufferedImageCache;
 import github.kasuminova.stellarcore.common.config.StellarCoreConfig;
 import github.kasuminova.stellarcore.common.util.StellarLog;
@@ -73,6 +74,8 @@ public abstract class MixinTextureMap {
         stellar_core$cachedTextures = new NonBlockingHashSet<>();
         stellar_core$cachedLocations = new NonBlockingHashSet<>();
         Future<Integer> detectMaxMipmapLevelTask = stellar_core$initializeOptifineTask(resourceManager);
+        final AtlasPngReader pngReader = StellarCoreConfig.PERFORMANCE.vanilla.singleReadAtlasPng
+            ? AtlasPngReader.forAtlas() : null;
         mapRegisteredSprites.values().parallelStream().forEach((sprite -> {
             ResourceLocation location = getResourceLocation(sprite);
             if (sprite.hasCustomLoader(resourceManager, location)) {
@@ -82,12 +85,16 @@ public abstract class MixinTextureMap {
             IResource resource = null;
             boolean prefetched = false;
             try {
-                PngSizeInfo pngSizeInfo = PngSizeInfo.makeFromResource(resourceManager.getResource(location));
-                resource = resourceManager.getResource(location);
-                boolean hasAnimation = resource.getMetadata("animation") != null;
-                sprite.loadSprite(pngSizeInfo, hasAnimation);
-
-                BufferedImage image = TextureUtil.readBufferedImage(resource.getInputStream());
+                final BufferedImage image;
+                if (pngReader != null) {
+                    resource = resourceManager.getResource(location);
+                    image = pngReader.read(resource, sprite);
+                } else {
+                    PngSizeInfo pngSizeInfo = PngSizeInfo.makeFromResource(resourceManager.getResource(location));
+                    resource = resourceManager.getResource(location);
+                    sprite.loadSprite(pngSizeInfo, resource.getMetadata("animation") != null);
+                    image = TextureUtil.readBufferedImage(resource.getInputStream());
+                }
                 int[] rgb = image.getRGB(0, 0, image.getWidth(), image.getHeight(),
                     new int[image.getWidth() * image.getHeight()], 0, image.getWidth());
                 SpriteBufferedImageCache.INSTANCE.put(sprite, image.getWidth(), image.getHeight(), rgb);

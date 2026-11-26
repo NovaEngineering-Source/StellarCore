@@ -468,6 +468,9 @@ stellar_core.config.bugfixes.thermalDynamics.fluidDuplicateFixes=Fluid Duplicate
 stellar_core.config.bugfixes.thermalDynamics.fluidDuplicateFixes.tooltip=Fix a fluid duplication issue where they would only appear on Super-Laminar FluidDuct.
 stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes=Container Satchel Filter Fixes
 stellar_core.config.bugfixes.thermalExpansion.containerSatchelFilterFixes.tooltip=The problem with stopping a backpack from replicating is that this probably does the same thing as UniversalTweaks.
+
+stellar_core.config.performance.vanilla.singleReadAtlasPng=Single-read atlas PNGs
+stellar_core.config.performance.vanilla.skipCoveredResourceNamespaces=Skip fully bound resource namespaces
 stellar_core.config.performance.vanilla.textureUploadBuffer=Reduce initial texture upload buffer memory
 stellar_core.config.performance.vanilla.tessellatorInitialCapacity=Reduce initial global and tile-entity tessellator buffers
 stellar_core.config.performance.forge.releaseSplashUploadBuffer=Release texture upload storage after the splash screen finishes

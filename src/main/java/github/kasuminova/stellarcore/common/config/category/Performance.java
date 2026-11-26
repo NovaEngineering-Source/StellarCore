@@ -257,6 +257,11 @@ public class Performance {
         @Config.Name("ParallelTextureLoad")
         public boolean parallelTextureLoad = false;
 
+        @Config.Comment("Read a standard atlas PNG and its metadata from one resource during parallel texture loading.")
+        @Config.LangKey("stellar_core.config.performance.vanilla.singleReadAtlasPng")
+        @Config.Name("SingleReadAtlasPng")
+        public boolean singleReadAtlasPng = true;
+
         @Config.Comment("(Client Performance) Improve the Map data structures of StateMapperBase to make them faster (~30%).")
         @Config.RequiresMcRestart
         @Config.LangKey("stellar_core.config.performance.vanilla.stateMapperBaseImprovements")
@@ -412,6 +417,11 @@ public class Performance {
         @Config.LangKey("stellar_core.config.performance.vanilla.resourceExistStateCache")
         @Config.Name("ResourceExistStateCache")
         public boolean resourceExistStateCache = true;
+
+        @Config.Comment("Skip per-path miss caching when every mutable resource pack already covers the namespace.")
+        @Config.LangKey("stellar_core.config.performance.vanilla.skipCoveredResourceNamespaces")
+        @Config.Name("SkipCoveredResourceNamespaces")
+        public boolean skipCoveredResourceNamespaces = true;
 
         @Config.Comment({
                 "(Client Performance | Experimental) Pre-scan directory-based resource packs to build an existence index,",
